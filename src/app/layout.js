@@ -31,6 +31,8 @@ export default function RootLayout({ children }) {
         <meta name="apple-mobile-web-app-title" content="AI-gency" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="theme-color" content="#f97316" />
+        {/* Travelpayouts verification */}
+        <script async src="https://tp-em.com/NTA5NTA0.js?t=509504" data-noptimize="1" data-cfasync="false" />
         <script data-noptimize="1" data-cfasync="false" data-wpfc-render="false" dangerouslySetInnerHTML={{ __html: `(function(){var script=document.createElement("script");script.async=1;script.src='https://tp-em.com/NTA5NTA0.js?t=509504';document.head.appendChild(script);})();` }} />
       </head>
       <body className="font-sans antialiased pb-24" style={{ background: "#FFF8F0" }}>
