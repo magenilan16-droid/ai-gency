@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useLanguage } from "@/app/LanguageProvider";
 
 const G = "linear-gradient(135deg,#f97316,#ec4899)";
 
@@ -41,6 +42,7 @@ const STYLE_E = { adventure:"🧗", relaxed:"🏖️", cultural:"🏛️", luxur
 export default function Dashboard() {
   const [trips, setTrips] = useState([]);
   const [mounted, setMounted] = useState(false);
+  const { t } = useLanguage();
 
   useEffect(() => {
     setMounted(true);
@@ -54,8 +56,8 @@ export default function Dashboard() {
 
   const upcoming = trips.filter(t => t.form?.startDate && daysUntil(t.form.startDate) >= 0).slice(0, 1)[0];
   const recent = trips.slice(0, 3);
-  const countries = [...new Set(trips.map(t => t.destination?.split(",").pop()?.trim()).filter(Boolean))];
-  const totalBudget = trips.reduce((s, t) => s + (t.total_estimated_cost || 0), 0);
+  const countries = [...new Set(trips.map(tr => tr.destination?.split(",").pop()?.trim()).filter(Boolean))];
+  const totalBudget = trips.reduce((s, tr) => s + (tr.total_estimated_cost || 0), 0);
 
   if (!mounted) return (
     <div className="min-h-screen flex items-center justify-center">
@@ -69,9 +71,9 @@ export default function Dashboard() {
       <div className="px-4 sm:px-6 pt-8 pb-4">
         <div className="max-w-2xl mx-auto flex items-center justify-between">
           <div>
-            <p className="text-xs font-black text-orange-400 uppercase tracking-widest mb-1">✦ Travel OS</p>
+            <p className="text-xs font-black text-orange-400 uppercase tracking-widest mb-1">✦ {t("travel_os")}</p>
             <h1 className="text-3xl font-black text-gray-900">
-              {trips.length === 0 ? "Welcome 👋" : "Your Dashboard"}
+              {trips.length === 0 ? t("welcome") : t("your_dashboard")}
             </h1>
           </div>
           <span className="text-3xl font-black text-gray-900">✈️ <span style={{ background: G, WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent" }}>AI-gency</span></span>
@@ -88,11 +90,16 @@ export default function Dashboard() {
               <div className="absolute top-0 right-0 text-8xl opacity-10 font-black -mt-2 -mr-2">{STYLE_E[upcoming.style] || "✈️"}</div>
               <div className="relative">
                 <p className="text-white/70 text-xs font-black uppercase tracking-widest mb-1">
-                  {(() => { const d = daysUntil(upcoming.form?.startDate); return d === 0 ? "🔥 TODAY!" : d === 1 ? "⏰ Tomorrow" : `✦ In ${d} days`; })()}
+                  {(() => {
+                    const d = daysUntil(upcoming.form?.startDate);
+                    if (d === 0) return t("today_badge");
+                    if (d === 1) return t("tomorrow_badge");
+                    return t("in_x_days", { n: d });
+                  })()}
                 </p>
                 <h2 className="text-2xl font-black mb-1">{upcoming.destination}</h2>
-                <p className="text-white/70 text-sm">{upcoming.form?.startDate} → {upcoming.form?.endDate} · {upcoming.days} days · {upcoming.currency} {upcoming.total_estimated_cost?.toLocaleString()}</p>
-                <div className="mt-4 inline-flex items-center gap-2 bg-white/20 rounded-xl px-4 py-2 text-sm font-bold">Open Trip →</div>
+                <p className="text-white/70 text-sm">{upcoming.form?.startDate} → {upcoming.form?.endDate} · {upcoming.days} {t("days")} · {upcoming.currency} {upcoming.total_estimated_cost?.toLocaleString()}</p>
+                <div className="mt-4 inline-flex items-center gap-2 bg-white/20 rounded-xl px-4 py-2 text-sm font-bold">{t("open_trip")} →</div>
               </div>
             </div>
           </Link>
@@ -101,11 +108,11 @@ export default function Dashboard() {
           <div className="rounded-3xl overflow-hidden relative" style={{ background: G }}>
             <div className="absolute top-0 right-0 text-[100px] opacity-10 leading-none font-black -mt-4 -mr-4">✈️</div>
             <div className="relative px-6 py-8">
-              <p className="text-white/70 text-xs font-black uppercase tracking-widest mb-2">✦ Welcome to AI-gency</p>
-              <h2 className="text-2xl font-black text-white mb-2">Plan your first trip 🌍</h2>
-              <p className="text-white/70 text-sm mb-5 max-w-sm">AI builds your perfect day-by-day itinerary in seconds. Or build it yourself.</p>
+              <p className="text-white/70 text-xs font-black uppercase tracking-widest mb-2">✦ {t("travel_os")}</p>
+              <h2 className="text-2xl font-black text-white mb-2">{t("plan_first_trip_title")}</h2>
+              <p className="text-white/70 text-sm mb-5 max-w-sm">{t("ai_builds_itinerary")}</p>
               <Link href="/plan" className="inline-flex items-center gap-2 bg-white font-black text-sm px-6 py-3 rounded-2xl hover:-translate-y-0.5 transition-all" style={{ color: "#f97316" }}>
-                Start Planning →
+                {t("start_planning")} →
               </Link>
             </div>
           </div>
@@ -115,35 +122,36 @@ export default function Dashboard() {
         {trips.length > 0 && (
           <div className="grid grid-cols-3 gap-3">
             {[
-              { icon: "✈️", value: trips.length, label: "Trips" },
-              { icon: "🌍", value: countries.length, label: "Countries" },
-              { icon: "💰", value: `$${Math.round(totalBudget/1000)}k`, label: "Planned" },
+              { icon: "✈️", value: trips.length, labelKey: "stat_trips", href: "/trips" },
+              { icon: "🌍", value: countries.length, labelKey: "stat_countries", href: "/countries" },
+              { icon: "💰", value: `$${Math.round(totalBudget/1000)}k`, labelKey: "stat_planned", href: "/trips" },
             ].map(s => (
-              <div key={s.label} className="bg-white rounded-2xl border border-orange-100 p-4 text-center shadow-sm">
+              <Link key={s.labelKey} href={s.href}
+                className="bg-white rounded-2xl border border-orange-100 p-4 text-center shadow-sm hover:-translate-y-0.5 transition-all active:scale-95">
                 <div className="text-2xl mb-1">{s.icon}</div>
                 <div className="text-xl font-black text-gray-900">{s.value}</div>
-                <div className="text-xs text-gray-400 font-medium">{s.label}</div>
-              </div>
+                <div className="text-xs text-gray-400 font-medium">{t(s.labelKey)}</div>
+              </Link>
             ))}
           </div>
         )}
 
         {/* Quick actions */}
         <div>
-          <h2 className="text-lg font-black text-gray-900 mb-3">Quick Actions</h2>
+          <h2 className="text-lg font-black text-gray-900 mb-3">{t("quick_actions")}</h2>
           <div className="grid grid-cols-2 gap-3">
             {[
-              { icon: "🤖", label: "Ask AI Assistant", desc: "Plan, tips, suggestions", href: "/chat", color: G },
-              { icon: "✈️", label: "New AI Trip", desc: "Chat-based planning", href: "/plan", color: "linear-gradient(135deg,#f97316,#f59e0b)" },
-              { icon: "💼", label: "Business Trip", desc: "Per diems & expenses", href: "/business", color: "linear-gradient(135deg,#10b981,#0ea5e9)" },
-              { icon: "✏️", label: "Build Manually", desc: "Full creative control", href: "/plan", color: "linear-gradient(135deg,#8b5cf6,#6366f1)" },
+              { icon: "🤖", labelKey: "ask_ai_assistant", descKey: "plan_tips_suggestions", href: "/chat", color: G },
+              { icon: "✈️", labelKey: "new_ai_trip", descKey: "chat_based_planning", href: "/plan", color: "linear-gradient(135deg,#f97316,#f59e0b)" },
+              { icon: "💼", labelKey: "business_trip_label", descKey: "per_diems_expenses", href: "/business", color: "linear-gradient(135deg,#10b981,#0ea5e9)" },
+              { icon: "✏️", labelKey: "build_manually", descKey: "full_creative_control", href: "/plan", color: "linear-gradient(135deg,#8b5cf6,#6366f1)" },
             ].map(a => (
-              <Link key={a.label} href={a.href}
+              <Link key={a.labelKey} href={a.href}
                 className="rounded-2xl p-4 text-white hover:-translate-y-0.5 transition-all shadow-md"
                 style={{ background: a.color }}>
                 <div className="text-2xl mb-2">{a.icon}</div>
-                <div className="font-black text-sm">{a.label}</div>
-                <div className="text-white/70 text-xs mt-0.5">{a.desc}</div>
+                <div className="font-black text-sm">{t(a.labelKey)}</div>
+                <div className="text-white/70 text-xs mt-0.5">{t(a.descKey)}</div>
               </Link>
             ))}
           </div>
@@ -153,27 +161,31 @@ export default function Dashboard() {
         {recent.length > 0 && (
           <div>
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-lg font-black text-gray-900">Recent Trips</h2>
-              <Link href="/trips" className="text-xs font-black text-orange-400 hover:text-orange-600 transition-colors">See all →</Link>
+              <h2 className="text-lg font-black text-gray-900">{t("recent_trips")}</h2>
+              <Link href="/trips" className="text-xs font-black text-orange-400 hover:text-orange-600 transition-colors">{t("see_all")} →</Link>
             </div>
             <div className="space-y-3">
-              {recent.map(t => {
-                const color = destColor(t.destination);
-                const d = daysUntil(t.form?.startDate);
+              {recent.map(tr => {
+                const color = destColor(tr.destination);
+                const d = daysUntil(tr.form?.startDate);
                 return (
-                  <Link key={t.id} href={`/trip/${t.id}`}
+                  <Link key={tr.id} href={`/trip/${tr.id}`}
                     className="flex items-center gap-4 bg-white rounded-2xl border border-orange-100 p-4 shadow-sm hover:-translate-y-0.5 transition-all">
                     <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0"
                       style={{ background: `${color}20` }}>
-                      {STYLE_E[t.style] || "🌍"}
+                      {STYLE_E[tr.style] || "🌍"}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="font-black text-gray-900 text-sm truncate">{t.destination}</div>
-                      <div className="text-xs text-gray-400">{t.form?.startDate || "No date"} · {t.days || "?"} days</div>
+                      <div className="font-black text-gray-900 text-sm truncate">{tr.destination}</div>
+                      <div className="text-xs text-gray-400">{tr.form?.startDate || t("no_date")} · {tr.days || "?"} {t("days")}</div>
                     </div>
                     <div className="text-right flex-shrink-0">
-                      <div className="text-sm font-black" style={{ color }}>{t.currency} {t.total_estimated_cost?.toLocaleString()}</div>
-                      {d !== null && d >= 0 && <div className="text-xs text-orange-400 font-bold">{d === 0 ? "Today!" : `${d}d away`}</div>}
+                      <div className="text-sm font-black" style={{ color }}>{tr.currency} {tr.total_estimated_cost?.toLocaleString()}</div>
+                      {d !== null && d >= 0 && (
+                        <div className="text-xs text-orange-400 font-bold">
+                          {d === 0 ? t("today_short") : t("x_d_away", { n: d })}
+                        </div>
+                      )}
                     </div>
                   </Link>
                 );
@@ -187,14 +199,14 @@ export default function Dashboard() {
           <div className="flex items-start gap-3">
             <div className="w-10 h-10 rounded-2xl flex items-center justify-center text-xl flex-shrink-0" style={{ background: G }}>🤖</div>
             <div className="flex-1">
-              <div className="font-black text-gray-900 text-sm mb-1">AI Travel Assistant</div>
+              <div className="font-black text-gray-900 text-sm mb-1">{t("ai_assistant_title")}</div>
               <p className="text-gray-500 text-sm leading-relaxed">
                 {trips.length > 0
-                  ? `You have ${trips.length} trip${trips.length > 1 ? "s" : ""} planned. Ask me for tips, activity ideas, or help editing your itinerary!`
-                  : "Ask me anything about travel — destinations, budgets, packing tips, local customs, or let me plan your whole trip!"}
+                  ? t("trips_count_msg", { n: trips.length, s: trips.length > 1 ? "s" : "" })
+                  : t("no_trips_msg")}
               </p>
               <Link href="/chat" className="inline-flex items-center gap-1 mt-2 text-xs font-black text-orange-500 hover:text-orange-600 transition-colors">
-                Open AI Chat →
+                {t("open_ai_chat")} →
               </Link>
             </div>
           </div>

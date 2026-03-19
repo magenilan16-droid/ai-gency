@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, useRef, Suspense } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { getTrip, updateTrip, generateId } from "@/lib/trips";
+import { useLanguage } from "@/app/LanguageProvider";
 
 // ─── Themes ───────────────────────────────────────────────────────────────────
 const DEST_THEMES = {
@@ -61,32 +62,12 @@ function getTheme(dest, style) {
   return DEST_THEMES.default;
 }
 
-const BUDGET_CATS = {
-  accommodation:  { color: "#f97316", label: "Accommodation" },
-  food:           { color: "#ec4899", label: "Food & Dining" },
-  activities:     { color: "#8b5cf6", label: "Activities" },
-  transportation: { color: "#3b82f6", label: "Transportation" },
-  other:          { color: "#9ca3af", label: "Other" },
-};
-const EXPENSE_CATS = [
-  { key: "food",           label: "Food & Drink",    icon: "🍽️" },
-  { key: "accommodation",  label: "Accommodation",   icon: "🏨" },
-  { key: "activities",     label: "Activities",      icon: "🎭" },
-  { key: "transportation", label: "Transport",       icon: "🚌" },
-  { key: "other",          label: "Other",           icon: "💳" },
-];
 const STYLE_ICONS = { adventure:"🧗", relaxed:"🏖️", cultural:"🏛️", luxury:"✨", nightlife:"🎉", culinary:"🍽️" };
 const TIME_STYLE  = {
   morning:   { bg:"#fff7ed", text:"#ea580c" },
   afternoon: { bg:"#fdf4ff", text:"#9333ea" },
   evening:   { bg:"#eff6ff", text:"#2563eb" },
 };
-const TABS = [
-  { id: "itinerary", label: "Itinerary", icon: "🗓️" },
-  { id: "pack",      label: "Pack",      icon: "🧳" },
-  { id: "expenses",  label: "Expenses",  icon: "💸" },
-  { id: "local",     label: "Local",     icon: "🌐" },
-];
 
 // ─── Editable ─────────────────────────────────────────────────────────────────
 function Editable({ value, onChange, className = "", multiline = false, placeholder = "Click to edit..." }) {
@@ -300,7 +281,6 @@ function PackTab({ trip }) {
 
   return (
     <div className="space-y-4">
-      {/* Progress bar */}
       {total > 0 && (
         <div className="bg-white rounded-2xl border border-orange-100 p-4 shadow-sm">
           <div className="flex items-center justify-between mb-2">
@@ -356,6 +336,23 @@ function PackTab({ trip }) {
 // ─── Expenses Tab ─────────────────────────────────────────────────────────────
 function ExpensesTab({ trip, expenses, onAdd, onDelete }) {
   const G = "linear-gradient(135deg,#f97316,#ec4899)";
+  const { t } = useLanguage();
+
+  const BUDGET_CATS = {
+    accommodation:  { color: "#f97316", label: t("accommodation_label") },
+    food:           { color: "#ec4899", label: t("food_label") },
+    activities:     { color: "#8b5cf6", label: t("activities_label") },
+    transportation: { color: "#3b82f6", label: t("transportation_label") },
+    other:          { color: "#9ca3af", label: t("other_label") },
+  };
+  const EXPENSE_CATS = [
+    { key: "food",           label: t("food_label"),           icon: "🍽️" },
+    { key: "accommodation",  label: t("accommodation_label"),  icon: "🏨" },
+    { key: "activities",     label: t("activities_label"),     icon: "🎭" },
+    { key: "transportation", label: t("transportation_label"), icon: "🚌" },
+    { key: "other",          label: t("other_label"),          icon: "💳" },
+  ];
+
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ name: "", amount: "", category: "food", date: new Date().toISOString().split("T")[0] });
   const set = (k,v) => setForm(p=>({...p,[k]:v}));
@@ -373,7 +370,6 @@ function ExpensesTab({ trip, expenses, onAdd, onDelete }) {
     setShowForm(false);
   }
 
-  // Per-category breakdown
   const byCategory = EXPENSE_CATS.map(cat => ({
     ...cat,
     spent:     expenses.filter(e=>e.category===cat.key).reduce((s,e)=>s+(Number(e.amount)||0),0),
@@ -383,7 +379,6 @@ function ExpensesTab({ trip, expenses, onAdd, onDelete }) {
 
   return (
     <div className="space-y-4">
-      {/* Summary card */}
       <div className="rounded-2xl p-5 text-white shadow-lg" style={{ background: remaining >= 0 ? G : "linear-gradient(135deg,#ef4444,#dc2626)" }}>
         <div className="flex justify-between items-start mb-4">
           <div>
@@ -401,7 +396,6 @@ function ExpensesTab({ trip, expenses, onAdd, onDelete }) {
         <p className="text-white/60 text-xs mt-2">{pct.toFixed(0)}% of {trip.currency} {totalEstimate.toLocaleString()} budget used</p>
       </div>
 
-      {/* Category breakdown */}
       <div className="bg-white rounded-2xl border border-orange-100 p-4 shadow-sm">
         <h3 className="font-black text-gray-900 mb-3 text-sm">By Category</h3>
         <div className="space-y-3">
@@ -422,14 +416,12 @@ function ExpensesTab({ trip, expenses, onAdd, onDelete }) {
         </div>
       </div>
 
-      {/* Add expense button */}
       <button onClick={()=>setShowForm(true)}
         className="w-full py-4 rounded-2xl text-white font-black text-sm shadow-lg shadow-orange-200/50 hover:-translate-y-0.5 transition-all"
         style={{ background: G }}>
         + Add Expense
       </button>
 
-      {/* Add expense form */}
       {showForm && (
         <div className="fixed inset-0 bg-black/40 z-50 flex items-end" onClick={()=>setShowForm(false)}>
           <form onSubmit={submit} className="bg-white rounded-t-3xl w-full max-w-lg mx-auto p-6 space-y-4" onClick={e=>e.stopPropagation()}>
@@ -468,7 +460,6 @@ function ExpensesTab({ trip, expenses, onAdd, onDelete }) {
         </div>
       )}
 
-      {/* Expense list */}
       {expenses.length === 0 ? (
         <div className="text-center py-10 text-gray-300">
           <div className="text-4xl mb-2">💸</div>
@@ -502,6 +493,7 @@ function ExpensesTab({ trip, expenses, onAdd, onDelete }) {
 // ─── Local Tab ────────────────────────────────────────────────────────────────
 function LocalTab({ trip }) {
   const G = "linear-gradient(135deg,#f97316,#ec4899)";
+  const { t } = useLanguage();
   const [data, setData]       = useState(null);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied]   = useState(null);
@@ -532,7 +524,6 @@ function LocalTab({ trip }) {
 
   return (
     <div className="space-y-4">
-      {/* Language header */}
       {data && (
         <div className="rounded-2xl p-4 text-white text-center" style={{ background: G }}>
           <div className="text-3xl mb-1">{data.flag || "🌍"}</div>
@@ -578,10 +569,9 @@ function LocalTab({ trip }) {
         ))
       )}
 
-      {/* Tips section */}
       {trip.tips?.length > 0 && (
         <div className="bg-white rounded-2xl border border-orange-100 p-4 shadow-sm">
-          <h3 className="font-black text-gray-900 mb-3 text-sm">💡 Local Tips</h3>
+          <h3 className="font-black text-gray-900 mb-3 text-sm">{t("local_tip")}</h3>
           <div className="space-y-2">
             {trip.tips.map((tip, i) => (
               <div key={i} className="flex gap-3">
@@ -640,6 +630,7 @@ function TripContent() {
   const { id }      = useParams();
   const router      = useRouter();
   const searchParams = useSearchParams();
+  const { t }       = useLanguage();
 
   const [trip, setTrip]               = useState(null);
   const [activeTab, setActiveTab]     = useState("itinerary");
@@ -652,11 +643,26 @@ function TripContent() {
   const [expenses, setExpenses]       = useState([]);
   const [showSurprise, setShowSurprise] = useState(false);
 
+  const TABS = [
+    { id: "itinerary", labelKey: "tab_itinerary", icon: "🗓️" },
+    { id: "pack",      labelKey: "tab_pack",      icon: "🧳" },
+    { id: "expenses",  labelKey: "tab_expenses",  icon: "💸" },
+    { id: "local",     labelKey: "tab_local",     icon: "🌐" },
+  ];
+
+  const BUDGET_CATS = {
+    accommodation:  { color: "#f97316", label: t("accommodation_label") },
+    food:           { color: "#ec4899", label: t("food_label") },
+    activities:     { color: "#8b5cf6", label: t("activities_label") },
+    transportation: { color: "#3b82f6", label: t("transportation_label") },
+    other:          { color: "#9ca3af", label: t("other_label") },
+  };
+
   useEffect(() => {
-    const t = getTrip(id);
-    if (!t) { router.push("/plan"); return; }
-    setTrip(t);
-    setExpenses(t.expenses || []);
+    const tr = getTrip(id);
+    if (!tr) { router.push("/plan"); return; }
+    setTrip(tr);
+    setExpenses(tr.expenses || []);
     if (searchParams.get("edit") === "true") setEditMode(true);
     if (searchParams.get("surprise") === "true") setShowSurprise(true);
   }, [id, router, searchParams]);
@@ -677,43 +683,43 @@ function TripContent() {
 
   function updateActivity(di, ai, field, value) {
     setTripAndSave(p => {
-      const t = JSON.parse(JSON.stringify(p));
-      t.daily_itinerary[di].activities[ai][field] = value;
-      t.daily_itinerary[di].daily_cost = t.daily_itinerary[di].activities.reduce((s,a)=>s+(Number(a.estimated_cost)||0)*(t.travelers||1),0);
-      t.total_estimated_cost = t.daily_itinerary.reduce((s,d)=>s+(d.daily_cost||0),0);
-      return t;
+      const tr = JSON.parse(JSON.stringify(p));
+      tr.daily_itinerary[di].activities[ai][field] = value;
+      tr.daily_itinerary[di].daily_cost = tr.daily_itinerary[di].activities.reduce((s,a)=>s+(Number(a.estimated_cost)||0)*(tr.travelers||1),0);
+      tr.total_estimated_cost = tr.daily_itinerary.reduce((s,d)=>s+(d.daily_cost||0),0);
+      return tr;
     });
   }
   function addActivity(di, activity) {
     setTripAndSave(p => {
-      const t = JSON.parse(JSON.stringify(p));
-      t.daily_itinerary[di].activities.push(activity || { time:"morning", name:"New Activity", description:"Describe this activity.", estimated_cost:0 });
-      return t;
+      const tr = JSON.parse(JSON.stringify(p));
+      tr.daily_itinerary[di].activities.push(activity || { time:"morning", name:"New Activity", description:"Describe this activity.", estimated_cost:0 });
+      return tr;
     });
   }
   function deleteActivity(di, ai) {
     setTripAndSave(p => {
-      const t = JSON.parse(JSON.stringify(p));
-      t.daily_itinerary[di].activities.splice(ai,1);
-      t.daily_itinerary[di].daily_cost = t.daily_itinerary[di].activities.reduce((s,a)=>s+(Number(a.estimated_cost)||0)*(t.travelers||1),0);
-      t.total_estimated_cost = t.daily_itinerary.reduce((s,d)=>s+(d.daily_cost||0),0);
-      return t;
+      const tr = JSON.parse(JSON.stringify(p));
+      tr.daily_itinerary[di].activities.splice(ai,1);
+      tr.daily_itinerary[di].daily_cost = tr.daily_itinerary[di].activities.reduce((s,a)=>s+(Number(a.estimated_cost)||0)*(tr.travelers||1),0);
+      tr.total_estimated_cost = tr.daily_itinerary.reduce((s,d)=>s+(d.daily_cost||0),0);
+      return tr;
     });
   }
   function updateDayField(di, field, value) {
-    setTripAndSave(p => { const t=JSON.parse(JSON.stringify(p)); t.daily_itinerary[di][field]=value; return t; });
+    setTripAndSave(p => { const tr=JSON.parse(JSON.stringify(p)); tr.daily_itinerary[di][field]=value; return tr; });
   }
   function updateTip(i, value) {
-    setTripAndSave(p => { const t=JSON.parse(JSON.stringify(p)); t.tips[i]=value; return t; });
+    setTripAndSave(p => { const tr=JSON.parse(JSON.stringify(p)); tr.tips[i]=value; return tr; });
   }
   function deleteTip(i) {
-    setTripAndSave(p => { const t=JSON.parse(JSON.stringify(p)); t.tips.splice(i,1); return t; });
+    setTripAndSave(p => { const tr=JSON.parse(JSON.stringify(p)); tr.tips.splice(i,1); return tr; });
   }
   function addTip() {
-    setTripAndSave(p => { const t=JSON.parse(JSON.stringify(p)); t.tips.push("Add your tip here"); return t; });
+    setTripAndSave(p => { const tr=JSON.parse(JSON.stringify(p)); tr.tips.push("Add your tip here"); return tr; });
   }
   function updateBudget(key, value) {
-    setTripAndSave(p => { const t=JSON.parse(JSON.stringify(p)); t.budget_breakdown[key]=Number(value); t.total_estimated_cost=Object.values(t.budget_breakdown).reduce((a,b)=>a+b,0); return t; });
+    setTripAndSave(p => { const tr=JSON.parse(JSON.stringify(p)); tr.budget_breakdown[key]=Number(value); tr.total_estimated_cost=Object.values(tr.budget_breakdown).reduce((a,b)=>a+b,0); return tr; });
   }
   function addExpense(exp) {
     const newExp = { ...exp, id: generateId(), createdAt: Date.now() };
@@ -750,10 +756,8 @@ function TripContent() {
   return (
     <main className="min-h-screen" style={{ background:"#FFF8F0" }}>
 
-      {/* Surprise reveal overlay */}
       {showSurprise && <SurpriseReveal destination={trip.destination} onDone={()=>setShowSurprise(false)}/>}
 
-      {/* Day suggestions */}
       {daySuggestIndex !== null && (
         <DaySuggestions trip={trip} dayIndex={daySuggestIndex}
           onApply={s=>addActivity(daySuggestIndex,s)} onClose={()=>setDaySuggestIndex(null)}/>
@@ -762,15 +766,15 @@ function TripContent() {
       {/* ── Nav ── */}
       <nav className="sticky top-0 z-40 px-3 py-3">
         <div className="max-w-5xl mx-auto flex items-center justify-between bg-white/90 backdrop-blur-xl rounded-2xl px-4 py-3 shadow-sm border border-orange-100">
-          <Link href="/trips" className="text-gray-400 hover:text-gray-600 text-sm font-medium transition-colors">← Trips</Link>
+          <Link href="/trips" className="text-gray-400 hover:text-gray-600 text-sm font-medium transition-colors">← {t("nav_trips")}</Link>
           <div className="flex items-center gap-2">
             <button onClick={()=>setEditMode(e=>!e)}
               className="text-xs font-bold px-3 py-2 rounded-xl border-2 transition-all"
               style={editMode ? {borderColor:"#f97316",background:"#fff7ed",color:"#f97316"} : {borderColor:"#ffedd5",background:"white",color:"#9ca3af"}}>
-              {editMode ? "✓ Done" : "✏️ Edit"}
+              {editMode ? `✓ Done` : t("edit_trip")}
             </button>
             <button onClick={copyLink} className="text-xs font-bold px-3 py-2 rounded-xl text-white shadow-sm" style={{background:hero}}>
-              {copied ? "✓ Copied!" : "🔗 Share"}
+              {copied ? "✓ Copied!" : t("share_trip")}
             </button>
           </div>
         </div>
@@ -792,8 +796,8 @@ function TripContent() {
             <div className="flex-1 min-w-0">
               <div className="flex flex-wrap gap-2 mb-3">
                 {[`${STYLE_ICONS[trip.style]||"🌍"} ${trip.style?.charAt(0).toUpperCase()+trip.style?.slice(1)||"Trip"}`,
-                  `👥 ${trip.travelers} traveler${trip.travelers===1?"":"s"}`,
-                  `🗓️ ${trip.days} days`].map(tag=>(
+                  `👥 ${trip.travelers} ${t("travelers_word")}`,
+                  `🗓️ ${trip.days} ${t("days")}`].map(tag=>(
                   <span key={tag} className="text-xs font-bold px-3 py-1.5 rounded-full" style={{background:"rgba(255,255,255,0.2)",color:"white"}}>{tag}</span>
                 ))}
               </div>
@@ -806,7 +810,7 @@ function TripContent() {
             </div>
             <div className="rounded-2xl p-4 text-center flex-shrink-0" style={{background:"rgba(255,255,255,0.15)",border:"1px solid rgba(255,255,255,0.25)"}}>
               <div className="text-2xl font-black text-white">{trip.currency} {trip.total_estimated_cost?.toLocaleString()}</div>
-              <div className="text-white/60 text-xs mt-1">Budget</div>
+              <div className="text-white/60 text-xs mt-1">{t("budget_label")}</div>
               {trip.travelers>1 && <div className="text-white/50 text-xs mt-0.5">≈ {trip.currency} {Math.round(trip.total_estimated_cost/trip.travelers).toLocaleString()}/person</div>}
             </div>
           </div>
@@ -833,7 +837,7 @@ function TripContent() {
                 className="flex-1 flex flex-col items-center gap-0.5 py-3 transition-all"
                 style={activeTab===tab.id ? {background:hero,color:"white"} : {color:"#9ca3af"}}>
                 <span className="text-base leading-none">{tab.icon}</span>
-                <span className="text-xs font-black">{tab.label}</span>
+                <span className="text-xs font-black">{t(tab.labelKey)}</span>
               </button>
             ))}
           </div>
@@ -879,7 +883,7 @@ function TripContent() {
             {/* Budget Breakdown */}
             {totalBudget > 0 && (
               <section>
-                <h2 className="text-lg font-black text-gray-900 mb-3">💰 Budget Breakdown</h2>
+                <h2 className="text-lg font-black text-gray-900 mb-3">💰 {t("budget_breakdown")}</h2>
                 <div className="bg-white rounded-3xl border border-orange-100 p-5 shadow-sm">
                   <div className="flex h-3 rounded-full overflow-hidden gap-0.5 mb-5">
                     {Object.entries(budget_breakdown).map(([k,v])=>(
@@ -912,7 +916,7 @@ function TripContent() {
                     <button key={i} onClick={()=>setActiveDay(i)}
                       className="flex-shrink-0 px-4 py-2 rounded-2xl text-sm font-bold transition-all"
                       style={activeDay===i ? {background:hero,color:"white",boxShadow:`0 4px 12px ${theme.g[0]}40`} : {background:"white",color:"#6b7280",border:"2px solid #ffedd5"}}>
-                      Day {day.day}
+                      {t("day_label")} {day.day}
                     </button>
                   ))}
                 </div>
@@ -923,7 +927,7 @@ function TripContent() {
                       <div className="flex items-start justify-between gap-4 flex-wrap">
                         <div>
                           <div className="text-xs font-black uppercase tracking-widest mb-1" style={{color:theme.g[0]}}>
-                            Day {daily_itinerary[activeDay].day} · {daily_itinerary[activeDay].date}
+                            {t("day_label")} {daily_itinerary[activeDay].day} · {daily_itinerary[activeDay].date}
                           </div>
                           <h3 className="text-xl font-black text-gray-900">
                             {editMode ? <Editable value={daily_itinerary[activeDay].title} onChange={v=>updateDayField(activeDay,"title",v)}/> : daily_itinerary[activeDay].title}
@@ -944,6 +948,7 @@ function TripContent() {
                     <div className="divide-y divide-orange-50">
                       {daily_itinerary[activeDay].activities?.map((a,j)=>{
                         const ts = TIME_STYLE[a.time]||TIME_STYLE.morning;
+                        const timeLabel = a.time === "morning" ? t("morning") : a.time === "afternoon" ? t("afternoon") : t("evening");
                         return (
                           <div key={j} className="p-4 flex gap-3 hover:bg-orange-50/30 transition-colors group">
                             <div className="flex-shrink-0 pt-0.5">
@@ -951,10 +956,14 @@ function TripContent() {
                                 <select value={a.time} onChange={e=>updateActivity(activeDay,j,"time",e.target.value)}
                                   className="text-xs font-bold px-2 py-1.5 rounded-full border-2 outline-none"
                                   style={{background:ts.bg,color:ts.text,borderColor:ts.bg}}>
-                                  {["morning","afternoon","evening"].map(t=><option key={t} value={t}>{t.charAt(0).toUpperCase()+t.slice(1)}</option>)}
+                                  {["morning","afternoon","evening"].map(tm=>(
+                                    <option key={tm} value={tm}>
+                                      {tm === "morning" ? t("morning") : tm === "afternoon" ? t("afternoon") : t("evening")}
+                                    </option>
+                                  ))}
                                 </select>
                               ) : (
-                                <span className="text-xs font-bold px-3 py-1.5 rounded-full" style={{background:ts.bg,color:ts.text}}>{a.time?.charAt(0).toUpperCase()+a.time?.slice(1)}</span>
+                                <span className="text-xs font-bold px-3 py-1.5 rounded-full" style={{background:ts.bg,color:ts.text}}>{timeLabel}</span>
                               )}
                             </div>
                             <div className="flex-1 min-w-0">
@@ -986,7 +995,7 @@ function TripContent() {
               <section className="space-y-3">
                 {trip.recommended_hotels?.length>0 && (
                   <div className="bg-white rounded-2xl border border-orange-100 p-4 shadow-sm">
-                    <div className="font-black text-gray-900 mb-3 text-sm">🏨 AI Hotel Picks</div>
+                    <div className="font-black text-gray-900 mb-3 text-sm">🏨 {t("hotels")}</div>
                     <div className="space-y-3">
                       {trip.recommended_hotels.map((h,i)=>(
                         <a key={i} href={`https://www.booking.com/search.html?ss=${encodeURIComponent(h.name+" "+trip.destination)}&checkin=${trip.form?.startDate||""}&checkout=${trip.form?.endDate||""}&group_adults=${trip.travelers||2}&aid=1269762&label=tp-712006`}
@@ -998,7 +1007,7 @@ function TripContent() {
                             <div className="text-xs text-orange-500">{h.why}</div>
                           </div>
                           <div className="text-right flex-shrink-0">
-                            <div className="font-black text-sm text-gray-900">{trip.currency} {h.price_per_night?.toLocaleString()}/night</div>
+                            <div className="font-black text-sm text-gray-900">{trip.currency} {h.price_per_night?.toLocaleString()}{t("per_night")}</div>
                             <div className="text-xs text-blue-500 group-hover:text-blue-700">Book →</div>
                           </div>
                         </a>
@@ -1008,14 +1017,14 @@ function TripContent() {
                 )}
                 {trip.recommended_restaurants?.length>0 && (
                   <div className="bg-white rounded-2xl border border-orange-100 p-4 shadow-sm">
-                    <div className="font-black text-gray-900 mb-3 text-sm">🍽️ AI Restaurant Picks</div>
+                    <div className="font-black text-gray-900 mb-3 text-sm">🍽️ {t("restaurants")}</div>
                     <div className="grid grid-cols-2 gap-2">
                       {trip.recommended_restaurants.map((r,i)=>(
                         <a key={i} href={`https://www.google.com/search?q=${encodeURIComponent(r.name+" "+trip.destination)}`}
                           target="_blank" rel="noopener noreferrer" className="rounded-xl border border-orange-100 p-3 hover:border-orange-300 hover:bg-orange-50 transition-all">
                           <div className="font-bold text-gray-900 text-xs">{r.name}</div>
                           <div className="text-xs text-gray-400 mt-0.5">{r.type} · {r.price_range}</div>
-                          <div className="text-xs text-orange-500 mt-1">Try: {r.must_try}</div>
+                          <div className="text-xs text-orange-500 mt-1">{t("must_try")} {r.must_try}</div>
                         </a>
                       ))}
                     </div>
@@ -1031,7 +1040,7 @@ function TripContent() {
             {(tips.length>0||editMode) && (
               <section>
                 <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-lg font-black text-gray-900">💡 Travel Tips</h2>
+                  <h2 className="text-lg font-black text-gray-900">💡 {t("tips_label")}</h2>
                   {editMode && <button onClick={addTip} className="text-xs font-bold px-4 py-2 rounded-xl border-2 border-orange-200 text-orange-500 bg-orange-50">+ Add</button>}
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

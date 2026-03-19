@@ -12,6 +12,7 @@ export async function POST(req) {
     }
 
     const days = Math.max(1, Math.ceil((new Date(endDate) - new Date(startDate)) / 86400000));
+    const isLong = days > 8;
 
     const styleDesc = {
       adventure: "adventure-focused: outdoor activities, hiking, extreme sports",
@@ -53,9 +54,8 @@ Return ONLY valid JSON (no markdown, no text outside JSON):
       "date": "${startDate}",
       "title": "Descriptive day theme",
       "activities": [
-        { "time": "morning", "name": "Activity", "description": "2-sentence description with local details.", "estimated_cost": 0 },
-        { "time": "afternoon", "name": "Activity", "description": "Description.", "estimated_cost": 0 },
-        { "time": "evening", "name": "Activity", "description": "Description.", "estimated_cost": 0 }
+        { "time": "morning", "name": "Activity", "description": "${isLong ? "One short sentence." : "2-sentence description with local details."}", "estimated_cost": 0 },
+        { "time": "afternoon", "name": "Activity", "description": "Description.", "estimated_cost": 0 }${isLong ? "" : `,\n        { "time": "evening", "name": "Activity", "description": "Description.", "estimated_cost": 0 }`}
       ],
       "daily_cost": 0,
       "accommodation": "Hotel/area recommendation"
@@ -71,13 +71,20 @@ Return ONLY valid JSON (no markdown, no text outside JSON):
   ]
 }
 
-Replace ALL 0s with realistic numbers. Stay within ${budget} ${currency} total. Make it amazing.`;
+CRITICAL RULES:
+- Generate ALL ${days} days — do NOT stop early
+- Replace ALL 0s with realistic numbers
+- Stay within ${budget} ${currency} total
+- budget_breakdown must sum to total_estimated_cost
+- recommended_hotels: 3 options | recommended_restaurants: ${isLong ? 3 : 5} options
+- Keep descriptions SHORT${isLong ? " (ONE sentence max) to save space" : ""}`;
+
 
     let message;
     try {
       message = await client.messages.create({
         model: "claude-haiku-4-5-20251001",
-        max_tokens: 4096,
+        max_tokens: isLong ? 6000 : 4096,
         messages: [{ role: "user", content: prompt }],
       });
     } catch (apiErr) {

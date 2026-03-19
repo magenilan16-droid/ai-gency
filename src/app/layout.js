@@ -1,5 +1,6 @@
 import "./globals.css";
 import BottomNav from "./components/BottomNav";
+import { LanguageProvider } from "./LanguageProvider";
 
 export const metadata = {
   title: "AI-gency — Travel OS",
@@ -36,8 +37,10 @@ export default function RootLayout({ children }) {
         <script data-noptimize="1" data-cfasync="false" data-wpfc-render="false" dangerouslySetInnerHTML={{ __html: `(function(){var script=document.createElement("script");script.async=1;script.src='https://tp-em.com/NTA5NTA0.js?t=509504';document.head.appendChild(script);})();` }} />
       </head>
       <body className="font-sans antialiased pb-24" style={{ background: "#FFF8F0" }}>
-        {children}
-        <BottomNav />
+        <LanguageProvider>
+          {children}
+          <BottomNav />
+        </LanguageProvider>
       </body>
     </html>
   );
