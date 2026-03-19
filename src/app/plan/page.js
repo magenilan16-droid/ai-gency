@@ -182,7 +182,7 @@ export default function PlanPage() {
       const res = await fetch("/api/plan-chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: newHistory }),
+        body: JSON.stringify({ messages: history }),
       });
 
       const reader = res.body.getReader();
