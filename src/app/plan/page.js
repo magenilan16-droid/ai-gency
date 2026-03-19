@@ -10,24 +10,151 @@ const CURRENCIES = ["USD", "EUR", "GBP", "ILS", "JPY", "AUD", "CAD"];
 
 // ─── Parse Claude's special markers ──────────────────────────────────────────
 function parseMarkers(text) {
-  const cities = text.match(/\[CITIES:\s*([^\]]+)\]/);
-  const options = text.match(/\[OPTIONS:\s*([^\]]+)\]/);
+  const cities     = text.match(/\[CITIES:\s*([^\]]+)\]/);
+  const options    = text.match(/\[OPTIONS:\s*([^\]]+)\]/);
+  const multiOpts  = text.match(/\[MULTI_OPTIONS:\s*([^\]]+)\]/);
+  const datePicker = /\[DATE_PICKER\]/.test(text);
+  const budgetPicker = /\[BUDGET_PICKER\]/.test(text);
   const readyMatch = text.match(/\[READY\]([\s\S]*?)\[\/READY\]/);
 
   return {
-    cities: cities ? cities[1].split(",").map(s => s.trim()).filter(Boolean) : null,
-    options: options ? options[1].split(",").map(s => s.trim()).filter(Boolean) : null,
+    cities:       cities     ? cities[1].split(",").map(s => s.trim()).filter(Boolean) : null,
+    options:      options    ? options[1].split(",").map(s => s.trim()).filter(Boolean) : null,
+    multiOptions: multiOpts  ? multiOpts[1].split(",").map(s => s.trim()).filter(Boolean) : null,
+    datePicker,
+    budgetPicker,
     ready: readyMatch ? (() => { try { return JSON.parse(readyMatch[1].trim()); } catch { return null; } })() : null,
     cleanText: text
       .replace(/\[CITIES:[^\]]+\]/g, "")
       .replace(/\[OPTIONS:[^\]]+\]/g, "")
+      .replace(/\[MULTI_OPTIONS:[^\]]+\]/g, "")
+      .replace(/\[DATE_PICKER\]/g, "")
+      .replace(/\[BUDGET_PICKER\]/g, "")
       .replace(/\[READY\][\s\S]*?\[\/READY\]/g, "")
       .trim(),
   };
 }
 
+// ─── Interactive widgets ──────────────────────────────────────────────────────
+
+function DatePickerWidget({ onConfirm }) {
+  const today = new Date().toISOString().split("T")[0];
+  const [start, setStart] = useState("");
+  const [end, setEnd]     = useState("");
+  const days = start && end ? Math.ceil((new Date(end) - new Date(start)) / 86400000) : 0;
+
+  return (
+    <div className="mt-3 bg-white rounded-2xl border-2 border-orange-100 p-4 space-y-3">
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <p className="text-xs font-black text-orange-400 uppercase tracking-wide mb-1.5">✈️ Depart</p>
+          <input type="date" value={start} min={today}
+            onChange={e => { setStart(e.target.value); if (end && e.target.value >= end) setEnd(""); }}
+            className="w-full px-3 py-2.5 rounded-xl border-2 border-orange-100 focus:border-orange-300 outline-none text-sm font-medium text-gray-800" />
+        </div>
+        <div>
+          <p className="text-xs font-black text-orange-400 uppercase tracking-wide mb-1.5">🏠 Return</p>
+          <input type="date" value={end} min={start || today}
+            onChange={e => setEnd(e.target.value)}
+            className="w-full px-3 py-2.5 rounded-xl border-2 border-orange-100 focus:border-orange-300 outline-none text-sm font-medium text-gray-800" />
+        </div>
+      </div>
+      {days > 0 && (
+        <p className="text-xs font-black text-orange-500">✓ {days} day trip</p>
+      )}
+      <button
+        disabled={!start || !end || days <= 0}
+        onClick={() => onConfirm(`Departing ${start}, returning ${end} (${days} days)`)}
+        className="w-full py-3.5 rounded-xl text-white text-sm font-black disabled:opacity-40 transition-opacity"
+        style={{ background: G }}>
+        Confirm Dates →
+      </button>
+    </div>
+  );
+}
+
+function BudgetPickerWidget({ currency, onConfirm }) {
+  const PRESETS = [500, 1000, 1500, 2000, 3000, 5000, 8000, 10000];
+  const [selected, setSelected] = useState(null);
+  const [custom, setCustom]     = useState("");
+  const value = selected === "custom" ? Number(custom) : selected;
+
+  return (
+    <div className="mt-3 bg-white rounded-2xl border-2 border-orange-100 p-4 space-y-3">
+      <div className="flex flex-wrap gap-2">
+        {PRESETS.map(p => (
+          <button key={p}
+            onClick={() => { setSelected(p); setCustom(""); }}
+            className="px-3 py-2 rounded-xl text-xs font-black border-2 transition-all"
+            style={selected === p
+              ? { borderColor: "#f97316", background: "#fff7ed", color: "#ea580c" }
+              : { borderColor: "#ffe4cc", background: "white", color: "#6b7280" }}>
+            {currency} {p.toLocaleString()}
+          </button>
+        ))}
+        <button
+          onClick={() => setSelected("custom")}
+          className="px-3 py-2 rounded-xl text-xs font-black border-2 transition-all"
+          style={selected === "custom"
+            ? { borderColor: "#f97316", background: "#fff7ed", color: "#ea580c" }
+            : { borderColor: "#ffe4cc", background: "white", color: "#6b7280" }}>
+          ✏️ Custom
+        </button>
+      </div>
+      {selected === "custom" && (
+        <input
+          type="number" value={custom} onChange={e => setCustom(e.target.value)}
+          placeholder={`Your amount in ${currency}`}
+          className="w-full px-4 py-3 rounded-xl border-2 border-orange-200 focus:border-orange-400 outline-none text-sm font-medium" />
+      )}
+      <button
+        disabled={!value || value <= 0}
+        onClick={() => onConfirm(`My total budget is ${currency} ${Number(value).toLocaleString()}`)}
+        className="w-full py-3.5 rounded-xl text-white text-sm font-black disabled:opacity-40 transition-opacity"
+        style={{ background: G }}>
+        Set Budget →
+      </button>
+    </div>
+  );
+}
+
+function MultiOptionsWidget({ options, onConfirm }) {
+  const [selected, setSelected] = useState(new Set());
+
+  function toggle(o) {
+    setSelected(prev => {
+      const next = new Set(prev);
+      next.has(o) ? next.delete(o) : next.add(o);
+      return next;
+    });
+  }
+
+  return (
+    <div className="mt-3 space-y-3">
+      <div className="flex flex-wrap gap-2">
+        {options.map(o => (
+          <button key={o} onClick={() => toggle(o)}
+            className="px-3 py-2.5 rounded-xl text-xs font-bold border-2 transition-all"
+            style={selected.has(o)
+              ? { borderColor: "#f97316", background: "#fff7ed", color: "#ea580c" }
+              : { borderColor: "#ffe4cc", background: "white", color: "#374151" }}>
+            {o}
+          </button>
+        ))}
+      </div>
+      <button
+        disabled={selected.size === 0}
+        onClick={() => onConfirm(Array.from(selected).join(", "))}
+        className="w-full py-3.5 rounded-xl text-white text-sm font-black disabled:opacity-40 transition-opacity"
+        style={{ background: G }}>
+        {selected.size > 0 ? `Confirm (${selected.size} selected) →` : "Select at least one →"}
+      </button>
+    </div>
+  );
+}
+
 // ─── Chat bubbles ─────────────────────────────────────────────────────────────
-function BotBubble({ text, cities, options, onChip, streaming }) {
+function BotBubble({ text, cities, options, multiOptions, datePicker, budgetPicker, onChip, onWidget, currency, streaming, widgetUsed }) {
   const lines = text.split("\n").filter(Boolean);
   return (
     <div className="flex items-end gap-3">
@@ -39,27 +166,42 @@ function BotBubble({ text, cities, options, onChip, streaming }) {
         </div>
 
         {/* City chips */}
-        {cities && cities.length > 0 && (
+        {!widgetUsed && cities?.length > 0 && (
           <div className="flex flex-wrap gap-2 pl-1">
             {cities.map(c => (
               <button key={c} onClick={() => onChip(c)}
-                className="px-3 py-1.5 rounded-xl text-xs font-bold border-2 border-orange-200 bg-orange-50 text-orange-600 hover:border-orange-400 hover:bg-orange-100 transition-all">
+                className="px-3 py-2 rounded-xl text-xs font-bold border-2 border-orange-200 bg-orange-50 text-orange-600 hover:border-orange-400 hover:bg-orange-100 transition-all">
                 📍 {c}
               </button>
             ))}
           </div>
         )}
 
-        {/* Option chips */}
-        {options && options.length > 0 && (
+        {/* Single-select options */}
+        {!widgetUsed && options?.length > 0 && (
           <div className="flex flex-col gap-2 pl-1">
             {options.map(o => (
               <button key={o} onClick={() => onChip(o)}
-                className="px-4 py-2.5 rounded-xl text-sm font-bold border-2 border-orange-100 bg-white text-gray-700 hover:border-orange-300 hover:bg-orange-50 transition-all text-left">
+                className="px-4 py-3 rounded-xl text-sm font-bold border-2 border-orange-100 bg-white text-gray-700 hover:border-orange-300 hover:bg-orange-50 transition-all text-left shadow-sm">
                 {o}
               </button>
             ))}
           </div>
+        )}
+
+        {/* Multi-select options */}
+        {!widgetUsed && multiOptions?.length > 0 && (
+          <MultiOptionsWidget options={multiOptions} onConfirm={onWidget} />
+        )}
+
+        {/* Date picker */}
+        {!widgetUsed && datePicker && (
+          <DatePickerWidget onConfirm={onWidget} />
+        )}
+
+        {/* Budget picker */}
+        {!widgetUsed && budgetPicker && (
+          <BudgetPickerWidget currency={currency} onConfirm={onWidget} />
         )}
       </div>
     </div>
@@ -140,17 +282,17 @@ function ManualForm({ onSubmit }) {
 export default function PlanPage() {
   const router = useRouter();
   const bottomRef = useRef(null);
-  const inputRef = useRef(null);
-  const [mode, setMode] = useState(null); // null | "ai" | "manual"
+  const inputRef  = useRef(null);
+  const [mode, setMode] = useState(null);
 
-  // AI chat state
-  const [chatMsgs, setChatMsgs] = useState([]); // { role: "user"|"assistant", content: string, cities?, options? }
-  const [input, setInput] = useState("");
-  const [streaming, setStreaming] = useState(false);
-  const [generating, setGenerating] = useState(false);
-  const [error, setError] = useState("");
+  const [chatMsgs, setChatMsgs]       = useState([]);
+  const [input, setInput]             = useState("");
+  const [streaming, setStreaming]     = useState(false);
+  const [generating, setGenerating]   = useState(false);
+  const [error, setError]             = useState("");
   const [collectedData, setCollectedData] = useState(null);
-  const [currency, setCurrency] = useState("USD");
+  const [currency, setCurrency]       = useState("USD");
+  const [usedWidgets, setUsedWidgets] = useState(new Set()); // indices of bot messages whose widget was submitted
 
   function scrollBottom() {
     setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 80);
@@ -158,24 +300,21 @@ export default function PlanPage() {
 
   function startAI() {
     setMode("ai");
-    // Show hardcoded greeting — no API call yet (API requires user message first)
     setChatMsgs([{
       role: "assistant",
-      content: "Hey! I'm Claude, your personal AI travel planner 🌍\nWhere in the world are you dreaming of going? Tell me a country or city!",
-      cities: null, options: null, streaming: false, initial: true,
+      content: "Hey! I'm Claude, your personal AI travel planner 🌍\nWhere in the world are you dreaming of going?",
+      cities: null, options: null, multiOptions: null, datePicker: false, budgetPicker: false, streaming: false, initial: true,
     }]);
     setCollectedData(null);
     setError("");
+    setUsedWidgets(new Set());
   }
 
-  // Stream a response from Claude given a message history (must start with user message)
   async function callClaude(history) {
     if (!history.length || history[0].role !== "user") return;
-
     setStreaming(true);
     let fullText = "";
 
-    // Add empty assistant message placeholder
     setChatMsgs(prev => [...prev, { role: "assistant", content: "", streaming: true }]);
 
     try {
@@ -185,7 +324,7 @@ export default function PlanPage() {
         body: JSON.stringify({ messages: history }),
       });
 
-      const reader = res.body.getReader();
+      const reader  = res.body.getReader();
       const decoder = new TextDecoder();
 
       while (true) {
@@ -209,16 +348,19 @@ export default function PlanPage() {
         }
       }
 
-      // Parse markers from complete text
-      const { cities, options, ready, cleanText } = parseMarkers(fullText);
+      const { cities, options, multiOptions, datePicker, budgetPicker, ready, cleanText } = parseMarkers(fullText);
 
       setChatMsgs(prev => {
         const updated = [...prev];
-        updated[updated.length - 1] = { role: "assistant", content: cleanText || fullText, cities, options, streaming: false };
+        updated[updated.length - 1] = {
+          role: "assistant",
+          content: cleanText || fullText,
+          cities, options, multiOptions, datePicker, budgetPicker,
+          streaming: false,
+        };
         return updated;
       });
 
-      // If Claude is ready to generate
       if (ready) {
         setCollectedData(ready);
         await generateTrip(ready);
@@ -238,14 +380,16 @@ export default function PlanPage() {
     }
   }
 
-  async function sendMessage(text) {
+  function sendMessage(text, fromWidgetIndex = null) {
     if (!text.trim() || streaming || generating) return;
     const userMsg = text.trim();
     setInput("");
     setError("");
 
-    // Build API history: skip initial hardcoded greeting (not sent to API)
-    // Anthropic API requires alternating user/assistant messages, starting with user
+    if (fromWidgetIndex !== null) {
+      setUsedWidgets(prev => new Set([...prev, fromWidgetIndex]));
+    }
+
     const history = chatMsgs
       .filter(m => !m.initial)
       .map(m => ({ role: m.role, content: m.content }));
@@ -253,19 +397,22 @@ export default function PlanPage() {
     setChatMsgs(prev => [...prev, { role: "user", content: userMsg }]);
     scrollBottom();
 
-    await callClaude([...history, { role: "user", content: userMsg }]);
+    callClaude([...history, { role: "user", content: userMsg }]);
   }
 
   async function generateTrip(data) {
     setGenerating(true);
-    setChatMsgs(prev => [...prev, { role: "assistant", content: `Perfect! I have everything I need. 🗺️\n\nGenerating your personalized ${data.destination} itinerary now... This takes about 20 seconds.` }]);
+    setChatMsgs(prev => [...prev, {
+      role: "assistant",
+      content: `Perfect! I have everything I need. 🗺️\n\nBuilding your personalized ${data.destination} itinerary now... This takes about 15 seconds.`,
+    }]);
     scrollBottom();
 
     try {
       const res = await fetch("/api/generate-trip", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...data, currency: currency }),
+        body: JSON.stringify({ ...data, currency }),
       });
       const text = await res.text();
       let tripData;
@@ -279,14 +426,17 @@ export default function PlanPage() {
       router.push(`/trip/${id}`);
     } catch (err) {
       setError(err.message);
-      setChatMsgs(prev => [...prev, { role: "assistant", content: `Oops! ${err.message}\n\nLet me try again — just click retry below.` }]);
+      setChatMsgs(prev => [...prev, {
+        role: "assistant",
+        content: `Oops! ${err.message}\n\nJust click Retry below.`,
+      }]);
     } finally {
       setGenerating(false);
     }
   }
 
   function handleManualSubmit(formData) {
-    const id = generateId();
+    const id   = generateId();
     const trip = createEmptyTrip(formData);
     saveTrip(id, trip);
     router.push(`/trip/${id}?edit=true`);
@@ -318,7 +468,7 @@ export default function PlanPage() {
             <div className="relative">
               <div className="text-3xl mb-3">🤖</div>
               <div className="text-xl font-black mb-1">Chat with Claude AI</div>
-              <div className="text-white/75 text-sm leading-relaxed">Tell me where you want to go. I'll ask the right questions, assess your budget, and build a fully personalized itinerary — with hotel & flight suggestions.</div>
+              <div className="text-white/75 text-sm leading-relaxed">Just answer a few quick taps — Claude asks, you tap. It builds a fully personalized itinerary with hotel & flight suggestions.</div>
               <div className="mt-5 inline-flex items-center gap-2 bg-white/20 rounded-xl px-4 py-2.5 text-sm font-bold">Start Chatting →</div>
             </div>
           </button>
@@ -369,7 +519,6 @@ export default function PlanPage() {
             <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
             <span className="text-sm font-black text-gray-900">Claude AI Planner</span>
           </div>
-          {/* Currency picker */}
           <select value={currency} onChange={e => setCurrency(e.target.value)}
             className="text-xs font-bold px-2 py-1.5 rounded-xl border-2 border-orange-100 bg-white outline-none text-gray-600">
             {CURRENCIES.map(c => <option key={c}>{c}</option>)}
@@ -383,9 +532,19 @@ export default function PlanPage() {
           {chatMsgs.map((m, i) =>
             m.role === "user"
               ? <UserBubble key={i} text={m.content} />
-              : <BotBubble key={i} text={m.content} cities={m.cities} options={m.options}
+              : <BotBubble key={i}
+                  text={m.content}
+                  cities={m.cities}
+                  options={m.options}
+                  multiOptions={m.multiOptions}
+                  datePicker={m.datePicker}
+                  budgetPicker={m.budgetPicker}
                   streaming={m.streaming}
-                  onChip={(chip) => sendMessage(chip)} />
+                  currency={currency}
+                  widgetUsed={usedWidgets.has(i)}
+                  onChip={chip => sendMessage(chip, i)}
+                  onWidget={val => sendMessage(val, i)}
+                />
           )}
           {(streaming || generating) && chatMsgs[chatMsgs.length - 1]?.role === "user" && (
             <div className="flex items-end gap-3">
@@ -421,7 +580,7 @@ export default function PlanPage() {
           {generating ? (
             <div className="flex items-center justify-center gap-3 py-5 text-gray-400">
               <div className="w-5 h-5 rounded-full border-2 border-orange-400 border-t-transparent animate-spin" />
-              <span className="text-sm font-medium">Claude is building your itinerary... (~20 sec)</span>
+              <span className="text-sm font-medium">Claude is building your itinerary... (~15 sec)</span>
             </div>
           ) : (
             <form onSubmit={e => { e.preventDefault(); sendMessage(input); }} className="flex gap-2.5">
@@ -430,7 +589,7 @@ export default function PlanPage() {
                 type="text"
                 value={input}
                 onChange={e => setInput(e.target.value)}
-                placeholder="Type your answer..."
+                placeholder="Or type your answer..."
                 disabled={streaming || generating}
                 className="flex-1 min-w-0 px-4 py-3.5 rounded-2xl outline-none text-gray-900 placeholder-gray-300 text-sm font-medium border-2 border-orange-100 focus:border-orange-300 bg-white transition-all disabled:opacity-50"
               />
