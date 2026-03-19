@@ -206,6 +206,7 @@ export default function CountriesPage() {
   const [mounted, setMounted]       = useState(false);
   const [wishlist, setWishlist]     = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [wishInput, setWishInput]   = useState("");
   const { t } = useLanguage();
 
   useEffect(() => {
@@ -278,20 +279,72 @@ export default function CountriesPage() {
           </p>
         </div>
 
-        {/* Wishlist section — shown only when wishlist has items */}
-        {wishlist.length > 0 && (
-          <div className="mb-5">
-            <p className="text-xs font-black uppercase tracking-widest text-orange-500 mb-2">❤️ Wishlist</p>
-            <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
+        {/* ── Wishlist section — always visible ── */}
+        <div className="mb-5 rounded-2xl border-2 p-4" style={{ borderColor: "#ffedd5", background: "var(--bg-card)" }}>
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-sm font-black text-orange-500">❤️ Dream Destinations</p>
+            <span className="text-xs font-bold px-2 py-1 rounded-full" style={{ background: "#fff7ed", color: "#f97316" }}>
+              {wishlist.length} saved
+            </span>
+          </div>
+
+          {/* Add input */}
+          <div className="flex gap-2 mb-3">
+            <input
+              type="text"
+              value={wishInput}
+              onChange={e => setWishInput(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === "Enter" && wishInput.trim()) {
+                  const name = wishInput.trim();
+                  if (!wishlist.find(w => w.name.toLowerCase() === name.toLowerCase())) {
+                    const updated = [...wishlist, { name, addedAt: Date.now() }];
+                    setWishlist(updated);
+                    saveWishlist(updated);
+                  }
+                  setWishInput("");
+                }
+              }}
+              placeholder="Add a destination... (e.g. Kyoto, Japan)"
+              className="flex-1 text-sm px-3 py-2 rounded-xl border-2 outline-none transition-colors"
+              style={{ borderColor: "#ffedd5", background: "var(--bg-page)" }}
+            />
+            <button
+              onClick={() => {
+                const name = wishInput.trim();
+                if (!name) return;
+                if (!wishlist.find(w => w.name.toLowerCase() === name.toLowerCase())) {
+                  const updated = [...wishlist, { name, addedAt: Date.now() }];
+                  setWishlist(updated);
+                  saveWishlist(updated);
+                }
+                setWishInput("");
+              }}
+              className="px-4 py-2 rounded-xl text-white font-black text-sm flex-shrink-0"
+              style={{ background: G }}
+            >
+              + Add
+            </button>
+          </div>
+
+          {/* Wishlist items */}
+          {wishlist.length === 0 ? (
+            <p className="text-xs text-center py-3" style={{ color: "var(--text-muted)" }}>
+              No destinations saved yet — add places you dream of visiting!
+            </p>
+          ) : (
+            <div className="flex flex-wrap gap-2">
               {wishlist.map(w => (
                 <div
                   key={w.name}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-orange-300 bg-white flex-shrink-0"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border"
+                  style={{ borderColor: "#fed7aa", background: "#fff7ed" }}
                 >
-                  <span className="text-sm font-bold text-gray-800">{w.name}</span>
+                  <span className="text-xs font-bold" style={{ color: "#374151" }}>{w.name}</span>
                   <button
                     onClick={() => removeFromWishlist(w.name)}
-                    className="text-orange-400 hover:text-orange-600 text-xs font-black leading-none"
+                    className="font-black leading-none text-sm"
+                    style={{ color: "#f97316" }}
                     aria-label={`Remove ${w.name} from wishlist`}
                   >
                     ×
@@ -299,8 +352,17 @@ export default function CountriesPage() {
                 </div>
               ))}
             </div>
-          </div>
-        )}
+          )}
+
+          {/* Plan from wishlist */}
+          {wishlist.length > 0 && (
+            <Link href="/plan"
+              className="mt-3 flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-white text-xs font-black"
+              style={{ background: G }}>
+              ✈️ Plan one of these trips →
+            </Link>
+          )}
+        </div>
 
         {countryList.length === 0 ? (
           <div className="text-center py-16">
