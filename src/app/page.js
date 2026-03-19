@@ -30,40 +30,212 @@ function destColor(d) {
   for (const [key, val] of Object.entries(DEST_COLORS)) { if (k.includes(key)) return val; }
   return "#f97316";
 }
-
 function daysUntil(dateStr) {
   if (!dateStr) return null;
-  const diff = Math.ceil((new Date(dateStr) - new Date()) / 86400000);
-  return diff;
+  return Math.ceil((new Date(dateStr) - new Date()) / 86400000);
 }
-
 const STYLE_E = { adventure:"🧗", relaxed:"🏖️", cultural:"🏛️", luxury:"✨", business:"💼" };
 
-export default function Dashboard() {
-  const [trips, setTrips] = useState([]);
-  const [mounted, setMounted] = useState(false);
+// ─── WELCOME PAGE (new users) ──────────────────────────────────────────────
+function WelcomePage() {
+  const [visible, setVisible] = useState(false);
+  useEffect(() => { const t = setTimeout(() => setVisible(true), 80); return () => clearTimeout(t); }, []);
+
+  const FEATURES = [
+    { icon: "🤖", title: "AI-Powered", desc: "Claude AI builds your full day-by-day itinerary in under 30 seconds." },
+    { icon: "💰", title: "Budget Smart", desc: "Set your budget and get a realistic plan with costs per activity." },
+    { icon: "🗓️", title: "Day-by-Day", desc: "Every day planned — activities, hotels, food, and local tips." },
+    { icon: "🔗", title: "Share Instantly", desc: "One link to share your itinerary with friends or family." },
+    { icon: "🧳", title: "Pack Ready", desc: "AI generates a custom packing list based on your destination." },
+    { icon: "🌦️", title: "Live Weather", desc: "Real weather forecast for your travel dates built right in." },
+  ];
+
+  const EXAMPLES = [
+    { dest: "Tokyo, Japan", days: 7, style: "cultural", budget: "$2,400", emoji: "🗾" },
+    { dest: "Bali, Indonesia", days: 10, style: "relaxed", budget: "$1,800", emoji: "🌺" },
+    { dest: "Paris, France", days: 5, style: "luxury", budget: "$3,200", emoji: "🗼" },
+    { dest: "Barcelona, Spain", days: 6, style: "adventure", budget: "$2,100", emoji: "🇪🇸" },
+  ];
+
+  return (
+    <div className="min-h-screen" style={{ background: "var(--bg-page)", overflowX: "hidden" }}>
+
+      {/* ── Hero ── */}
+      <div className="relative min-h-screen flex flex-col items-center justify-center px-5 pt-16 pb-24 text-center overflow-hidden">
+
+        {/* Background orbs */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full opacity-10 blur-3xl pointer-events-none"
+          style={{ background: "linear-gradient(135deg,#f97316,#ec4899)", marginTop: "-100px" }} />
+        <div className="absolute bottom-0 right-0 w-[300px] h-[300px] rounded-full opacity-8 blur-3xl pointer-events-none"
+          style={{ background: "#667eea" }} />
+
+        {/* Badge */}
+        <div
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-full border text-xs font-black mb-6 transition-all duration-700"
+          style={{
+            borderColor: "#ffedd5",
+            background: "rgba(255,237,213,0.6)",
+            color: "#f97316",
+            opacity: visible ? 1 : 0,
+            transform: visible ? "translateY(0)" : "translateY(12px)",
+          }}
+        >
+          <span className="w-2 h-2 rounded-full bg-orange-400 animate-pulse" />
+          Powered by Claude AI · No signup required
+        </div>
+
+        {/* Headline */}
+        <h1
+          className="text-5xl sm:text-6xl font-black leading-none mb-4 transition-all duration-700 delay-100"
+          style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(16px)" }}
+        >
+          <span style={{ color: "var(--text-main)" }}>Your trip is</span>
+          <br />
+          <span style={{
+            background: G,
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            backgroundClip: "text",
+          }}>
+            one click aw-AI
+          </span>
+          <span style={{ color: "var(--text-main)" }}> ✈️</span>
+        </h1>
+
+        {/* Sub */}
+        <p
+          className="text-base sm:text-lg max-w-sm mx-auto leading-relaxed mb-8 transition-all duration-700 delay-150"
+          style={{
+            color: "var(--text-sub)",
+            opacity: visible ? 1 : 0,
+            transform: visible ? "translateY(0)" : "translateY(16px)",
+          }}
+        >
+          Tell Claude where you want to go. Get a complete day-by-day itinerary, budget breakdown, and packing list — in seconds.
+        </p>
+
+        {/* CTA */}
+        <div
+          className="flex flex-col sm:flex-row gap-3 items-center justify-center transition-all duration-700 delay-200"
+          style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(16px)" }}
+        >
+          <Link
+            href="/plan"
+            className="flex items-center gap-2 text-white font-black text-base px-8 py-4 rounded-2xl shadow-xl hover:-translate-y-1 transition-all"
+            style={{ background: G, boxShadow: "0 8px 32px rgba(249,115,22,0.35)" }}
+          >
+            Start Planning — It&apos;s Free
+            <span className="text-white/80">→</span>
+          </Link>
+          <Link
+            href="/trips"
+            className="text-sm font-bold px-6 py-4 rounded-2xl border-2 transition-all hover:bg-orange-50"
+            style={{ borderColor: "#ffedd5", color: "var(--text-sub)" }}
+          >
+            View Example Trips
+          </Link>
+        </div>
+
+        {/* Floating example cards */}
+        <div
+          className="mt-12 w-full max-w-sm mx-auto transition-all duration-700 delay-300"
+          style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(20px)" }}
+        >
+          <div className="grid grid-cols-2 gap-2">
+            {EXAMPLES.map((ex, i) => (
+              <Link key={i} href="/plan"
+                className="rounded-2xl p-3 text-left hover:-translate-y-1 transition-all cursor-pointer"
+                style={{ background: "var(--bg-card)", border: "1px solid var(--border)", boxShadow: "0 2px 12px rgba(0,0,0,0.05)" }}
+              >
+                <div className="text-2xl mb-1">{ex.emoji}</div>
+                <div className="font-black text-xs" style={{ color: "var(--text-main)" }}>{ex.dest}</div>
+                <div className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>{ex.days} days · {ex.budget}</div>
+                <div className="text-xs font-bold mt-1" style={{ color: "#f97316" }}>{ex.style}</div>
+              </Link>
+            ))}
+          </div>
+          <p className="text-center text-xs mt-3" style={{ color: "var(--text-muted)" }}>
+            Click any destination to start planning ↑
+          </p>
+        </div>
+      </div>
+
+      {/* ── How it works ── */}
+      <div className="px-5 pb-16 max-w-lg mx-auto">
+        <h2 className="text-2xl font-black text-center mb-2" style={{ color: "var(--text-main)" }}>
+          How it works
+        </h2>
+        <p className="text-center text-sm mb-8" style={{ color: "var(--text-sub)" }}>
+          Three steps. Zero hassle.
+        </p>
+        <div className="space-y-4">
+          {[
+            { n: "1", icon: "💬", title: "Tell AI what you want", desc: "Chat naturally — destination, dates, budget, travel style. No forms to fill." },
+            { n: "2", icon: "⚡", title: "AI plans everything", desc: "Claude AI creates a full itinerary with activities, hotels, local tips, and cost estimates." },
+            { n: "3", icon: "✈️", title: "Go travel", desc: "Share with friends, export to calendar, print your plan. You&apos;re ready to go." },
+          ].map(step => (
+            <div key={step.n} className="flex gap-4 items-start rounded-2xl p-4"
+              style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}>
+              <div className="w-10 h-10 rounded-2xl flex items-center justify-center text-white font-black text-sm flex-shrink-0"
+                style={{ background: G }}>
+                {step.n}
+              </div>
+              <div>
+                <div className="font-black text-sm mb-0.5" style={{ color: "var(--text-main)" }}>{step.icon} {step.title}</div>
+                <div className="text-xs leading-relaxed" style={{ color: "var(--text-sub)" }}>{step.desc}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Features grid ── */}
+      <div className="px-5 pb-16 max-w-lg mx-auto">
+        <h2 className="text-2xl font-black text-center mb-8" style={{ color: "var(--text-main)" }}>
+          Everything you need
+        </h2>
+        <div className="grid grid-cols-2 gap-3">
+          {FEATURES.map((f, i) => (
+            <div key={i} className="rounded-2xl p-4"
+              style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}>
+              <div className="text-2xl mb-2">{f.icon}</div>
+              <div className="font-black text-sm mb-1" style={{ color: "var(--text-main)" }}>{f.title}</div>
+              <div className="text-xs leading-relaxed" style={{ color: "var(--text-sub)" }}>{f.desc}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Final CTA ── */}
+      <div className="px-5 pb-32 max-w-lg mx-auto">
+        <div className="rounded-3xl p-8 text-white text-center relative overflow-hidden" style={{ background: G }}>
+          <div className="absolute top-0 right-0 text-8xl opacity-10 leading-none font-black -mt-2 -mr-2">✈️</div>
+          <div className="relative">
+            <div className="text-4xl mb-3">🌍</div>
+            <h2 className="text-2xl font-black mb-2">Ready for your next adventure?</h2>
+            <p className="text-white/70 text-sm mb-6">
+              No account needed. No credit card. Just your dream destination.
+            </p>
+            <Link href="/plan"
+              className="inline-flex items-center gap-2 bg-white font-black text-sm px-8 py-3.5 rounded-2xl shadow-lg hover:-translate-y-0.5 transition-all"
+              style={{ color: "#f97316" }}>
+              Plan My Trip Now →
+            </Link>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── DASHBOARD (returning users) ───────────────────────────────────────────
+function Dashboard({ trips }) {
   const { t } = useLanguage();
 
-  useEffect(() => {
-    setMounted(true);
-    setTrips(getAllTrips());
-    const onFocus = () => setTrips(getAllTrips());
-    const onVis = () => { if (document.visibilityState === "visible") setTrips(getAllTrips()); };
-    window.addEventListener("focus", onFocus);
-    document.addEventListener("visibilitychange", onVis);
-    return () => { window.removeEventListener("focus", onFocus); document.removeEventListener("visibilitychange", onVis); };
-  }, []);
-
-  const upcoming = trips.filter(t => t.form?.startDate && daysUntil(t.form.startDate) >= 0).slice(0, 1)[0];
+  const upcoming = trips.filter(tr => tr.form?.startDate && daysUntil(tr.form.startDate) >= 0).slice(0, 1)[0];
   const recent = trips.slice(0, 3);
   const countries = [...new Set(trips.map(tr => tr.destination?.split(",").pop()?.trim()).filter(Boolean))];
   const totalBudget = trips.reduce((s, tr) => s + (tr.total_estimated_cost || 0), 0);
-
-  if (!mounted) return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="w-10 h-10 rounded-full border-4 border-orange-300 border-t-transparent animate-spin" />
-    </div>
-  );
 
   return (
     <div className="min-h-screen" style={{ background: "var(--bg-page)" }}>
@@ -72,18 +244,16 @@ export default function Dashboard() {
         <div className="max-w-2xl mx-auto flex items-center justify-between">
           <div>
             <p className="text-xs font-black text-orange-400 uppercase tracking-widest mb-1">✦ {t("travel_os")}</p>
-            <h1 className="text-3xl font-black text-gray-900">
-              {trips.length === 0 ? t("welcome") : t("your_dashboard")}
-            </h1>
+            <h1 className="text-3xl font-black" style={{ color: "var(--text-main)" }}>{t("your_dashboard")}</h1>
           </div>
-          <span className="text-3xl font-black text-gray-900">✈️ <span style={{ background: G, WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent" }}>AI-gency</span></span>
+          <span className="text-2xl font-black">✈️ <span style={{ background: G, WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent" }}>AI-gency</span></span>
         </div>
       </div>
 
       <div className="max-w-2xl mx-auto px-4 sm:px-6 space-y-5 pb-8">
 
         {/* Upcoming trip hero */}
-        {upcoming ? (
+        {upcoming && (
           <Link href={`/trip/${upcoming.id}`}>
             <div className="rounded-3xl p-6 text-white relative overflow-hidden cursor-pointer hover:-translate-y-0.5 transition-all"
               style={{ background: `linear-gradient(135deg,${destColor(upcoming.destination)},${destColor(upcoming.destination)}99)` }}>
@@ -103,62 +273,34 @@ export default function Dashboard() {
               </div>
             </div>
           </Link>
-        ) : (
-          /* No trips — onboarding hero */
-          <div className="rounded-3xl overflow-hidden relative" style={{ background: G }}>
-            <div className="absolute top-0 right-0 text-[100px] opacity-10 leading-none font-black -mt-4 -mr-4">✈️</div>
-            <div className="relative px-6 py-8">
-              <p className="text-white/70 text-xs font-black uppercase tracking-widest mb-2">✦ {t("travel_os")}</p>
-              <h2 className="text-2xl font-black text-white mb-2">{t("plan_first_trip_title")}</h2>
-              <p className="text-white/70 text-sm mb-5 max-w-sm">{t("ai_builds_itinerary")}</p>
-              <Link href="/plan" className="inline-flex items-center gap-2 bg-white font-black text-sm px-6 py-3 rounded-2xl hover:-translate-y-0.5 transition-all" style={{ color: "#f97316" }}>
-                {t("start_planning")} →
-              </Link>
-            </div>
-          </div>
         )}
 
-        {/* Trust bar */}
-        <div className="flex flex-wrap gap-2">
+        {/* Stats row */}
+        <div className="grid grid-cols-3 gap-3">
           {[
-            "✈️ Powered by Claude AI",
-            "🔒 No signup required",
-            "📱 Works on any device",
-            "🌍 200+ destinations",
-          ].map(label => (
-            <span key={label} className="text-xs font-bold px-3 py-1.5 rounded-full border border-orange-200 text-orange-500" style={{ background: "var(--bg-card-alt)" }}>
-              {label}
-            </span>
+            { icon: "✈️", value: trips.length, labelKey: "stat_trips", href: "/trips" },
+            { icon: "🌍", value: countries.length, labelKey: "stat_countries", href: "/countries" },
+            { icon: "💰", value: `$${Math.round(totalBudget/1000)}k`, labelKey: "stat_planned", href: "/trips" },
+          ].map(s => (
+            <Link key={s.labelKey} href={s.href}
+              className="rounded-2xl border p-4 text-center shadow-sm hover:-translate-y-0.5 transition-all active:scale-95"
+              style={{ background: "var(--bg-card)", borderColor: "var(--border)" }}>
+              <div className="text-2xl mb-1">{s.icon}</div>
+              <div className="text-xl font-black" style={{ color: "var(--text-main)" }}>{s.value}</div>
+              <div className="text-xs font-medium" style={{ color: "var(--text-muted)" }}>{t(s.labelKey)}</div>
+            </Link>
           ))}
         </div>
 
-        {/* Stats row */}
-        {trips.length > 0 && (
-          <div className="grid grid-cols-3 gap-3">
-            {[
-              { icon: "✈️", value: trips.length, labelKey: "stat_trips", href: "/trips" },
-              { icon: "🌍", value: countries.length, labelKey: "stat_countries", href: "/countries" },
-              { icon: "💰", value: `$${Math.round(totalBudget/1000)}k`, labelKey: "stat_planned", href: "/trips" },
-            ].map(s => (
-              <Link key={s.labelKey} href={s.href}
-                className="bg-white rounded-2xl border border-orange-100 p-4 text-center shadow-sm hover:-translate-y-0.5 transition-all active:scale-95">
-                <div className="text-2xl mb-1">{s.icon}</div>
-                <div className="text-xl font-black text-gray-900">{s.value}</div>
-                <div className="text-xs text-gray-400 font-medium">{t(s.labelKey)}</div>
-              </Link>
-            ))}
-          </div>
-        )}
-
         {/* Quick actions */}
         <div>
-          <h2 className="text-lg font-black text-gray-900 mb-3">{t("quick_actions")}</h2>
+          <h2 className="text-lg font-black mb-3" style={{ color: "var(--text-main)" }}>{t("quick_actions")}</h2>
           <div className="grid grid-cols-2 gap-3">
             {[
-              { icon: "🤖", labelKey: "ask_ai_assistant", descKey: "plan_tips_suggestions", href: "/chat", color: G },
-              { icon: "✈️", labelKey: "new_ai_trip", descKey: "chat_based_planning", href: "/plan", color: "linear-gradient(135deg,#f97316,#f59e0b)" },
-              { icon: "💼", labelKey: "business_trip_label", descKey: "per_diems_expenses", href: "/business", color: "linear-gradient(135deg,#10b981,#0ea5e9)" },
-              { icon: "✏️", labelKey: "build_manually", descKey: "full_creative_control", href: "/plan", color: "linear-gradient(135deg,#8b5cf6,#6366f1)" },
+              { icon: "✈️", labelKey: "new_ai_trip", descKey: "chat_based_planning", href: "/plan", color: G },
+              { icon: "🤖", labelKey: "ask_ai_assistant", descKey: "plan_tips_suggestions", href: "/chat", color: "linear-gradient(135deg,#f97316,#f59e0b)" },
+              { icon: "💼", labelKey: "business_trip_label", descKey: "per_diems_expenses", href: "/business", color: "linear-gradient(135deg,#8b5cf6,#6366f1)" },
+              { icon: "🌍", labelKey: "explore_countries", descKey: "discover_destinations", href: "/countries", color: "linear-gradient(135deg,#0d9488,#0ea5e9)" },
             ].map(a => (
               <Link key={a.labelKey} href={a.href}
                 className="rounded-2xl p-4 text-white hover:-translate-y-0.5 transition-all shadow-md"
@@ -175,7 +317,7 @@ export default function Dashboard() {
         {recent.length > 0 && (
           <div>
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-lg font-black text-gray-900">{t("recent_trips")}</h2>
+              <h2 className="text-lg font-black" style={{ color: "var(--text-main)" }}>{t("recent_trips")}</h2>
               <Link href="/trips" className="text-xs font-black text-orange-400 hover:text-orange-600 transition-colors">{t("see_all")} →</Link>
             </div>
             <div className="space-y-3">
@@ -184,14 +326,15 @@ export default function Dashboard() {
                 const d = daysUntil(tr.form?.startDate);
                 return (
                   <Link key={tr.id} href={`/trip/${tr.id}`}
-                    className="flex items-center gap-4 bg-white rounded-2xl border border-orange-100 p-4 shadow-sm hover:-translate-y-0.5 transition-all">
+                    className="flex items-center gap-4 rounded-2xl border p-4 shadow-sm hover:-translate-y-0.5 transition-all"
+                    style={{ background: "var(--bg-card)", borderColor: "var(--border)" }}>
                     <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0"
                       style={{ background: `${color}20` }}>
                       {STYLE_E[tr.style] || "🌍"}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="font-black text-gray-900 text-sm truncate">{tr.destination}</div>
-                      <div className="text-xs text-gray-400">{tr.form?.startDate || t("no_date")} · {tr.days || "?"} {t("days")}</div>
+                      <div className="font-black text-sm truncate" style={{ color: "var(--text-main)" }}>{tr.destination}</div>
+                      <div className="text-xs" style={{ color: "var(--text-muted)" }}>{tr.form?.startDate || t("no_date")} · {tr.days || "?"} {t("days")}</div>
                     </div>
                     <div className="text-right flex-shrink-0">
                       <div className="text-sm font-black" style={{ color }}>{tr.currency} {tr.total_estimated_cost?.toLocaleString()}</div>
@@ -208,24 +351,46 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* AI tip of the day */}
-        <div className="rounded-2xl p-5 bg-white border border-orange-100 shadow-sm">
-          <div className="flex items-start gap-3">
-            <div className="w-10 h-10 rounded-2xl flex items-center justify-center text-xl flex-shrink-0" style={{ background: G }}>🤖</div>
-            <div className="flex-1">
-              <div className="font-black text-gray-900 text-sm mb-1">{t("ai_assistant_title")}</div>
-              <p className="text-gray-500 text-sm leading-relaxed">
-                {trips.length > 0
-                  ? t("trips_count_msg", { n: trips.length, s: trips.length > 1 ? "s" : "" })
-                  : t("no_trips_msg")}
-              </p>
-              <Link href="/chat" className="inline-flex items-center gap-1 mt-2 text-xs font-black text-orange-500 hover:text-orange-600 transition-colors">
-                {t("open_ai_chat")} →
-              </Link>
+        {/* New trip CTA */}
+        <div className="rounded-2xl p-5 text-white relative overflow-hidden" style={{ background: G }}>
+          <div className="absolute top-0 right-0 text-6xl opacity-10 leading-none font-black -mt-1 -mr-2">✈️</div>
+          <div className="relative flex items-center justify-between gap-4">
+            <div>
+              <div className="font-black text-sm mb-0.5">Plan your next trip</div>
+              <div className="text-white/70 text-xs">AI builds your itinerary in seconds</div>
             </div>
+            <Link href="/plan"
+              className="flex-shrink-0 bg-white font-black text-xs px-5 py-2.5 rounded-xl hover:-translate-y-0.5 transition-all"
+              style={{ color: "#f97316" }}>
+              New Trip →
+            </Link>
           </div>
         </div>
       </div>
     </div>
   );
+}
+
+// ─── ROOT ──────────────────────────────────────────────────────────────────
+export default function Home() {
+  const [trips, setTrips] = useState([]);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    setTrips(getAllTrips());
+    const onFocus = () => setTrips(getAllTrips());
+    const onVis = () => { if (document.visibilityState === "visible") setTrips(getAllTrips()); };
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVis);
+    return () => { window.removeEventListener("focus", onFocus); document.removeEventListener("visibilitychange", onVis); };
+  }, []);
+
+  if (!mounted) return (
+    <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--bg-page)" }}>
+      <div className="w-10 h-10 rounded-full border-4 border-orange-300 border-t-transparent animate-spin" />
+    </div>
+  );
+
+  return trips.length === 0 ? <WelcomePage /> : <Dashboard trips={trips} />;
 }
