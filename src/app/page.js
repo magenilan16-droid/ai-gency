@@ -618,9 +618,23 @@ export default function App() {
   const [trips, setTrips] = useState([]);
   const [mounted, setMounted] = useState(false);
 
+  function refreshTrips() {
+    setTrips(getAllTrips());
+  }
+
   useEffect(() => {
     setMounted(true);
-    setTrips(getAllTrips());
+    refreshTrips();
+
+    // Refresh trips when tab becomes visible again (user returns from trip page)
+    const onFocus = () => refreshTrips();
+    const onVisible = () => { if (document.visibilityState === "visible") refreshTrips(); };
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
   }, []);
 
   function handleDelete(id) {

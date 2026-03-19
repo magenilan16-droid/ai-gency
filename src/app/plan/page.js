@@ -193,16 +193,38 @@ export default function PlanPage() {
   async function generateTrip(a) {
     setLoading(true); setError("");
     try {
-      const res = await fetch("/api/generate-trip", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(a) });
-      if (!res.ok) throw new Error((await res.json()).error || "Failed");
-      const data = await res.json();
+      const res = await fetch("/api/generate-trip", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(a),
+      });
+
+      // Always read as text first to avoid JSON parse crash
+      const text = await res.text();
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        throw new Error("Server returned an unexpected response. Please try again.");
+      }
+
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to generate trip. Please try again.");
+      }
+
+      // Save to localStorage BEFORE redirecting
       const id = generateId();
       saveTrip(id, { ...data, form: a });
+
+      // Small delay to ensure save completes
+      await new Promise(r => setTimeout(r, 100));
+
       router.push(`/trip/${id}`);
     } catch (err) {
       setLoading(false);
-      setError(err.message || "Something went wrong.");
-      addMsg("bot", "Oops! Something went wrong 😔 Try again below.", true);
+      const msg = err.message || "Something went wrong. Please try again.";
+      setError(msg);
+      addMsg("bot", `Oops! ${msg}\n\nClick Retry below or go back to change your inputs.`, true);
     }
   }
 
