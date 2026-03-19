@@ -127,7 +127,7 @@ function WelcomePage() {
           className="text-5xl sm:text-6xl font-black leading-none mb-4 transition-all duration-700 delay-100"
           style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(16px)" }}
         >
-          <span style={{ color: "var(--text-main)" }}>Your trip is</span>
+          <span style={{ color: "var(--text-main)" }}>{t("hero_headline_1")}</span>
           <br />
           <span style={{
             background: G,
@@ -135,7 +135,7 @@ function WelcomePage() {
             WebkitTextFillColor: "transparent",
             backgroundClip: "text",
           }}>
-            one click aw-AI
+            {t("hero_headline_2")}
           </span>
           <span style={{ color: "var(--text-main)" }}> ✈️</span>
         </h1>

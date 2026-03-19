@@ -378,6 +378,19 @@ export const translations = {
     dark_mode_title: "Dark mode",
     switch_to_hebrew: "Switch to Hebrew",
     switch_to_english: "Switch to English",
+
+    // Hero headline (page.js)
+    hero_headline_1: "Your trip is",
+    hero_headline_2: "one click aw-AI",
+
+    // Chat page - initial message & quick prompts
+    chat_initial_msg: "Hey! 👋 I'm your AI travel assistant. I can save, edit and delete your trips, plus recommend hotels and flights with real booking links. What would you like to do?",
+    chat_quick_1: "🎲 Compare two destinations for me",
+    chat_quick_2: "💾 Save a new trip for me",
+    chat_quick_3: "🧳 What should I pack?",
+    chat_quick_4: "🏨 Recommend hotels",
+    chat_quick_5: "✈️ Find me cheap flights",
+    chat_quick_6: "💡 Best hidden gems?",
   },
 
   he: {
@@ -757,6 +770,19 @@ export const translations = {
     dark_mode_title: "מצב כהה",
     switch_to_hebrew: "עבור לעברית",
     switch_to_english: "Switch to English",
+
+    // Hero headline (page.js)
+    hero_headline_1: "הטיול שלך",
+    hero_headline_2: "במרחק קליק aw-AI",
+
+    // Chat page - initial message & quick prompts
+    chat_initial_msg: "היי! 👋 אני עוזר הטיול ה-AI שלך. אני יכול לשמור, לערוך ולמחוק טיולים, ולהמליץ על מלונות וטיסות עם קישורי הזמנה. במה אוכל לעזור?",
+    chat_quick_1: "🎲 השווה שני יעדים בשבילי",
+    chat_quick_2: "💾 שמור טיול חדש בשבילי",
+    chat_quick_3: "🧳 מה לארוז?",
+    chat_quick_4: "🏨 המלץ על מלונות",
+    chat_quick_5: "✈️ מצא לי טיסות זולות",
+    chat_quick_6: "💡 אטרקציות נסתרות?",
   },
 };
 

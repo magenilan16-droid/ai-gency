@@ -216,14 +216,7 @@ function MessageContent({ text }) {
 
 // ─── Quick prompts ──────────────────────────────────────────────────────────
 
-const QUICK_PROMPTS = [
-  "🎲 Compare two destinations for me",
-  "💾 Save a new trip for me",
-  "🧳 What should I pack?",
-  "🏨 Recommend hotels",
-  "✈️ Find me cheap flights",
-  "💡 Best hidden gems?",
-];
+// QUICK_PROMPTS moved inside component to use t()
 
 // ─── Main component ─────────────────────────────────────────────────────────
 
@@ -232,7 +225,11 @@ function ChatContent() {
   const searchParams = useSearchParams();
   const initialTripId = searchParams.get("tripId");
 
-  const INITIAL_MESSAGE = { role: "assistant", content: "Hey! 👋 I'm your AI travel assistant. I can save, edit and delete your trips, plus recommend hotels and flights with real booking links. What would you like to do?" };
+  const QUICK_PROMPTS = [
+    t("chat_quick_1"), t("chat_quick_2"), t("chat_quick_3"),
+    t("chat_quick_4"), t("chat_quick_5"), t("chat_quick_6"),
+  ];
+  const INITIAL_MESSAGE = { role: "assistant", content: t("chat_initial_msg") };
 
   const [trips, setTrips] = useState([]);
   const [selectedTripId, setSelectedTripId] = useState(initialTripId || "");
@@ -259,10 +256,20 @@ function ChatContent() {
     } else if (initialTripId && allTrips.find(tr => tr.id === initialTripId)) {
       setSelectedTripId(initialTripId);
       const trip = allTrips.find(tr => tr.id === initialTripId);
-      const welcomeBack = { role: "assistant", content: `Hey! 👋 I'm focused on your **${trip.destination}** trip. I can edit it, suggest hotels & flights, or help with anything else!` };
+      const welcomeBack = { role: "assistant", content: t("chat_focused_greeting", { dest: trip.destination }) };
       setMessages([welcomeBack]);
     }
   }, []);
+
+  // Update initial greeting when language changes (useState only runs once with initial lang)
+  useEffect(() => {
+    setMessages(prev => {
+      if (prev.length === 1 && prev[0].role === "assistant") {
+        return [{ role: "assistant", content: t("chat_initial_msg") }];
+      }
+      return prev;
+    });
+  }, [lang]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
