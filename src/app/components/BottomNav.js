@@ -64,14 +64,14 @@ export default function BottomNav() {
           <button
             onClick={toggleDark}
             className="text-sm leading-none hover:scale-110 transition-transform"
-            title={dark ? "Light mode" : "Dark mode"}
+            title={dark ? t("light_mode_title") : t("dark_mode_title")}
           >
             {dark ? "☀️" : "🌙"}
           </button>
           <button
             onClick={() => setLang(lang === "en" ? "he" : "en")}
             className="text-base leading-none hover:scale-110 transition-transform"
-            title={lang === "en" ? "Switch to Hebrew" : "החלף לאנגלית"}
+            title={lang === "en" ? t("switch_to_hebrew") : t("switch_to_english")}
           >
             {lang === "en" ? "🇮🇱" : "🇺🇸"}
           </button>

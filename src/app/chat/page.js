@@ -371,15 +371,15 @@ function ChatContent() {
 
       {/* Header */}
       <div className="px-4 pt-8 pb-3 max-w-2xl mx-auto w-full">
-        <p className="text-xs font-black text-orange-400 uppercase tracking-widest mb-1">✦ AI Assistant</p>
+        <p className="text-xs font-black text-orange-400 uppercase tracking-widest mb-1">{t("ai_assistant_label")}</p>
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-black text-gray-900">AI Chat</h1>
+          <h1 className="text-2xl font-black text-gray-900">{t("ai_chat_title")}</h1>
           <select
             value={selectedTripId}
             onChange={e => setSelectedTripId(e.target.value)}
             className="text-xs font-bold px-3 py-2 rounded-xl border-2 border-orange-100 bg-white text-gray-600 max-w-[160px] truncate"
           >
-            <option value="">No trip selected</option>
+            <option value="">{t("no_trip_selected")}</option>
             {trips.map(trip => (
               <option key={trip.id} value={trip.id}>{trip.destination || "Untitled"}</option>
             ))}
@@ -399,7 +399,7 @@ function ChatContent() {
             <div className="flex items-center gap-2">
               <span className="text-base">💬</span>
               <div>
-                <p className="text-xs font-black text-orange-700">Continuing your conversation</p>
+                <p className="text-xs font-black text-orange-700">{t("continuing_conversation")}</p>
                 <p className="text-xs text-orange-400">Saved {timeAgo(restoredAt)}</p>
               </div>
             </div>

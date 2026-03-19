@@ -99,10 +99,11 @@ function EditableNumber({ value, onChange, prefix = "", className = "" }) {
 // ─── AI Chat Panel (overlay) ──────────────────────────────────────────────────
 function AIChatPanel({ trip, onClose }) {
   const G = "linear-gradient(135deg,#f97316,#ec4899)";
-  const [msgs, setMsgs] = useState([{ role: "assistant", content: `Hey! 👋 I know all about your **${trip.destination}** trip. Ask me anything!` }]);
+  const { t } = useLanguage();
+  const [msgs, setMsgs] = useState([{ role: "assistant", content: t("ai_panel_greeting", { dest: trip.destination }) }]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const QUICK = ["Best restaurants nearby?", "What to pack?", "Hidden gems?", "Is it safe?", "Best photo spots?"];
+  const QUICK = [t("quick_prompt_restaurants"), t("quick_prompt_packing"), t("quick_prompt_gems"), t("quick_prompt_safety"), t("quick_prompt_photos")];
 
   async function send(text) {
     if (!text.trim() || loading) return;
@@ -121,7 +122,7 @@ function AIChatPanel({ trip, onClose }) {
           }
         }
       }
-    } catch { setMsgs(prev => [...prev, { role: "assistant", content: "Sorry, something went wrong." }]); }
+    } catch { setMsgs(prev => [...prev, { role: "assistant", content: t("error_something_wrong") }]); }
     finally { setLoading(false); }
   }
 
@@ -130,8 +131,8 @@ function AIChatPanel({ trip, onClose }) {
       <div className="flex items-center gap-3 px-4 pt-8 pb-4 bg-white border-b border-orange-100">
         <button onClick={onClose} className="w-9 h-9 rounded-xl bg-orange-50 flex items-center justify-center text-orange-400 font-black text-lg">←</button>
         <div className="w-9 h-9 rounded-2xl flex items-center justify-center text-lg" style={{ background: G }}>🤖</div>
-        <div><div className="font-black text-gray-900 text-sm">AI Assistant</div><div className="text-xs text-gray-400">{trip.destination}</div></div>
-        <Link href={`/chat?tripId=${trip.id || ""}`} className="ml-auto text-xs font-bold text-orange-500 border-2 border-orange-100 px-3 py-1.5 rounded-xl hover:bg-orange-50">Full Chat →</Link>
+        <div><div className="font-black text-gray-900 text-sm">{t("ask_ai_btn")}</div><div className="text-xs text-gray-400">{trip.destination}</div></div>
+        <Link href={`/chat?tripId=${trip.id || ""}`} className="ml-auto text-xs font-bold text-orange-500 border-2 border-orange-100 px-3 py-1.5 rounded-xl hover:bg-orange-50">{t("full_chat_link")}</Link>
       </div>
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
         {msgs.map((m, i) => (
@@ -156,6 +157,7 @@ function AIChatPanel({ trip, onClose }) {
 // ─── Day Suggestions ──────────────────────────────────────────────────────────
 function DaySuggestions({ trip, dayIndex, onApply, onClose }) {
   const G = "linear-gradient(135deg,#f97316,#ec4899)";
+  const { t } = useLanguage();
   const [suggestions, setSuggestions] = useState(null);
   const [loading, setLoading] = useState(true);
   const day = trip.daily_itinerary?.[dayIndex];
@@ -169,11 +171,11 @@ function DaySuggestions({ trip, dayIndex, onApply, onClose }) {
     <div className="fixed inset-0 z-50 bg-black/40 flex items-end" onClick={onClose}>
       <div className="bg-white rounded-t-3xl w-full max-w-lg mx-auto p-6 max-h-[80vh] overflow-y-auto" onClick={e=>e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
-          <div><div className="font-black text-gray-900">✨ AI Suggestions</div><div className="text-xs text-gray-400">Day {day?.day} — {day?.title}</div></div>
+          <div><div className="font-black text-gray-900">{t("ai_suggestions_title")}</div><div className="text-xs text-gray-400">Day {day?.day} — {day?.title}</div></div>
           <button onClick={onClose} className="text-gray-400 font-black text-xl w-9 h-9 rounded-xl bg-gray-50 flex items-center justify-center">×</button>
         </div>
-        {loading ? <div className="flex flex-col items-center py-10 gap-3"><div className="w-10 h-10 rounded-full border-4 border-orange-300 border-t-transparent animate-spin"/><p className="text-sm text-gray-400">Getting alternatives...</p></div>
-          : !suggestions?.length ? <p className="text-center py-8 text-gray-400 text-sm">No suggestions available.</p>
+        {loading ? <div className="flex flex-col items-center py-10 gap-3"><div className="w-10 h-10 rounded-full border-4 border-orange-300 border-t-transparent animate-spin"/><p className="text-sm text-gray-400">{t("getting_alternatives")}</p></div>
+          : !suggestions?.length ? <p className="text-center py-8 text-gray-400 text-sm">{t("no_suggestions")}</p>
           : <div className="space-y-3">{suggestions.map((s,i)=>{const ts=TIME_STYLE[s.time]||TIME_STYLE.morning; return (
             <div key={i} className="border-2 border-orange-100 rounded-2xl p-4">
               <div className="flex items-start justify-between gap-2 mb-2">
@@ -182,7 +184,7 @@ function DaySuggestions({ trip, dayIndex, onApply, onClose }) {
               </div>
               <div className="font-black text-gray-900 text-sm mb-1">{s.name}</div>
               <p className="text-xs text-gray-400 mb-3">{s.description}</p>
-              <button onClick={()=>{onApply(s);onClose();}} className="w-full py-2 rounded-xl text-white text-xs font-black" style={{background:G}}>+ Add to Day {day?.day}</button>
+              <button onClick={()=>{onApply(s);onClose();}} className="w-full py-2 rounded-xl text-white text-xs font-black" style={{background:G}}>{t("add_to_day_btn", { n: day?.day })}</button>
             </div>);})}</div>}
       </div>
     </div>
@@ -191,6 +193,7 @@ function DaySuggestions({ trip, dayIndex, onApply, onClose }) {
 
 // ─── Currency Widget ──────────────────────────────────────────────────────────
 function CurrencyWidget({ baseCurrency, amount }) {
+  const { t } = useLanguage();
   const [rates, setRates] = useState(null);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
@@ -205,11 +208,11 @@ function CurrencyWidget({ baseCurrency, amount }) {
   return (
     <div className="bg-white rounded-2xl border border-orange-100 shadow-sm overflow-hidden">
       <button onClick={fetchRates} className="w-full flex items-center justify-between px-4 py-3">
-        <div className="flex items-center gap-2"><span className="text-lg">💱</span><span className="font-black text-gray-900 text-sm">Currency Converter</span></div>
+        <div className="flex items-center gap-2"><span className="text-lg">💱</span><span className="font-black text-gray-900 text-sm">{t("currency_converter_title")}</span></div>
         {loading ? <div className="w-4 h-4 rounded-full border-2 border-orange-300 border-t-transparent animate-spin"/> : <span className="text-gray-400 text-sm">{open?"▲":"▼"}</span>}
       </button>
       {open && <div className="px-4 pb-4 border-t border-orange-50">
-        {loading ? <div className="py-3 text-sm text-gray-400">Fetching live rates...</div>
+        {loading ? <div className="py-3 text-sm text-gray-400">{t("fetching_rates")}</div>
           : filtered.length > 0 ? <>
             <p className="text-xs text-gray-400 py-2">{baseCurrency} {amount?.toLocaleString()} equals:</p>
             <div className="grid grid-cols-2 gap-2">{filtered.map(([c,rate])=>(
@@ -218,8 +221,8 @@ function CurrencyWidget({ baseCurrency, amount }) {
                 <span className="text-sm font-black text-gray-900">{(amount*rate).toLocaleString(undefined,{maximumFractionDigits:0})}</span>
               </div>
             ))}</div>
-            <p className="text-xs text-gray-300 mt-2 text-center">Live rates · Not financial advice</p>
-          </> : <p className="text-sm text-red-400 py-2">Could not load rates.</p>}
+            <p className="text-xs text-gray-300 mt-2 text-center">{t("live_rates_disclaimer")}</p>
+          </> : <p className="text-sm text-red-400 py-2">{t("could_not_load_rates")}</p>}
       </div>}
     </div>
   );
@@ -227,6 +230,7 @@ function CurrencyWidget({ baseCurrency, amount }) {
 
 // ─── Booking Section ──────────────────────────────────────────────────────────
 function BookingSection({ trip }) {
+  const { t } = useLanguage();
   const city = encodeURIComponent(trip.destination?.split(",")[0] || "");
   const checkin = trip.form?.startDate || "";
   const checkout = trip.form?.endDate || "";
@@ -244,7 +248,7 @@ function BookingSection({ trip }) {
   ];
   return (
     <section>
-      <h2 className="text-lg font-black text-gray-900 mb-3">✈️ Book Your Trip</h2>
+      <h2 className="text-lg font-black text-gray-900 mb-3">{t("book_your_trip_title")}</h2>
       <div className="grid grid-cols-2 gap-3 mb-4">
         {links.map(b=>(
           <a key={b.label} href={b.href} target="_blank" rel="noopener noreferrer"
@@ -319,7 +323,7 @@ function WeatherWidget({ destination, startDate, endDate }) {
       {open && !loading && (
         <div className="px-4 pb-4 border-t border-orange-50">
           {!weather ? (
-            <p className="text-sm text-gray-400 py-3 text-center">Could not load weather.</p>
+            <p className="text-sm text-gray-400 py-3 text-center">{t("could_not_load_weather")}</p>
           ) : (
             <>
               <p className="text-xs text-gray-400 py-2">{weather.loc.name}, {weather.loc.country}</p>
@@ -338,7 +342,7 @@ function WeatherWidget({ destination, startDate, endDate }) {
                   ))}
                 </div>
               </div>
-              <p className="text-xs text-gray-300 mt-2 text-center">Open-Meteo · Not a forecast guarantee</p>
+              <p className="text-xs text-gray-300 mt-2 text-center">{t("weather_disclaimer")}</p>
             </>
           )}
         </div>
@@ -966,7 +970,7 @@ function TripContent() {
                 : { borderColor: "#ffedd5", color: "#9ca3af", background: "transparent" }
               }
             >
-              {editMode ? "✓ Editing" : "✏️ Edit"}
+              {editMode ? t("editing_active") : t("edit_btn_label")}
             </button>
             <button onClick={handlePrint} disabled={printLoading} className="no-print text-xs font-bold px-3 py-2 rounded-xl border-2 border-orange-100 text-gray-500 hover:bg-orange-50 transition-all disabled:opacity-50">
               {printLoading ? "⏳" : "🖨️"}
@@ -984,8 +988,8 @@ function TripContent() {
       {editMode && (
         <div className="mx-3 mb-3 rounded-2xl px-5 py-3 flex items-center gap-3 text-sm" style={{background:"#fff7ed",border:"2px solid #fed7aa"}}>
           <span className="text-orange-500">✏️</span>
-          <span className="text-orange-700 font-bold">Edit Mode — tap any text to change it</span>
-          {saved && <span className="ml-auto text-green-600 font-bold text-xs">✓ Saved!</span>}
+          <span className="text-orange-700 font-bold">{t("edit_mode_hint")}</span>
+          {saved && <span className="ml-auto text-green-600 font-bold text-xs">{t("saved_indicator")}</span>}
         </div>
       )}
 
@@ -1226,7 +1230,7 @@ function TripContent() {
                           </div>
                           <div className="text-right flex-shrink-0">
                             <div className="font-black text-sm text-gray-900">{trip.currency} {h.price_per_night?.toLocaleString()}{t("per_night")}</div>
-                            <div className="text-xs text-blue-500 group-hover:text-blue-700">Book →</div>
+                            <div className="text-xs text-blue-500 group-hover:text-blue-700">{t("book_link")}</div>
                           </div>
                         </a>
                       ))}

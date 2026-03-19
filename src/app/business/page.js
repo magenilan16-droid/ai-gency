@@ -99,7 +99,7 @@ export default function BusinessPage() {
     <div className="min-h-screen" style={{ background: "var(--bg-page)" }}>
       <div className="px-4 sm:px-6 pt-8 pb-4 max-w-2xl mx-auto">
         {/* Header */}
-        <p className="text-xs font-black text-orange-400 uppercase tracking-widest mb-1">✦ Business Travel</p>
+        <p className="text-xs font-black text-orange-400 uppercase tracking-widest mb-1">{t("business_label")}</p>
         <h1 className="text-3xl font-black text-gray-900 mb-5">{t("business_title")}</h1>
 
         {/* Tabs */}
@@ -145,7 +145,7 @@ export default function BusinessPage() {
             <div className="rounded-3xl p-5 text-white relative overflow-hidden" style={{ background: G }}>
               <div className="absolute top-0 right-0 text-8xl opacity-10 font-black -mt-2 -mr-2">💼</div>
               <div className="relative">
-                <p className="text-white/70 text-xs font-black uppercase tracking-widest mb-3">Total Per Diem — {days} days in {city}</p>
+                <p className="text-white/70 text-xs font-black uppercase tracking-widest mb-3">{t("grand_total")} — {days} days in {city}</p>
                 <div className="text-4xl font-black mb-4">${totalPerDiem.toLocaleString()}</div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="bg-white/20 rounded-2xl p-3">
@@ -198,7 +198,7 @@ export default function BusinessPage() {
               {expenses.length > 0 && (
                 <button onClick={exportCSV}
                   className="py-3 px-4 rounded-2xl font-black text-sm border-2 border-orange-100 text-orange-500 bg-white hover:bg-orange-50 transition-colors">
-                  ⬇️ CSV
+                  {t("export_csv_btn")}
                 </button>
               )}
             </div>

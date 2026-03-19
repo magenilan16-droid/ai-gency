@@ -75,16 +75,17 @@ const STYLE_E = { adventure:"🧗", relaxed:"🏖️", cultural:"🏛️", luxur
 
 // ─── WELCOME PAGE (new users) ──────────────────────────────────────────────
 function WelcomePage() {
+  const { t } = useLanguage();
   const [visible, setVisible] = useState(false);
   useEffect(() => { const t = setTimeout(() => setVisible(true), 80); return () => clearTimeout(t); }, []);
 
   const FEATURES = [
-    { icon: "🤖", title: "AI-Powered", desc: "Claude AI builds your full day-by-day itinerary in under 30 seconds." },
-    { icon: "💰", title: "Budget Smart", desc: "Set your budget and get a realistic plan with costs per activity." },
-    { icon: "🗓️", title: "Day-by-Day", desc: "Every day planned — activities, hotels, food, and local tips." },
-    { icon: "🔗", title: "Share Instantly", desc: "One link to share your itinerary with friends or family." },
-    { icon: "🧳", title: "Pack Ready", desc: "AI generates a custom packing list based on your destination." },
-    { icon: "🌦️", title: "Live Weather", desc: "Real weather forecast for your travel dates built right in." },
+    { icon: "🤖", title: t("feature_ai_title"), desc: t("feature_ai_desc") },
+    { icon: "💰", title: t("feature_budget_title"), desc: t("feature_budget_desc") },
+    { icon: "🗓️", title: t("feature_daybyday_title"), desc: t("feature_daybyday_desc") },
+    { icon: "🔗", title: t("feature_share_title"), desc: t("feature_share_desc") },
+    { icon: "🧳", title: t("feature_packing_title"), desc: t("feature_packing_desc") },
+    { icon: "🌦️", title: t("feature_weather_title"), desc: t("feature_weather_desc") },
   ];
 
   const EXAMPLES = [
@@ -118,7 +119,7 @@ function WelcomePage() {
           }}
         >
           <span className="w-2 h-2 rounded-full bg-orange-400 animate-pulse" />
-          Powered by Claude AI · No signup required
+          {t("hero_badge_text")}
         </div>
 
         {/* Headline */}
@@ -148,7 +149,7 @@ function WelcomePage() {
             transform: visible ? "translateY(0)" : "translateY(16px)",
           }}
         >
-          Tell Claude where you want to go. Get a complete day-by-day itinerary, budget breakdown, and packing list — in seconds.
+          {t("hero_subtitle")}
         </p>
 
         {/* CTA */}
@@ -161,7 +162,7 @@ function WelcomePage() {
             className="flex items-center gap-2 text-white font-black text-base px-8 py-4 rounded-2xl shadow-xl hover:-translate-y-1 transition-all"
             style={{ background: G, boxShadow: "0 8px 32px rgba(249,115,22,0.35)" }}
           >
-            Start Planning — It&apos;s Free
+            {t("hero_cta_main")}
             <span className="text-white/80">→</span>
           </Link>
           <Link
@@ -169,7 +170,7 @@ function WelcomePage() {
             className="text-sm font-bold px-6 py-4 rounded-2xl border-2 transition-all hover:bg-orange-50"
             style={{ borderColor: "#ffedd5", color: "var(--text-sub)" }}
           >
-            View Example Trips
+            {t("view_examples_btn")}
           </Link>
         </div>
 
@@ -192,7 +193,7 @@ function WelcomePage() {
             ))}
           </div>
           <p className="text-center text-xs mt-3" style={{ color: "var(--text-muted)" }}>
-            Click any destination to start planning ↑
+            {t("click_destination_hint")}
           </p>
         </div>
       </div>
@@ -200,16 +201,16 @@ function WelcomePage() {
       {/* ── How it works ── */}
       <div className="px-5 pb-16 max-w-lg mx-auto">
         <h2 className="text-2xl font-black text-center mb-2" style={{ color: "var(--text-main)" }}>
-          How it works
+          {t("how_it_works_title")}
         </h2>
         <p className="text-center text-sm mb-8" style={{ color: "var(--text-sub)" }}>
-          Three steps. Zero hassle.
+          {t("three_steps_subtitle")}
         </p>
         <div className="space-y-4">
           {[
-            { n: "1", icon: "💬", title: "Tell AI what you want", desc: "Chat naturally — destination, dates, budget, travel style. No forms to fill." },
-            { n: "2", icon: "⚡", title: "AI plans everything", desc: "Claude AI creates a full itinerary with activities, hotels, local tips, and cost estimates." },
-            { n: "3", icon: "✈️", title: "Go travel", desc: "Share with friends, export to calendar, print your plan. You&apos;re ready to go." },
+            { n: "1", icon: "💬", title: t("step1_title"), desc: t("step1_desc") },
+            { n: "2", icon: "⚡", title: t("step2_title"), desc: t("step2_desc") },
+            { n: "3", icon: "✈️", title: t("step3_title"), desc: t("step3_desc") },
           ].map(step => (
             <div key={step.n} className="flex gap-4 items-start rounded-2xl p-4"
               style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}>
@@ -229,7 +230,7 @@ function WelcomePage() {
       {/* ── Features grid ── */}
       <div className="px-5 pb-16 max-w-lg mx-auto">
         <h2 className="text-2xl font-black text-center mb-8" style={{ color: "var(--text-main)" }}>
-          Everything you need
+          {t("features_title")}
         </h2>
         <div className="grid grid-cols-2 gap-3">
           {FEATURES.map((f, i) => (
@@ -249,14 +250,14 @@ function WelcomePage() {
           <div className="absolute top-0 right-0 text-8xl opacity-10 leading-none font-black -mt-2 -mr-2">✈️</div>
           <div className="relative">
             <div className="text-4xl mb-3">🌍</div>
-            <h2 className="text-2xl font-black mb-2">Ready for your next adventure?</h2>
+            <h2 className="text-2xl font-black mb-2">{t("final_cta_title")}</h2>
             <p className="text-white/70 text-sm mb-6">
-              No account needed. No credit card. Just your dream destination.
+              {t("final_cta_subtitle")}
             </p>
             <Link href="/plan"
               className="inline-flex items-center gap-2 bg-white font-black text-sm px-8 py-3.5 rounded-2xl shadow-lg hover:-translate-y-0.5 transition-all"
               style={{ color: "#f97316" }}>
-              Plan My Trip Now →
+              {t("final_cta_btn")}
             </Link>
           </div>
         </div>
@@ -394,13 +395,13 @@ function Dashboard({ trips }) {
           <div className="absolute top-0 right-0 text-6xl opacity-10 leading-none font-black -mt-1 -mr-2">✈️</div>
           <div className="relative flex items-center justify-between gap-4">
             <div>
-              <div className="font-black text-sm mb-0.5">Plan your next trip</div>
-              <div className="text-white/70 text-xs">AI builds your itinerary in seconds</div>
+              <div className="font-black text-sm mb-0.5">{t("next_trip_cta_title")}</div>
+              <div className="text-white/70 text-xs">{t("next_trip_cta_subtitle")}</div>
             </div>
             <Link href="/plan"
               className="flex-shrink-0 bg-white font-black text-xs px-5 py-2.5 rounded-xl hover:-translate-y-0.5 transition-all"
               style={{ color: "#f97316" }}>
-              New Trip →
+              {t("new_trip_link")}
             </Link>
           </div>
         </div>

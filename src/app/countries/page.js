@@ -282,9 +282,9 @@ export default function CountriesPage() {
         {/* ── Wishlist section — always visible ── */}
         <div className="mb-5 rounded-2xl border-2 p-4" style={{ borderColor: "#ffedd5", background: "var(--bg-card)" }}>
           <div className="flex items-center justify-between mb-3">
-            <p className="text-sm font-black text-orange-500">❤️ Dream Destinations</p>
+            <p className="text-sm font-black text-orange-500">{t("dream_destinations_title")}</p>
             <span className="text-xs font-bold px-2 py-1 rounded-full" style={{ background: "#fff7ed", color: "#f97316" }}>
-              {wishlist.length} saved
+              {t("items_saved", { n: wishlist.length })}
             </span>
           </div>
 
@@ -305,7 +305,7 @@ export default function CountriesPage() {
                   setWishInput("");
                 }
               }}
-              placeholder="Add a destination... (e.g. Kyoto, Japan)"
+              placeholder={t("add_destination_placeholder")}
               className="flex-1 text-sm px-3 py-2 rounded-xl border-2 outline-none transition-colors"
               style={{ borderColor: "#ffedd5", background: "var(--bg-page)" }}
             />
@@ -323,14 +323,14 @@ export default function CountriesPage() {
               className="px-4 py-2 rounded-xl text-white font-black text-sm flex-shrink-0"
               style={{ background: G }}
             >
-              + Add
+              {t("add_btn")}
             </button>
           </div>
 
           {/* Wishlist items */}
           {wishlist.length === 0 ? (
             <p className="text-xs text-center py-3" style={{ color: "var(--text-muted)" }}>
-              No destinations saved yet — add places you dream of visiting!
+              {t("no_wishlist_msg")}
             </p>
           ) : (
             <div className="flex flex-wrap gap-2">
@@ -345,7 +345,7 @@ export default function CountriesPage() {
                     onClick={() => removeFromWishlist(w.name)}
                     className="font-black leading-none text-sm"
                     style={{ color: "#f97316" }}
-                    aria-label={`Remove ${w.name} from wishlist`}
+                    aria-label={t("remove_wishlist_aria") + " " + w.name}
                   >
                     ×
                   </button>
@@ -359,7 +359,7 @@ export default function CountriesPage() {
             <Link href="/plan"
               className="mt-3 flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-white text-xs font-black"
               style={{ background: G }}>
-              ✈️ Plan one of these trips →
+              {t("plan_wishlist_trips")}
             </Link>
           )}
         </div>
@@ -383,7 +383,7 @@ export default function CountriesPage() {
                 type="text"
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                placeholder="Search countries..."
+                placeholder={t("countries_search")}
                 className="w-full bg-white border border-orange-100 rounded-2xl pl-10 pr-10 py-3 text-sm font-medium text-gray-800 placeholder-gray-300 shadow-sm outline-none focus:border-orange-400 transition-colors"
               />
               {searchQuery && (
@@ -400,7 +400,7 @@ export default function CountriesPage() {
             {/* No results message */}
             {filteredList.length === 0 ? (
               <div className="text-center py-10">
-                <p className="text-gray-400 font-medium">No results for &ldquo;{searchQuery}&rdquo;</p>
+                <p className="text-gray-400 font-medium">{t("no_search_results", { q: searchQuery })}</p>
               </div>
             ) : (
               <div className="space-y-3">
