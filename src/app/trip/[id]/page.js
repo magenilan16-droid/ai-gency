@@ -1,36 +1,64 @@
 "use client";
 
-import { useEffect, useState, useCallback, Suspense } from "react";
+import { useEffect, useState, useCallback, useRef, Suspense } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { getTrip, updateTrip } from "@/lib/trips";
+import { getTrip, updateTrip, generateId } from "@/lib/trips";
 
-// ─── Destination themes ────────────────────────────────────────────────────────
-const THEMES = {
-  japan:      { g: ["#FF6B6B","#FF8E53"], e: "🗾", hi: "Konnichiwa!", fact: "Japan has 14 UNESCO World Heritage Sites and some of the world's best street food." },
-  tokyo:      { g: ["#FF6B6B","#FF8E53"], e: "🗼", hi: "Konnichiwa!", fact: "Tokyo is the world's most populous metro area — over 37 million people." },
-  paris:      { g: ["#667eea","#764ba2"], e: "🗼", hi: "Bonjour!", fact: "Paris has 1,800+ monuments and 173 museums, including the world's most visited." },
-  france:     { g: ["#667eea","#764ba2"], e: "🇫🇷", hi: "Bonjour!", fact: "France is the most visited country on earth, welcoming 90M tourists per year." },
-  italy:      { g: ["#11998e","#38ef7d"], e: "🇮🇹", hi: "Benvenuto!", fact: "Italy has more UNESCO World Heritage Sites than any other country — 58 total." },
-  rome:       { g: ["#f7971e","#ffd200"], e: "🏛️", hi: "When in Rome!", fact: "Rome has more ancient fountains than any other city in the world." },
-  greece:     { g: ["#2980B9","#6DD5FA"], e: "🏛️", hi: "Kalimera!", fact: "Greece has over 6,000 islands, though only 250 are inhabited." },
-  spain:      { g: ["#ee0979","#ff6a00"], e: "🇪🇸", hi: "¡Hola!", fact: "Spain hosts La Tomatina — the world's largest tomato fight, every August." },
-  thailand:   { g: ["#f7971e","#ffd200"], e: "🐘", hi: "Sawasdee!", fact: "Thailand has 40,000+ temples, including the sacred Wat Phra Kaew." },
-  bali:       { g: ["#11998e","#38ef7d"], e: "🌺", hi: "Om Swastiastu!", fact: "Bali has 20,000+ temples — known as the Island of the Gods." },
-  "new york": { g: ["#4776E6","#8E54E9"], e: "🗽", hi: "Welcome to NYC!", fact: "NYC's subway has 472 stations — the most of any metro in the world." },
-  london:     { g: ["#4776E6","#8E54E9"], e: "🎡", hi: "Cheerio!", fact: "London's Tube is the world's oldest metro system, opened in 1863." },
-  dubai:      { g: ["#f7971e","#ffd200"], e: "🏙️", hi: "Welcome to Dubai!", fact: "The Burj Khalifa is the tallest building on earth at 828 meters." },
-  australia:  { g: ["#f46b45","#eea849"], e: "🦘", hi: "G'day!", fact: "Australia is home to 80% of species found nowhere else on earth." },
-  israel:     { g: ["#2980B9","#6DD5FA"], e: "🕍", hi: "Shalom!", fact: "Israel has more museums per capita than any other country." },
-  "tel aviv": { g: ["#11998e","#38ef7d"], e: "🏖️", hi: "Shalom!", fact: "Tel Aviv was founded in 1909 and has the world's highest concentration of Bauhaus buildings." },
-  default:    { g: ["#f97316","#ec4899"], e: "🌍", hi: "Adventure awaits!", fact: null },
+// ─── Themes ───────────────────────────────────────────────────────────────────
+const DEST_THEMES = {
+  japan:      { g: ["#FF6B6B","#FF8E53"], e: "🗾", hi: "Konnichiwa!" },
+  tokyo:      { g: ["#FF6B6B","#FF8E53"], e: "🗼", hi: "Konnichiwa!" },
+  paris:      { g: ["#667eea","#764ba2"], e: "🗼", hi: "Bonjour!" },
+  france:     { g: ["#667eea","#764ba2"], e: "🇫🇷", hi: "Bonjour!" },
+  italy:      { g: ["#11998e","#38ef7d"], e: "🇮🇹", hi: "Benvenuto!" },
+  rome:       { g: ["#f7971e","#ffd200"], e: "🏛️", hi: "When in Rome!" },
+  greece:     { g: ["#2980B9","#6DD5FA"], e: "🏛️", hi: "Kalimera!" },
+  spain:      { g: ["#ee0979","#ff6a00"], e: "🇪🇸", hi: "¡Hola!" },
+  thailand:   { g: ["#f7971e","#ffd200"], e: "🐘", hi: "Sawasdee!" },
+  bali:       { g: ["#11998e","#38ef7d"], e: "🌺", hi: "Om Swastiastu!" },
+  "new york": { g: ["#4776E6","#8E54E9"], e: "🗽", hi: "Welcome to NYC!" },
+  london:     { g: ["#4776E6","#8E54E9"], e: "🎡", hi: "Cheerio!" },
+  dubai:      { g: ["#f7971e","#ffd200"], e: "🏙️", hi: "Welcome!" },
+  australia:  { g: ["#f46b45","#eea849"], e: "🦘", hi: "G'day!" },
+  israel:     { g: ["#2980B9","#6DD5FA"], e: "🕍", hi: "Shalom!" },
+  "tel aviv": { g: ["#11998e","#38ef7d"], e: "🏖️", hi: "Shalom!" },
+  albania:    { g: ["#E31937","#000000"], e: "🦅", hi: "Mirë se vini!" },
+  tirana:     { g: ["#E31937","#000000"], e: "🦅", hi: "Mirë se vini!" },
+  portugal:   { g: ["#009246","#CF2B37"], e: "🇵🇹", hi: "Olá!" },
+  lisbon:     { g: ["#f97316","#eab308"], e: "🎵", hi: "Olá!" },
+  morocco:    { g: ["#c1272d","#006233"], e: "🕌", hi: "Marhaba!" },
+  iceland:    { g: ["#2980B9","#6DD5FA"], e: "🌋", hi: "Halló!" },
+  vietnam:    { g: ["#da020e","#f7971e"], e: "🍜", hi: "Xin chào!" },
+  mexico:     { g: ["#006847","#CE1126"], e: "🌮", hi: "¡Hola!" },
+  peru:       { g: ["#D91023","#f7971e"], e: "🏔️", hi: "¡Hola!" },
+  argentina:  { g: ["#74acdf","#ffffff"], e: "🥩", hi: "¡Hola!" },
+  brazil:     { g: ["#009c3b","#ffdf00"], e: "🌴", hi: "Olá!" },
+  egypt:      { g: ["#f7971e","#ffd200"], e: "🏺", hi: "Ahlan!" },
+  turkey:     { g: ["#E30A17","#ffffff"], e: "🕌", hi: "Merhaba!" },
+  istanbul:   { g: ["#E30A17","#f7971e"], e: "🕌", hi: "Merhaba!" },
+  singapore:  { g: ["#EF3340","#ffffff"], e: "🦁", hi: "Selamat datang!" },
+  default:    { g: ["#f97316","#ec4899"], e: "🌍", hi: "Adventure awaits!" },
 };
 
-function getTheme(dest) {
-  if (!dest) return THEMES.default;
-  const k = dest.toLowerCase();
-  for (const [key, val] of Object.entries(THEMES)) { if (k.includes(key)) return val; }
-  return THEMES.default;
+const STYLE_THEMES = {
+  adventure: { g: ["#f97316","#ef4444"] },
+  relaxed:   { g: ["#0d9488","#0ea5e9"] },
+  cultural:  { g: ["#7c3aed","#6366f1"] },
+  luxury:    { g: ["#d97706","#f59e0b"] },
+  nightlife: { g: ["#a21caf","#ec4899"] },
+  culinary:  { g: ["#16a34a","#0d9488"] },
+};
+
+function getTheme(dest, style) {
+  if (dest) {
+    const k = dest.toLowerCase();
+    for (const [key, val] of Object.entries(DEST_THEMES)) {
+      if (key !== "default" && k.includes(key)) return val;
+    }
+  }
+  if (style && STYLE_THEMES[style]) return { ...DEST_THEMES.default, ...STYLE_THEMES[style] };
+  return DEST_THEMES.default;
 }
 
 const BUDGET_CATS = {
@@ -40,15 +68,27 @@ const BUDGET_CATS = {
   transportation: { color: "#3b82f6", label: "Transportation" },
   other:          { color: "#9ca3af", label: "Other" },
 };
-const STYLE_ICONS = { adventure:"🧗", relaxed:"🏖️", cultural:"🏛️", luxury:"✨" };
-const TIME_OPTS = ["morning","afternoon","evening"];
-const TIME_STYLE = {
+const EXPENSE_CATS = [
+  { key: "food",           label: "Food & Drink",    icon: "🍽️" },
+  { key: "accommodation",  label: "Accommodation",   icon: "🏨" },
+  { key: "activities",     label: "Activities",      icon: "🎭" },
+  { key: "transportation", label: "Transport",       icon: "🚌" },
+  { key: "other",          label: "Other",           icon: "💳" },
+];
+const STYLE_ICONS = { adventure:"🧗", relaxed:"🏖️", cultural:"🏛️", luxury:"✨", nightlife:"🎉", culinary:"🍽️" };
+const TIME_STYLE  = {
   morning:   { bg:"#fff7ed", text:"#ea580c" },
   afternoon: { bg:"#fdf4ff", text:"#9333ea" },
   evening:   { bg:"#eff6ff", text:"#2563eb" },
 };
+const TABS = [
+  { id: "itinerary", label: "Itinerary", icon: "🗓️" },
+  { id: "pack",      label: "Pack",      icon: "🧳" },
+  { id: "expenses",  label: "Expenses",  icon: "💸" },
+  { id: "local",     label: "Local",     icon: "🌐" },
+];
 
-// ─── Editable field ────────────────────────────────────────────────────────────
+// ─── Editable ─────────────────────────────────────────────────────────────────
 function Editable({ value, onChange, className = "", multiline = false, placeholder = "Click to edit..." }) {
   const [editing, setEditing] = useState(false);
   const [local, setLocal] = useState(value);
@@ -66,7 +106,6 @@ function Editable({ value, onChange, className = "", multiline = false, placehol
     </span>
   );
 }
-
 function EditableNumber({ value, onChange, prefix = "", className = "" }) {
   const [editing, setEditing] = useState(false);
   const [local, setLocal] = useState(value);
@@ -76,39 +115,28 @@ function EditableNumber({ value, onChange, prefix = "", className = "" }) {
   return <span onClick={() => setEditing(true)} className={"cursor-text hover:bg-orange-50 rounded-lg px-1 -mx-1 transition-colors border border-dashed border-transparent hover:border-orange-200 font-bold " + className} title="Click to edit">{prefix}{value?.toLocaleString()}</span>;
 }
 
-// ─── AI Chat Panel ─────────────────────────────────────────────────────────────
+// ─── AI Chat Panel (overlay) ──────────────────────────────────────────────────
 function AIChatPanel({ trip, onClose }) {
-  const [msgs, setMsgs] = useState([{
-    role: "assistant",
-    content: `Hey! 👋 I know all about your **${trip.destination}** trip. Ask me anything — best restaurants, hidden gems, packing tips, or how to optimize your itinerary!`
-  }]);
+  const G = "linear-gradient(135deg,#f97316,#ec4899)";
+  const [msgs, setMsgs] = useState([{ role: "assistant", content: `Hey! 👋 I know all about your **${trip.destination}** trip. Ask me anything!` }]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const bottomRef = useState(null)[0];
+  const QUICK = ["Best restaurants nearby?", "What to pack?", "Hidden gems?", "Is it safe?", "Best photo spots?"];
 
   async function send(text) {
     if (!text.trim() || loading) return;
     const newMsgs = [...msgs, { role: "user", content: text }];
-    setMsgs(newMsgs);
-    setInput("");
-    setLoading(true);
-
+    setMsgs(newMsgs); setInput(""); setLoading(true);
     try {
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: newMsgs, trips: [{ ...trip, id: "current" }], currentTripId: "current" }),
-      });
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let text = "";
+      const res = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: newMsgs, trips: [{ ...trip, id: "current" }], currentTripId: "current" }) });
+      const reader = res.body.getReader(); const decoder = new TextDecoder(); let txt = "";
       setMsgs(prev => [...prev, { role: "assistant", content: "" }]);
       while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
+        const { done, value } = await reader.read(); if (done) break;
         for (const line of decoder.decode(value).split("\n")) {
           if (line.startsWith("data: ") && line !== "data: [DONE]") {
-            try { const p = JSON.parse(line.slice(6)); if (p.text) { text += p.text; setMsgs(prev => { const u = [...prev]; u[u.length-1] = { role: "assistant", content: text }; return u; }); } } catch {}
+            try { const p = JSON.parse(line.slice(6)); if (p.text) { txt += p.text; setMsgs(prev => { const u=[...prev]; u[u.length-1]={role:"assistant",content:txt}; return u; }); } } catch {}
           }
         }
       }
@@ -116,188 +144,65 @@ function AIChatPanel({ trip, onClose }) {
     finally { setLoading(false); }
   }
 
-  const G = "linear-gradient(135deg,#f97316,#ec4899)";
-  const QUICK = ["Best restaurants nearby?", "What to pack?", "Hidden gems?", "Is it safe?", "Best photo spots?"];
-
   return (
     <div className="fixed inset-0 z-50 flex flex-col" style={{ background: "#FFF8F0" }}>
-      {/* Header */}
       <div className="flex items-center gap-3 px-4 pt-8 pb-4 bg-white border-b border-orange-100">
         <button onClick={onClose} className="w-9 h-9 rounded-xl bg-orange-50 flex items-center justify-center text-orange-400 font-black text-lg">←</button>
         <div className="w-9 h-9 rounded-2xl flex items-center justify-center text-lg" style={{ background: G }}>🤖</div>
-        <div>
-          <div className="font-black text-gray-900 text-sm">AI Assistant</div>
-          <div className="text-xs text-gray-400">{trip.destination}</div>
-        </div>
+        <div><div className="font-black text-gray-900 text-sm">AI Assistant</div><div className="text-xs text-gray-400">{trip.destination}</div></div>
         <Link href={`/chat?tripId=${trip.id || ""}`} className="ml-auto text-xs font-bold text-orange-500 border-2 border-orange-100 px-3 py-1.5 rounded-xl hover:bg-orange-50">Full Chat →</Link>
       </div>
-
-      {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
         {msgs.map((m, i) => (
           <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
-            <div className={`max-w-[85%] px-4 py-3 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${
-              m.role === "user" ? "text-white rounded-tr-sm" : "bg-white border border-orange-100 text-gray-800 rounded-tl-sm shadow-sm"
-            }`} style={m.role === "user" ? { background: G } : {}}>
-              {m.content || <span className="inline-flex gap-1"><span className="w-1.5 h-1.5 bg-orange-300 rounded-full animate-bounce" /><span className="w-1.5 h-1.5 bg-orange-300 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} /><span className="w-1.5 h-1.5 bg-orange-300 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} /></span>}
+            <div className={`max-w-[85%] px-4 py-3 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${m.role==="user" ? "text-white rounded-tr-sm" : "bg-white border border-orange-100 text-gray-800 rounded-tl-sm shadow-sm"}`} style={m.role==="user"?{background:G}:{}}>
+              {m.content || <span className="inline-flex gap-1"><span className="w-1.5 h-1.5 bg-orange-300 rounded-full animate-bounce"/><span className="w-1.5 h-1.5 bg-orange-300 rounded-full animate-bounce" style={{animationDelay:"150ms"}}/><span className="w-1.5 h-1.5 bg-orange-300 rounded-full animate-bounce" style={{animationDelay:"300ms"}}/></span>}
             </div>
           </div>
         ))}
       </div>
-
-      {/* Quick prompts */}
-      {msgs.length <= 1 && (
-        <div className="px-4 pb-2">
-          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-            {QUICK.map(q => (
-              <button key={q} onClick={() => send(q)} className="flex-shrink-0 text-xs font-bold px-3 py-2 rounded-xl bg-white border-2 border-orange-100 text-orange-500 whitespace-nowrap">{q}</button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Input */}
+      {msgs.length <= 1 && <div className="px-4 pb-2"><div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">{QUICK.map(q=><button key={q} onClick={()=>send(q)} className="flex-shrink-0 text-xs font-bold px-3 py-2 rounded-xl bg-white border-2 border-orange-100 text-orange-500 whitespace-nowrap">{q}</button>)}</div></div>}
       <div className="px-4 pb-6 pt-2">
         <div className="flex gap-2 bg-white rounded-2xl border-2 border-orange-100 p-2 shadow-sm">
-          <input value={input} onChange={e => setInput(e.target.value)}
-            onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); send(input); } }}
-            placeholder="Ask anything..." disabled={loading}
-            className="flex-1 bg-transparent text-sm text-gray-800 placeholder-gray-300 outline-none px-2 font-medium" />
-          <button onClick={() => send(input)} disabled={loading || !input.trim()}
-            className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-black disabled:opacity-40"
-            style={{ background: G }}>↑</button>
+          <input value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"){e.preventDefault();send(input);}}} placeholder="Ask anything..." disabled={loading} className="flex-1 bg-transparent text-sm text-gray-800 placeholder-gray-300 outline-none px-2 font-medium"/>
+          <button onClick={()=>send(input)} disabled={loading||!input.trim()} className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-black disabled:opacity-40" style={{background:G}}>↑</button>
         </div>
       </div>
     </div>
   );
 }
 
-// ─── Packing List ──────────────────────────────────────────────────────────────
-function PackingList({ trip, onClose }) {
-  const [packing, setPacking] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [checked, setChecked] = useState({});
-
-  useEffect(() => {
-    fetch("/api/suggest", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ type: "packing", trip }),
-    })
-      .then(r => r.json())
-      .then(r => { if (r.ok) setPacking(r.data); })
-      .finally(() => setLoading(false));
-  }, []);
-
-  const G = "linear-gradient(135deg,#f97316,#ec4899)";
-
-  return (
-    <div className="fixed inset-0 z-50 flex flex-col" style={{ background: "#FFF8F0" }}>
-      <div className="flex items-center gap-3 px-4 pt-8 pb-4 bg-white border-b border-orange-100">
-        <button onClick={onClose} className="w-9 h-9 rounded-xl bg-orange-50 flex items-center justify-center text-orange-400 font-black text-lg">←</button>
-        <div className="w-9 h-9 rounded-2xl flex items-center justify-center text-xl" style={{ background: G }}>🧳</div>
-        <div>
-          <div className="font-black text-gray-900 text-sm">AI Packing List</div>
-          <div className="text-xs text-gray-400">{trip.destination} · {trip.days} days</div>
-        </div>
-      </div>
-
-      <div className="flex-1 overflow-y-auto px-4 py-4">
-        {loading ? (
-          <div className="flex flex-col items-center justify-center h-48 gap-3">
-            <div className="w-10 h-10 rounded-full border-4 border-orange-300 border-t-transparent animate-spin" />
-            <p className="text-sm text-gray-400 font-medium">AI is building your packing list...</p>
-          </div>
-        ) : !packing ? (
-          <div className="text-center py-12 text-gray-400">Failed to generate. Please try again.</div>
-        ) : (
-          <div className="space-y-4">
-            {(packing.categories || []).map((cat, ci) => (
-              <div key={ci} className="bg-white rounded-2xl border border-orange-100 p-4 shadow-sm">
-                <h3 className="font-black text-gray-900 mb-3 text-sm">{cat.name}</h3>
-                <div className="space-y-2">
-                  {(cat.items || []).map((item, ii) => {
-                    const key = `${ci}-${ii}`;
-                    return (
-                      <label key={ii} className="flex items-center gap-3 cursor-pointer group">
-                        <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all ${checked[key] ? "border-orange-400 bg-orange-400" : "border-orange-200"}`}
-                          onClick={() => setChecked(p => ({ ...p, [key]: !p[key] }))}>
-                          {checked[key] && <span className="text-white text-xs font-black">✓</span>}
-                        </div>
-                        <span className={`text-sm font-medium transition-all ${checked[key] ? "line-through text-gray-300" : "text-gray-700"}`}>{item}</span>
-                      </label>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// ─── Day AI Suggestions ────────────────────────────────────────────────────────
+// ─── Day Suggestions ──────────────────────────────────────────────────────────
 function DaySuggestions({ trip, dayIndex, onApply, onClose }) {
+  const G = "linear-gradient(135deg,#f97316,#ec4899)";
   const [suggestions, setSuggestions] = useState(null);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetch("/api/suggest", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ type: "regenerate_day", trip, dayIndex }),
-    })
-      .then(r => r.json())
-      .then(r => { if (r.ok) setSuggestions(Array.isArray(r.data) ? r.data : []); })
-      .finally(() => setLoading(false));
-  }, []);
-
-  const G = "linear-gradient(135deg,#f97316,#ec4899)";
   const day = trip.daily_itinerary?.[dayIndex];
 
+  useEffect(() => {
+    fetch("/api/suggest", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ type:"regenerate_day", trip, dayIndex }) })
+      .then(r=>r.json()).then(r=>{ if(r.ok) setSuggestions(Array.isArray(r.data)?r.data:[]); }).finally(()=>setLoading(false));
+  }, []);
+
   return (
-    <div className="fixed inset-0 z-50 bg-black/40 flex items-end">
-      <div className="bg-white rounded-t-3xl w-full max-w-lg mx-auto p-6 max-h-[80vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 bg-black/40 flex items-end" onClick={onClose}>
+      <div className="bg-white rounded-t-3xl w-full max-w-lg mx-auto p-6 max-h-[80vh] overflow-y-auto" onClick={e=>e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
-          <div>
-            <div className="font-black text-gray-900">✨ AI Suggestions</div>
-            <div className="text-xs text-gray-400">Day {day?.day} — {day?.title}</div>
-          </div>
+          <div><div className="font-black text-gray-900">✨ AI Suggestions</div><div className="text-xs text-gray-400">Day {day?.day} — {day?.title}</div></div>
           <button onClick={onClose} className="text-gray-400 font-black text-xl w-9 h-9 rounded-xl bg-gray-50 flex items-center justify-center">×</button>
         </div>
-
-        {loading ? (
-          <div className="flex flex-col items-center py-10 gap-3">
-            <div className="w-10 h-10 rounded-full border-4 border-orange-300 border-t-transparent animate-spin" />
-            <p className="text-sm text-gray-400">AI is suggesting alternatives...</p>
-          </div>
-        ) : !suggestions?.length ? (
-          <p className="text-center py-8 text-gray-400 text-sm">No suggestions available.</p>
-        ) : (
-          <div className="space-y-3">
-            {suggestions.map((s, i) => {
-              const ts = TIME_STYLE[s.time] || TIME_STYLE.morning;
-              return (
-                <div key={i} className="border-2 border-orange-100 rounded-2xl p-4">
-                  <div className="flex items-start justify-between gap-2 mb-2">
-                    <span className="text-xs font-bold px-2 py-1 rounded-full" style={{ background: ts.bg, color: ts.text }}>
-                      {s.time?.charAt(0).toUpperCase() + s.time?.slice(1)}
-                    </span>
-                    <span className="text-xs font-bold text-gray-400">{trip.currency} {s.estimated_cost}</span>
-                  </div>
-                  <div className="font-black text-gray-900 text-sm mb-1">{s.name}</div>
-                  <p className="text-xs text-gray-400 mb-3">{s.description}</p>
-                  <button onClick={() => { onApply(s); onClose(); }}
-                    className="w-full py-2 rounded-xl text-white text-xs font-black" style={{ background: G }}>
-                    + Add to Day {day?.day}
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-        )}
+        {loading ? <div className="flex flex-col items-center py-10 gap-3"><div className="w-10 h-10 rounded-full border-4 border-orange-300 border-t-transparent animate-spin"/><p className="text-sm text-gray-400">Getting alternatives...</p></div>
+          : !suggestions?.length ? <p className="text-center py-8 text-gray-400 text-sm">No suggestions available.</p>
+          : <div className="space-y-3">{suggestions.map((s,i)=>{const ts=TIME_STYLE[s.time]||TIME_STYLE.morning; return (
+            <div key={i} className="border-2 border-orange-100 rounded-2xl p-4">
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <span className="text-xs font-bold px-2 py-1 rounded-full" style={{background:ts.bg,color:ts.text}}>{s.time?.charAt(0).toUpperCase()+s.time?.slice(1)}</span>
+                <span className="text-xs font-bold text-gray-400">{trip.currency} {s.estimated_cost}</span>
+              </div>
+              <div className="font-black text-gray-900 text-sm mb-1">{s.name}</div>
+              <p className="text-xs text-gray-400 mb-3">{s.description}</p>
+              <button onClick={()=>{onApply(s);onClose();}} className="w-full py-2 rounded-xl text-white text-xs font-black" style={{background:G}}>+ Add to Day {day?.day}</button>
+            </div>);})}</div>}
       </div>
     </div>
   );
@@ -308,141 +213,452 @@ function CurrencyWidget({ baseCurrency, amount }) {
   const [rates, setRates] = useState(null);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
-
   async function fetchRates() {
-    if (rates) { setOpen(o => !o); return; }
+    if (rates) { setOpen(o=>!o); return; }
     setLoading(true);
-    try {
-      const res = await fetch(`/api/currency?from=${baseCurrency || "USD"}`);
-      const data = await res.json();
-      if (data.ok) setRates(data.rates);
-    } catch {}
+    try { const res=await fetch(`/api/currency?from=${baseCurrency||"USD"}`); const data=await res.json(); if(data.ok) setRates(data.rates); } catch {}
     finally { setLoading(false); setOpen(true); }
   }
-
   const SHOW = ["EUR","GBP","ILS","JPY","AUD","CAD","THB","SGD"];
-  const filtered = rates ? Object.entries(rates).filter(([k]) => SHOW.includes(k)) : [];
-
+  const filtered = rates ? Object.entries(rates).filter(([k])=>SHOW.includes(k)) : [];
   return (
     <div className="bg-white rounded-2xl border border-orange-100 shadow-sm overflow-hidden">
       <button onClick={fetchRates} className="w-full flex items-center justify-between px-4 py-3">
-        <div className="flex items-center gap-2">
-          <span className="text-lg">💱</span>
-          <span className="font-black text-gray-900 text-sm">Currency Converter</span>
-          <span className="text-xs text-gray-400">Live rates · Frankfurter API</span>
-        </div>
-        <span className="text-gray-400 text-sm">{open ? "▲" : "▼"}</span>
+        <div className="flex items-center gap-2"><span className="text-lg">💱</span><span className="font-black text-gray-900 text-sm">Currency Converter</span></div>
+        {loading ? <div className="w-4 h-4 rounded-full border-2 border-orange-300 border-t-transparent animate-spin"/> : <span className="text-gray-400 text-sm">{open?"▲":"▼"}</span>}
       </button>
-      {open && (
-        <div className="px-4 pb-4 border-t border-orange-50">
-          {loading ? (
-            <div className="flex items-center gap-2 py-3 text-sm text-gray-400">
-              <div className="w-4 h-4 rounded-full border-2 border-orange-300 border-t-transparent animate-spin" />
-              Fetching live rates...
-            </div>
-          ) : filtered.length > 0 ? (
-            <>
-              <p className="text-xs text-gray-400 py-2">{baseCurrency} {amount?.toLocaleString()} equals:</p>
-              <div className="grid grid-cols-2 gap-2">
-                {filtered.map(([currency, rate]) => (
-                  <div key={currency} className="flex justify-between items-center px-3 py-2 bg-orange-50 rounded-xl">
-                    <span className="text-xs font-bold text-gray-500">{currency}</span>
-                    <span className="text-sm font-black text-gray-900">{(amount * rate).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
-                  </div>
-                ))}
+      {open && <div className="px-4 pb-4 border-t border-orange-50">
+        {loading ? <div className="py-3 text-sm text-gray-400">Fetching live rates...</div>
+          : filtered.length > 0 ? <>
+            <p className="text-xs text-gray-400 py-2">{baseCurrency} {amount?.toLocaleString()} equals:</p>
+            <div className="grid grid-cols-2 gap-2">{filtered.map(([c,rate])=>(
+              <div key={c} className="flex justify-between items-center px-3 py-2 bg-orange-50 rounded-xl">
+                <span className="text-xs font-bold text-gray-500">{c}</span>
+                <span className="text-sm font-black text-gray-900">{(amount*rate).toLocaleString(undefined,{maximumFractionDigits:0})}</span>
               </div>
-              <p className="text-xs text-gray-300 mt-2 text-center">Rates updated daily · Not financial advice</p>
-            </>
-          ) : (
-            <p className="text-sm text-red-400 py-2">Could not load rates.</p>
-          )}
-        </div>
-      )}
+            ))}</div>
+            <p className="text-xs text-gray-300 mt-2 text-center">Live rates · Not financial advice</p>
+          </> : <p className="text-sm text-red-400 py-2">Could not load rates.</p>}
+      </div>}
     </div>
   );
 }
 
-// ─── Booking Section (Travelpayouts affiliate-ready) ──────────────────────────
+// ─── Booking Section ──────────────────────────────────────────────────────────
 function BookingSection({ trip }) {
-  const city = encodeURIComponent(trip.destination?.split(",")[0] || trip.destination || "");
-  const cityRaw = trip.destination?.split(",")[0] || trip.destination || "";
+  const city = encodeURIComponent(trip.destination?.split(",")[0] || "");
   const checkin = trip.form?.startDate || "";
   const checkout = trip.form?.endDate || "";
   const adults = trip.travelers || 2;
-  const G = "linear-gradient(135deg,#f97316,#ec4899)";
-
-  // Travelpayouts deep links (replace MARKER with your affiliate marker after signup at travelpayouts.com)
   const MARKER = "712006";
-
-  const bookings = [
-    {
-      icon: "✈️", label: "Search Flights", sub: "via Aviasales",
-      color: "linear-gradient(135deg,#4776E6,#8E54E9)",
-      href: `https://www.aviasales.com/?marker=${MARKER}&origin=TLV&destination=${cityRaw.slice(0,3).toUpperCase()}&depart_date=${checkin}&return_date=${checkout}&adults=${adults}`,
-    },
-    {
-      icon: "🏨", label: "Search Hotels", sub: "via Booking.com",
-      color: "linear-gradient(135deg,#003580,#0ea5e9)",
-      href: `https://www.booking.com/search.html?ss=${city}&checkin=${checkin}&checkout=${checkout}&group_adults=${adults}&no_rooms=1&aid=1269762&label=tp-${MARKER}`,
-    },
-    {
-      icon: "🎭", label: "Book Activities", sub: "via GetYourGuide",
-      color: "linear-gradient(135deg,#FF6B35,#F7931A)",
-      href: `https://www.getyourguide.com/s/?q=${city}&date_from=${checkin}&date_to=${checkout}&utm_source=partner&utm_medium=affiliate&partner_id=TY2AC55`,
-    },
-    {
-      icon: "🚗", label: "Rent a Car", sub: "via RentalCars",
-      color: "linear-gradient(135deg,#10b981,#0ea5e9)",
-      href: `https://www.rentalcars.com/?affiliateCode=travelpay&preflang=en&puLocation=${city}&puDay=${checkin}&doDay=${checkout}&marker=${MARKER}`,
-    },
+  const links = [
+    { icon:"✈️", label:"Flights", sub:"Aviasales", color:"linear-gradient(135deg,#4776E6,#8E54E9)",
+      href:`https://www.aviasales.com/?marker=${MARKER}&origin=TLV&destination=${trip.destination?.slice(0,3).toUpperCase()}&depart_date=${checkin}&return_date=${checkout}&adults=${adults}` },
+    { icon:"🏨", label:"Hotels", sub:"Booking.com", color:"linear-gradient(135deg,#003580,#0ea5e9)",
+      href:`https://www.booking.com/search.html?ss=${city}&checkin=${checkin}&checkout=${checkout}&group_adults=${adults}&aid=1269762&label=tp-${MARKER}` },
+    { icon:"🎭", label:"Activities", sub:"GetYourGuide", color:"linear-gradient(135deg,#FF6B35,#F7931A)",
+      href:`https://www.getyourguide.com/s/?q=${city}&date_from=${checkin}&date_to=${checkout}&utm_source=partner&partner_id=TY2AC55` },
+    { icon:"🚗", label:"Car Rental", sub:"RentalCars", color:"linear-gradient(135deg,#10b981,#0ea5e9)",
+      href:`https://www.rentalcars.com/?affiliateCode=travelpay&puLocation=${city}&puDay=${checkin}&doDay=${checkout}&marker=${MARKER}` },
   ];
-
   return (
     <section>
-      <div className="flex items-center justify-between mb-3">
-        <h2 className="text-lg font-black text-gray-900">✈️ Book Your Trip</h2>
-        <span className="text-xs text-gray-400 font-medium">Affiliate links · we earn a small commission</span>
-      </div>
-
+      <h2 className="text-lg font-black text-gray-900 mb-3">✈️ Book Your Trip</h2>
       <div className="grid grid-cols-2 gap-3 mb-4">
-        {bookings.map(b => (
-          <a key={b.label}
-            href={b.fallback}
-            target="_blank" rel="noopener noreferrer"
-            className="rounded-2xl p-4 text-white shadow-md hover:-translate-y-0.5 transition-all"
-            style={{ background: b.color }}>
+        {links.map(b=>(
+          <a key={b.label} href={b.href} target="_blank" rel="noopener noreferrer"
+            className="rounded-2xl p-4 text-white shadow-md hover:-translate-y-0.5 transition-all" style={{background:b.color}}>
             <div className="text-2xl mb-2">{b.icon}</div>
             <div className="font-black text-sm">{b.label}</div>
             <div className="text-white/70 text-xs mt-0.5">{b.sub}</div>
           </a>
         ))}
       </div>
-
-      {/* Currency Converter */}
       <CurrencyWidget baseCurrency={trip.currency} amount={trip.total_estimated_cost} />
     </section>
   );
 }
 
-// ─── Main ──────────────────────────────────────────────────────────────────────
+// ─── Pack Tab ─────────────────────────────────────────────────────────────────
+function PackTab({ trip }) {
+  const G = "linear-gradient(135deg,#f97316,#ec4899)";
+  const [data, setData]       = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [checked, setChecked] = useState({});
+  const loaded = useRef(false);
+
+  useEffect(() => {
+    if (loaded.current) return;
+    loaded.current = true;
+    setLoading(true);
+    fetch("/api/suggest", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ type:"packing", trip }) })
+      .then(r=>r.json()).then(r=>{ if(r.ok) setData(r.data); }).catch(()=>{}).finally(()=>setLoading(false));
+  }, []);
+
+  const total  = data?.categories?.flatMap(c=>c.items||[]).length || 0;
+  const packed = Object.values(checked).filter(Boolean).length;
+
+  return (
+    <div className="space-y-4">
+      {/* Progress bar */}
+      {total > 0 && (
+        <div className="bg-white rounded-2xl border border-orange-100 p-4 shadow-sm">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-black text-gray-900">Packing Progress</span>
+            <span className="text-sm font-black text-orange-500">{packed}/{total}</span>
+          </div>
+          <div className="h-3 bg-orange-50 rounded-full overflow-hidden">
+            <div className="h-full rounded-full transition-all duration-500" style={{ width: total > 0 ? `${(packed/total)*100}%` : "0%", background: G }} />
+          </div>
+          {packed === total && total > 0 && <p className="text-xs text-green-600 font-bold mt-2">✓ All packed! Have an amazing trip!</p>}
+        </div>
+      )}
+
+      {loading ? (
+        <div className="flex flex-col items-center justify-center py-16 gap-3">
+          <div className="w-12 h-12 rounded-full border-4 border-orange-300 border-t-transparent animate-spin"/>
+          <p className="text-sm text-gray-400 font-medium">AI is building your packing list...</p>
+        </div>
+      ) : !data ? (
+        <div className="text-center py-12 text-gray-400">
+          <div className="text-4xl mb-3">🧳</div>
+          <p className="font-medium">Could not load packing list. Please try again.</p>
+        </div>
+      ) : (
+        (data.categories || []).map((cat, ci) => (
+          <div key={ci} className="bg-white rounded-2xl border border-orange-100 p-4 shadow-sm">
+            <h3 className="font-black text-gray-900 mb-3 text-sm flex items-center gap-2">
+              <span>{cat.name}</span>
+              <span className="text-xs font-bold text-gray-300">{(cat.items||[]).filter((_,ii)=>checked[`${ci}-${ii}`]).length}/{(cat.items||[]).length}</span>
+            </h3>
+            <div className="space-y-2">
+              {(cat.items||[]).map((item, ii) => {
+                const key = `${ci}-${ii}`;
+                return (
+                  <label key={ii} className="flex items-center gap-3 cursor-pointer group py-0.5">
+                    <div className="w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all"
+                      style={checked[key] ? {borderColor:"#f97316",background:"#f97316"} : {borderColor:"#fed7aa"}}
+                      onClick={()=>setChecked(p=>({...p,[key]:!p[key]}))}>
+                      {checked[key] && <span className="text-white text-xs font-black">✓</span>}
+                    </div>
+                    <span className={`text-sm font-medium transition-all ${checked[key]?"line-through text-gray-300":"text-gray-700"}`}>{item}</span>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+        ))
+      )}
+    </div>
+  );
+}
+
+// ─── Expenses Tab ─────────────────────────────────────────────────────────────
+function ExpensesTab({ trip, expenses, onAdd, onDelete }) {
+  const G = "linear-gradient(135deg,#f97316,#ec4899)";
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState({ name: "", amount: "", category: "food", date: new Date().toISOString().split("T")[0] });
+  const set = (k,v) => setForm(p=>({...p,[k]:v}));
+
+  const totalSpent    = expenses.reduce((s,e)=>s+(Number(e.amount)||0),0);
+  const totalEstimate = trip.total_estimated_cost || 0;
+  const remaining     = totalEstimate - totalSpent;
+  const pct           = totalEstimate > 0 ? Math.min(100, (totalSpent/totalEstimate)*100) : 0;
+
+  function submit(e) {
+    e.preventDefault();
+    if (!form.name || !form.amount) return;
+    onAdd({ ...form, amount: Number(form.amount) });
+    setForm({ name:"", amount:"", category:"food", date: new Date().toISOString().split("T")[0] });
+    setShowForm(false);
+  }
+
+  // Per-category breakdown
+  const byCategory = EXPENSE_CATS.map(cat => ({
+    ...cat,
+    spent:     expenses.filter(e=>e.category===cat.key).reduce((s,e)=>s+(Number(e.amount)||0),0),
+    estimated: trip.budget_breakdown?.[cat.key] || 0,
+    color:     BUDGET_CATS[cat.key]?.color || "#9ca3af",
+  }));
+
+  return (
+    <div className="space-y-4">
+      {/* Summary card */}
+      <div className="rounded-2xl p-5 text-white shadow-lg" style={{ background: remaining >= 0 ? G : "linear-gradient(135deg,#ef4444,#dc2626)" }}>
+        <div className="flex justify-between items-start mb-4">
+          <div>
+            <p className="text-white/70 text-xs font-bold uppercase tracking-wide">Total Spent</p>
+            <p className="text-3xl font-black">{trip.currency} {totalSpent.toLocaleString()}</p>
+          </div>
+          <div className="text-right">
+            <p className="text-white/70 text-xs font-bold uppercase tracking-wide">{remaining >= 0 ? "Remaining" : "Over Budget"}</p>
+            <p className="text-2xl font-black">{trip.currency} {Math.abs(remaining).toLocaleString()}</p>
+          </div>
+        </div>
+        <div className="h-2.5 rounded-full bg-white/20 overflow-hidden">
+          <div className="h-full rounded-full bg-white transition-all duration-500" style={{ width: `${pct}%` }} />
+        </div>
+        <p className="text-white/60 text-xs mt-2">{pct.toFixed(0)}% of {trip.currency} {totalEstimate.toLocaleString()} budget used</p>
+      </div>
+
+      {/* Category breakdown */}
+      <div className="bg-white rounded-2xl border border-orange-100 p-4 shadow-sm">
+        <h3 className="font-black text-gray-900 mb-3 text-sm">By Category</h3>
+        <div className="space-y-3">
+          {byCategory.map(cat => (
+            <div key={cat.key}>
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-xs font-bold text-gray-600">{cat.icon} {cat.label}</span>
+                <div className="text-right">
+                  <span className="text-xs font-black text-gray-900">{trip.currency} {cat.spent.toLocaleString()}</span>
+                  {cat.estimated > 0 && <span className="text-xs text-gray-300 ml-1">/ {cat.estimated.toLocaleString()}</span>}
+                </div>
+              </div>
+              <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                <div className="h-full rounded-full transition-all" style={{ width: cat.estimated > 0 ? `${Math.min(100,(cat.spent/cat.estimated)*100)}%` : "0%", background: cat.color }} />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Add expense button */}
+      <button onClick={()=>setShowForm(true)}
+        className="w-full py-4 rounded-2xl text-white font-black text-sm shadow-lg shadow-orange-200/50 hover:-translate-y-0.5 transition-all"
+        style={{ background: G }}>
+        + Add Expense
+      </button>
+
+      {/* Add expense form */}
+      {showForm && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-end" onClick={()=>setShowForm(false)}>
+          <form onSubmit={submit} className="bg-white rounded-t-3xl w-full max-w-lg mx-auto p-6 space-y-4" onClick={e=>e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-black text-gray-900">Add Expense</h3>
+              <button type="button" onClick={()=>setShowForm(false)} className="w-8 h-8 rounded-xl bg-gray-100 flex items-center justify-center text-gray-400 font-black">×</button>
+            </div>
+            <input required value={form.name} onChange={e=>set("name",e.target.value)} placeholder="What did you spend on?"
+              className="w-full px-4 py-3 rounded-xl border-2 border-orange-100 focus:border-orange-300 outline-none text-sm font-medium"/>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-bold text-gray-400 block mb-1">Amount ({trip.currency})</label>
+                <input required type="number" min="0" value={form.amount} onChange={e=>set("amount",e.target.value)} placeholder="0"
+                  className="w-full px-4 py-3 rounded-xl border-2 border-orange-100 focus:border-orange-300 outline-none text-sm font-bold"/>
+              </div>
+              <div>
+                <label className="text-xs font-bold text-gray-400 block mb-1">Date</label>
+                <input type="date" value={form.date} onChange={e=>set("date",e.target.value)}
+                  className="w-full px-3 py-3 rounded-xl border-2 border-orange-100 focus:border-orange-300 outline-none text-sm"/>
+              </div>
+            </div>
+            <div>
+              <label className="text-xs font-bold text-gray-400 block mb-2">Category</label>
+              <div className="flex flex-wrap gap-2">
+                {EXPENSE_CATS.map(c=>(
+                  <button key={c.key} type="button" onClick={()=>set("category",c.key)}
+                    className="px-3 py-2 rounded-xl text-xs font-bold border-2 transition-all"
+                    style={form.category===c.key ? {borderColor:"#f97316",background:"#fff7ed",color:"#ea580c"} : {borderColor:"#ffedd5",color:"#6b7280"}}>
+                    {c.icon} {c.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <button type="submit" className="w-full py-4 rounded-xl text-white font-black text-sm" style={{background:G}}>Save Expense</button>
+          </form>
+        </div>
+      )}
+
+      {/* Expense list */}
+      {expenses.length === 0 ? (
+        <div className="text-center py-10 text-gray-300">
+          <div className="text-4xl mb-2">💸</div>
+          <p className="text-sm font-medium">No expenses yet. Start tracking!</p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          <h3 className="font-black text-gray-900 text-sm">All Expenses</h3>
+          {[...expenses].reverse().map(exp => {
+            const cat = EXPENSE_CATS.find(c=>c.key===exp.category) || EXPENSE_CATS[4];
+            return (
+              <div key={exp.id} className="bg-white rounded-2xl border border-orange-100 p-3 flex items-center gap-3 shadow-sm group">
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg flex-shrink-0 bg-orange-50">{cat.icon}</div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-bold text-gray-900 text-sm truncate">{exp.name}</div>
+                  <div className="text-xs text-gray-400">{exp.date} · {cat.label}</div>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <div className="font-black text-gray-900 text-sm">{trip.currency} {Number(exp.amount).toLocaleString()}</div>
+                  <button onClick={()=>onDelete(exp.id)} className="text-xs text-red-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all">remove</button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Local Tab ────────────────────────────────────────────────────────────────
+function LocalTab({ trip }) {
+  const G = "linear-gradient(135deg,#f97316,#ec4899)";
+  const [data, setData]       = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [copied, setCopied]   = useState(null);
+  const loaded = useRef(false);
+
+  useEffect(() => {
+    if (loaded.current) return;
+    loaded.current = true;
+    setLoading(true);
+    fetch("/api/phrases", { method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ destination: trip.destination, style: trip.style, days: trip.days }) })
+      .then(r=>r.json()).then(r=>{ if(r.ok) setData(r.data); }).catch(()=>{}).finally(()=>setLoading(false));
+  }, []);
+
+  function copy(text, id) {
+    navigator.clipboard.writeText(text);
+    setCopied(id);
+    setTimeout(()=>setCopied(null), 1500);
+  }
+
+  const CATEGORY_ICONS = { essentials:"🌟", food:"🍽️", transport:"🚌", shopping:"🛍️", emergency:"🚨", social:"👋" };
+  const grouped = data?.phrases ? data.phrases.reduce((acc, p) => {
+    const cat = p.category || "essentials";
+    if (!acc[cat]) acc[cat] = [];
+    acc[cat].push(p);
+    return acc;
+  }, {}) : {};
+
+  return (
+    <div className="space-y-4">
+      {/* Language header */}
+      {data && (
+        <div className="rounded-2xl p-4 text-white text-center" style={{ background: G }}>
+          <div className="text-3xl mb-1">{data.flag || "🌍"}</div>
+          <div className="font-black text-lg">{data.language}</div>
+          <div className="text-white/70 text-sm">Speak like a local in {trip.destination}</div>
+        </div>
+      )}
+
+      {loading ? (
+        <div className="flex flex-col items-center justify-center py-16 gap-3">
+          <div className="w-12 h-12 rounded-full border-4 border-orange-300 border-t-transparent animate-spin"/>
+          <p className="text-sm text-gray-400 font-medium">Learning local phrases...</p>
+        </div>
+      ) : !data ? (
+        <div className="text-center py-12 text-gray-400">
+          <div className="text-4xl mb-3">🌐</div>
+          <p className="font-medium">Could not load phrases. Please try again.</p>
+        </div>
+      ) : (
+        Object.entries(grouped).map(([cat, phrases]) => (
+          <div key={cat} className="bg-white rounded-2xl border border-orange-100 shadow-sm overflow-hidden">
+            <div className="px-4 py-3 border-b border-orange-50" style={{ background: "#FFF8F0" }}>
+              <span className="font-black text-gray-900 text-sm">{CATEGORY_ICONS[cat] || "💬"} {cat.charAt(0).toUpperCase()+cat.slice(1)}</span>
+            </div>
+            <div className="divide-y divide-orange-50">
+              {phrases.map((p, i) => (
+                <div key={i} className="px-4 py-3 flex items-start gap-3 hover:bg-orange-50/30 transition-colors">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-bold text-gray-900 text-sm">{p.english}</div>
+                    <div className="font-black text-orange-500 text-base mt-0.5">{p.local}</div>
+                    <div className="text-xs text-gray-400 mt-0.5 italic">{p.pronunciation}</div>
+                    <div className="text-xs text-gray-300 mt-1">{p.usage}</div>
+                  </div>
+                  <button onClick={()=>copy(p.local, `${cat}-${i}`)}
+                    className="flex-shrink-0 w-8 h-8 rounded-xl flex items-center justify-center transition-all"
+                    style={copied===`${cat}-${i}` ? {background:"#f97316",color:"white"} : {background:"#fff7ed",color:"#f97316"}}>
+                    {copied===`${cat}-${i}` ? "✓" : "📋"}
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))
+      )}
+
+      {/* Tips section */}
+      {trip.tips?.length > 0 && (
+        <div className="bg-white rounded-2xl border border-orange-100 p-4 shadow-sm">
+          <h3 className="font-black text-gray-900 mb-3 text-sm">💡 Local Tips</h3>
+          <div className="space-y-2">
+            {trip.tips.map((tip, i) => (
+              <div key={i} className="flex gap-3">
+                <span className="w-5 h-5 rounded-full flex items-center justify-center text-xs text-white font-black flex-shrink-0 mt-0.5" style={{ background: G }}>{i+1}</span>
+                <p className="text-sm text-gray-600 leading-relaxed">{tip}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Surprise Reveal ─────────────────────────────────────────────────────────
+function SurpriseReveal({ destination, onDone }) {
+  const [revealed, setRevealed] = useState(false);
+  const [countdown, setCountdown] = useState(3);
+
+  useEffect(() => {
+    const t = setInterval(() => {
+      setCountdown(c => {
+        if (c <= 1) { clearInterval(t); setRevealed(true); return 0; }
+        return c - 1;
+      });
+    }, 1000);
+    return () => clearInterval(t);
+  }, []);
+
+  return (
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center text-center px-8"
+      style={{ background: "linear-gradient(135deg,#f97316,#ec4899)" }}>
+      {!revealed ? (
+        <div className="space-y-6">
+          <div className="text-6xl animate-bounce">🎲</div>
+          <h2 className="text-3xl font-black text-white">Your surprise destination reveals in...</h2>
+          <div className="text-8xl font-black text-white animate-pulse">{countdown}</div>
+        </div>
+      ) : (
+        <div className="space-y-6 animate-fade-in">
+          <div className="text-6xl">🎉</div>
+          <div className="text-white/70 text-lg font-bold uppercase tracking-widest">You're going to...</div>
+          <h1 className="text-5xl font-black text-white leading-tight">{destination}</h1>
+          <button onClick={onDone}
+            className="mt-6 px-8 py-4 rounded-2xl font-black text-orange-500 text-lg bg-white shadow-2xl hover:scale-105 transition-transform">
+            See My Itinerary →
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Main ─────────────────────────────────────────────────────────────────────
 function TripContent() {
-  const { id } = useParams();
-  const router = useRouter();
+  const { id }      = useParams();
+  const router      = useRouter();
   const searchParams = useSearchParams();
-  const [trip, setTrip] = useState(null);
-  const [activeDay, setActiveDay] = useState(0);
-  const [editMode, setEditMode] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const [saved, setSaved] = useState(false);
-  const [showAI, setShowAI] = useState(false);
-  const [showPacking, setShowPacking] = useState(false);
+
+  const [trip, setTrip]               = useState(null);
+  const [activeTab, setActiveTab]     = useState("itinerary");
+  const [activeDay, setActiveDay]     = useState(0);
+  const [editMode, setEditMode]       = useState(false);
+  const [copied, setCopied]           = useState(false);
+  const [saved, setSaved]             = useState(false);
+  const [showAI, setShowAI]           = useState(false);
   const [daySuggestIndex, setDaySuggestIndex] = useState(null);
+  const [expenses, setExpenses]       = useState([]);
+  const [showSurprise, setShowSurprise] = useState(false);
 
   useEffect(() => {
     const t = getTrip(id);
     if (!t) { router.push("/plan"); return; }
     setTrip(t);
+    setExpenses(t.expenses || []);
     if (searchParams.get("edit") === "true") setEditMode(true);
+    if (searchParams.get("surprise") === "true") setShowSurprise(true);
   }, [id, router, searchParams]);
 
   const persist = useCallback((updated) => {
@@ -463,95 +679,97 @@ function TripContent() {
     setTripAndSave(p => {
       const t = JSON.parse(JSON.stringify(p));
       t.daily_itinerary[di].activities[ai][field] = value;
-      t.daily_itinerary[di].daily_cost = t.daily_itinerary[di].activities.reduce((s, a) => s + (Number(a.estimated_cost) || 0) * (t.travelers || 1), 0);
-      t.total_estimated_cost = t.daily_itinerary.reduce((s, d) => s + (d.daily_cost || 0), 0);
+      t.daily_itinerary[di].daily_cost = t.daily_itinerary[di].activities.reduce((s,a)=>s+(Number(a.estimated_cost)||0)*(t.travelers||1),0);
+      t.total_estimated_cost = t.daily_itinerary.reduce((s,d)=>s+(d.daily_cost||0),0);
       return t;
     });
   }
-
   function addActivity(di, activity) {
     setTripAndSave(p => {
       const t = JSON.parse(JSON.stringify(p));
-      t.daily_itinerary[di].activities.push(activity || { time: "morning", name: "New Activity", description: "Describe this activity.", estimated_cost: 0 });
+      t.daily_itinerary[di].activities.push(activity || { time:"morning", name:"New Activity", description:"Describe this activity.", estimated_cost:0 });
       return t;
     });
   }
-
   function deleteActivity(di, ai) {
     setTripAndSave(p => {
       const t = JSON.parse(JSON.stringify(p));
-      t.daily_itinerary[di].activities.splice(ai, 1);
-      t.daily_itinerary[di].daily_cost = t.daily_itinerary[di].activities.reduce((s, a) => s + (Number(a.estimated_cost) || 0) * (t.travelers || 1), 0);
-      t.total_estimated_cost = t.daily_itinerary.reduce((s, d) => s + (d.daily_cost || 0), 0);
+      t.daily_itinerary[di].activities.splice(ai,1);
+      t.daily_itinerary[di].daily_cost = t.daily_itinerary[di].activities.reduce((s,a)=>s+(Number(a.estimated_cost)||0)*(t.travelers||1),0);
+      t.total_estimated_cost = t.daily_itinerary.reduce((s,d)=>s+(d.daily_cost||0),0);
       return t;
     });
   }
-
   function updateDayField(di, field, value) {
-    setTripAndSave(p => { const t = JSON.parse(JSON.stringify(p)); t.daily_itinerary[di][field] = value; return t; });
+    setTripAndSave(p => { const t=JSON.parse(JSON.stringify(p)); t.daily_itinerary[di][field]=value; return t; });
   }
-
   function updateTip(i, value) {
-    setTripAndSave(p => { const t = JSON.parse(JSON.stringify(p)); t.tips[i] = value; return t; });
+    setTripAndSave(p => { const t=JSON.parse(JSON.stringify(p)); t.tips[i]=value; return t; });
   }
   function deleteTip(i) {
-    setTripAndSave(p => { const t = JSON.parse(JSON.stringify(p)); t.tips.splice(i, 1); return t; });
+    setTripAndSave(p => { const t=JSON.parse(JSON.stringify(p)); t.tips.splice(i,1); return t; });
   }
   function addTip() {
-    setTripAndSave(p => { const t = JSON.parse(JSON.stringify(p)); t.tips.push("Add your tip here"); return t; });
+    setTripAndSave(p => { const t=JSON.parse(JSON.stringify(p)); t.tips.push("Add your tip here"); return t; });
   }
   function updateBudget(key, value) {
-    setTripAndSave(p => { const t = JSON.parse(JSON.stringify(p)); t.budget_breakdown[key] = Number(value); t.total_estimated_cost = Object.values(t.budget_breakdown).reduce((a, b) => a + b, 0); return t; });
+    setTripAndSave(p => { const t=JSON.parse(JSON.stringify(p)); t.budget_breakdown[key]=Number(value); t.total_estimated_cost=Object.values(t.budget_breakdown).reduce((a,b)=>a+b,0); return t; });
+  }
+  function addExpense(exp) {
+    const newExp = { ...exp, id: generateId(), createdAt: Date.now() };
+    const updated = [...expenses, newExp];
+    setExpenses(updated);
+    setTripAndSave(p => ({ ...p, expenses: updated }));
+  }
+  function deleteExpense(expId) {
+    const updated = expenses.filter(e => e.id !== expId);
+    setExpenses(updated);
+    setTripAndSave(p => ({ ...p, expenses: updated }));
   }
   function copyLink() {
-    navigator.clipboard.writeText(window.location.href).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2500); });
+    navigator.clipboard.writeText(window.location.href).then(()=>{ setCopied(true); setTimeout(()=>setCopied(false),2500); });
   }
 
   if (!trip) return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: "#FFF8F0" }}>
+    <div className="min-h-screen flex items-center justify-center" style={{ background:"#FFF8F0" }}>
       <div className="text-center">
-        <div className="w-12 h-12 rounded-full border-4 border-orange-400 border-t-transparent animate-spin mx-auto mb-4" />
+        <div className="w-12 h-12 rounded-full border-4 border-orange-400 border-t-transparent animate-spin mx-auto mb-4"/>
         <p className="text-gray-400 font-medium">Loading your trip...</p>
       </div>
     </div>
   );
 
-  // Overlays
-  if (showAI) return <AIChatPanel trip={{ ...trip, id }} onClose={() => setShowAI(false)} />;
-  if (showPacking) return <PackingList trip={trip} onClose={() => setShowPacking(false)} />;
+  if (showAI) return <AIChatPanel trip={{...trip,id}} onClose={()=>setShowAI(false)}/>;
 
-  const { daily_itinerary = [], budget_breakdown = {}, tips = [], form } = trip;
-  const totalBudget = Object.values(budget_breakdown).reduce((a, b) => a + b, 0);
-  const theme = getTheme(trip.destination || form?.destination);
-  const hero = `linear-gradient(135deg,${theme.g[0]},${theme.g[1]})`;
-  const G = "linear-gradient(135deg,#f97316,#ec4899)";
+  const { daily_itinerary=[], budget_breakdown={}, tips=[], form } = trip;
+  const totalBudget = Object.values(budget_breakdown).reduce((a,b)=>a+b,0);
+  const theme = getTheme(trip.destination||form?.destination, trip.style||form?.style);
+  const hero  = `linear-gradient(135deg,${theme.g[0]},${theme.g[1]})`;
+  const G     = "linear-gradient(135deg,#f97316,#ec4899)";
 
   return (
-    <main className="min-h-screen" style={{ background: "#FFF8F0" }}>
+    <main className="min-h-screen" style={{ background:"#FFF8F0" }}>
 
-      {/* Day suggestions modal */}
+      {/* Surprise reveal overlay */}
+      {showSurprise && <SurpriseReveal destination={trip.destination} onDone={()=>setShowSurprise(false)}/>}
+
+      {/* Day suggestions */}
       {daySuggestIndex !== null && (
-        <DaySuggestions
-          trip={trip}
-          dayIndex={daySuggestIndex}
-          onApply={(s) => addActivity(daySuggestIndex, s)}
-          onClose={() => setDaySuggestIndex(null)}
-        />
+        <DaySuggestions trip={trip} dayIndex={daySuggestIndex}
+          onApply={s=>addActivity(daySuggestIndex,s)} onClose={()=>setDaySuggestIndex(null)}/>
       )}
 
       {/* ── Nav ── */}
-      <nav className="sticky top-0 z-40 px-3 sm:px-6 py-3">
+      <nav className="sticky top-0 z-40 px-3 py-3">
         <div className="max-w-5xl mx-auto flex items-center justify-between bg-white/90 backdrop-blur-xl rounded-2xl px-4 py-3 shadow-sm border border-orange-100">
-          <Link href="/" className="text-gray-400 hover:text-gray-600 text-xs sm:text-sm font-medium transition-colors">← Home</Link>
+          <Link href="/trips" className="text-gray-400 hover:text-gray-600 text-sm font-medium transition-colors">← Trips</Link>
           <div className="flex items-center gap-2">
-            <button onClick={() => setEditMode(e => !e)}
+            <button onClick={()=>setEditMode(e=>!e)}
               className="text-xs font-bold px-3 py-2 rounded-xl border-2 transition-all"
-              style={editMode ? { borderColor: "#f97316", background: "#fff7ed", color: "#f97316" } : { borderColor: "#ffe4cc", background: "white", color: "#9ca3af" }}>
-              {editMode ? "✓ Editing" : "✏️ Edit"}
+              style={editMode ? {borderColor:"#f97316",background:"#fff7ed",color:"#f97316"} : {borderColor:"#ffedd5",background:"white",color:"#9ca3af"}}>
+              {editMode ? "✓ Done" : "✏️ Edit"}
             </button>
-            <button onClick={copyLink}
-              className="text-xs font-bold px-3 py-2 rounded-xl text-white shadow-sm"
-              style={{ background: hero }}>
+            <button onClick={copyLink} className="text-xs font-bold px-3 py-2 rounded-xl text-white shadow-sm" style={{background:hero}}>
               {copied ? "✓ Copied!" : "🔗 Share"}
             </button>
           </div>
@@ -559,324 +777,312 @@ function TripContent() {
       </nav>
 
       {editMode && (
-        <div className="mx-3 sm:mx-6 mb-3 rounded-2xl px-5 py-3 flex items-center gap-3 text-sm font-medium" style={{ background: "#fff7ed", border: "2px solid #fed7aa" }}>
+        <div className="mx-3 mb-3 rounded-2xl px-5 py-3 flex items-center gap-3 text-sm" style={{background:"#fff7ed",border:"2px solid #fed7aa"}}>
           <span className="text-orange-500">✏️</span>
-          <span className="text-orange-700 font-bold">Edit Mode</span>
-          <span className="text-orange-500 font-medium hidden sm:inline">— Click any text to edit</span>
+          <span className="text-orange-700 font-bold">Edit Mode — tap any text to change it</span>
           {saved && <span className="ml-auto text-green-600 font-bold text-xs">✓ Saved!</span>}
         </div>
       )}
 
       {/* ── Hero ── */}
-      <div className="mx-3 sm:mx-6 rounded-3xl overflow-hidden mb-6" style={{ background: hero }}>
-        <div className="max-w-5xl mx-auto px-5 sm:px-8 py-8 sm:py-10">
+      <div className="mx-3 rounded-3xl overflow-hidden mb-0" style={{background:hero}}>
+        <div className="max-w-5xl mx-auto px-5 py-8">
           <p className="text-white/70 text-xs font-black uppercase tracking-widest mb-1">✦ {theme.hi}</p>
-          <div className="flex flex-wrap items-start justify-between gap-5">
+          <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="flex-1 min-w-0">
               <div className="flex flex-wrap gap-2 mb-3">
-                {[
-                  `${STYLE_ICONS[trip.style] || "🌍"} ${trip.style?.charAt(0).toUpperCase() + trip.style?.slice(1) || "Trip"}`,
-                  `👥 ${trip.travelers} ${trip.travelers === 1 ? "traveler" : "travelers"}`,
-                  `🗓️ ${trip.days} days`,
-                ].map(tag => (
-                  <span key={tag} className="text-xs font-bold px-3 py-1.5 rounded-full" style={{ background: "rgba(255,255,255,0.2)", color: "white" }}>{tag}</span>
+                {[`${STYLE_ICONS[trip.style]||"🌍"} ${trip.style?.charAt(0).toUpperCase()+trip.style?.slice(1)||"Trip"}`,
+                  `👥 ${trip.travelers} traveler${trip.travelers===1?"":"s"}`,
+                  `🗓️ ${trip.days} days`].map(tag=>(
+                  <span key={tag} className="text-xs font-bold px-3 py-1.5 rounded-full" style={{background:"rgba(255,255,255,0.2)",color:"white"}}>{tag}</span>
                 ))}
               </div>
-              <h1 className="text-3xl sm:text-5xl font-black text-white leading-tight mb-1">
+              <h1 className="text-3xl sm:text-4xl font-black text-white leading-tight mb-1">
                 {theme.e} {editMode
-                  ? <Editable value={trip.destination} onChange={v => setTripAndSave(p => ({ ...p, destination: v }))} className="text-white" />
+                  ? <Editable value={trip.destination} onChange={v=>setTripAndSave(p=>({...p,destination:v}))} className="text-white"/>
                   : trip.destination}
               </h1>
               <p className="text-white/60 text-sm font-medium">{form?.startDate} → {form?.endDate}</p>
             </div>
-            <div className="rounded-2xl p-4 text-center flex-shrink-0" style={{ background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.25)" }}>
-              <div className="text-2xl sm:text-3xl font-black text-white">{trip.currency} {trip.total_estimated_cost?.toLocaleString()}</div>
-              <div className="text-white/60 text-xs mt-1 font-medium">Total Estimate</div>
-              {trip.travelers > 1 && <div className="text-white/50 text-xs mt-0.5">≈ {trip.currency} {Math.round(trip.total_estimated_cost / trip.travelers).toLocaleString()} / person</div>}
+            <div className="rounded-2xl p-4 text-center flex-shrink-0" style={{background:"rgba(255,255,255,0.15)",border:"1px solid rgba(255,255,255,0.25)"}}>
+              <div className="text-2xl font-black text-white">{trip.currency} {trip.total_estimated_cost?.toLocaleString()}</div>
+              <div className="text-white/60 text-xs mt-1">Budget</div>
+              {trip.travelers>1 && <div className="text-white/50 text-xs mt-0.5">≈ {trip.currency} {Math.round(trip.total_estimated_cost/trip.travelers).toLocaleString()}/person</div>}
             </div>
           </div>
           {trip.summary && (
-            <p className="mt-5 text-white/75 text-sm leading-relaxed max-w-2xl rounded-2xl px-5 py-4" style={{ background: "rgba(255,255,255,0.12)" }}>
-              {editMode ? <Editable value={trip.summary} onChange={v => setTripAndSave(p => ({ ...p, summary: v }))} multiline className="text-white" /> : trip.summary}
+            <p className="mt-4 text-white/75 text-sm leading-relaxed max-w-2xl rounded-2xl px-5 py-4" style={{background:"rgba(255,255,255,0.12)"}}>
+              {editMode ? <Editable value={trip.summary} onChange={v=>setTripAndSave(p=>({...p,summary:v}))} multiline className="text-white"/> : trip.summary}
             </p>
           )}
-          {theme.fact && !editMode && (
-            <div className="mt-3 flex items-start gap-3 max-w-2xl rounded-2xl px-5 py-3" style={{ background: "rgba(255,255,255,0.1)" }}>
-              <span className="text-yellow-300 flex-shrink-0">💡</span>
-              <p className="text-white/65 text-xs leading-relaxed">{theme.fact}</p>
+          {trip.surprise_reveal && !showSurprise && (
+            <div className="mt-3 flex items-start gap-3 max-w-2xl rounded-2xl px-5 py-3" style={{background:"rgba(255,255,255,0.1)"}}>
+              <span className="text-yellow-300 flex-shrink-0">🎲</span>
+              <p className="text-white/75 text-xs leading-relaxed italic">{trip.surprise_reveal}</p>
             </div>
           )}
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-3 sm:px-6 space-y-6 pb-32">
-
-        {/* ── AI Quick Actions ── */}
-        <section>
-          <h2 className="text-lg font-black text-gray-900 mb-3">🤖 AI Tools</h2>
-          <div className="grid grid-cols-2 gap-3">
-            <button onClick={() => setShowAI(true)}
-              className="rounded-2xl p-4 text-white text-left shadow-md hover:-translate-y-0.5 transition-all"
-              style={{ background: G }}>
-              <div className="text-2xl mb-2">🤖</div>
-              <div className="font-black text-sm">Ask AI</div>
-              <div className="text-white/70 text-xs mt-0.5">Tips, suggestions & more</div>
-            </button>
-            <button onClick={() => setShowPacking(true)}
-              className="rounded-2xl p-4 text-white text-left shadow-md hover:-translate-y-0.5 transition-all"
-              style={{ background: "linear-gradient(135deg,#8b5cf6,#6366f1)" }}>
-              <div className="text-2xl mb-2">🧳</div>
-              <div className="font-black text-sm">Packing List</div>
-              <div className="text-white/70 text-xs mt-0.5">AI-generated for your trip</div>
-            </button>
+      {/* ── Tab Bar ── */}
+      <div className="sticky top-16 z-30 mx-3 mb-4">
+        <div className="bg-white/95 backdrop-blur-xl rounded-b-2xl border border-orange-100 border-t-0 shadow-sm overflow-hidden">
+          <div className="flex">
+            {TABS.map(tab => (
+              <button key={tab.id} onClick={()=>setActiveTab(tab.id)}
+                className="flex-1 flex flex-col items-center gap-0.5 py-3 transition-all"
+                style={activeTab===tab.id ? {background:hero,color:"white"} : {color:"#9ca3af"}}>
+                <span className="text-base leading-none">{tab.icon}</span>
+                <span className="text-xs font-black">{tab.label}</span>
+              </button>
+            ))}
           </div>
-        </section>
+        </div>
+      </div>
 
-        {/* ── Budget Breakdown ── */}
-        {totalBudget > 0 && (
-          <section>
-            <h2 className="text-lg font-black text-gray-900 mb-3">💰 Budget Breakdown</h2>
-            <div className="bg-white rounded-3xl border border-orange-100 p-5 sm:p-6 shadow-sm">
-              <div className="flex h-3 rounded-full overflow-hidden gap-0.5 mb-5">
-                {Object.entries(budget_breakdown).map(([k, v]) => (
-                  <div key={k} className="rounded-full" style={{ width: `${totalBudget > 0 ? (v / totalBudget) * 100 : 0}%`, background: BUDGET_CATS[k]?.color || "#9ca3af" }} />
-                ))}
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                {Object.entries(budget_breakdown).map(([k, v]) => (
-                  <div key={k} className="flex items-center gap-3">
-                    <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ background: BUDGET_CATS[k]?.color || "#9ca3af" }} />
-                    <div>
-                      <div className="text-xs text-gray-400">{BUDGET_CATS[k]?.label || k}</div>
-                      <div className="text-sm font-bold text-gray-900">
-                        {trip.currency} {editMode ? <EditableNumber value={v} onChange={val => updateBudget(k, val)} /> : v?.toLocaleString()}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
-        )}
+      {/* ── Tab Content ── */}
+      <div className="max-w-5xl mx-auto px-3 pb-32 space-y-4">
 
-        {/* ── Itinerary ── */}
-        {daily_itinerary.length > 0 && (
-          <section>
-            <h2 className="text-lg font-black text-gray-900 mb-3">🗓️ Day-by-Day Itinerary</h2>
-
-            {/* Day tabs */}
-            <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2 mb-4">
-              {daily_itinerary.map((day, i) => (
-                <button key={i} onClick={() => setActiveDay(i)}
-                  className="flex-shrink-0 px-4 py-2 rounded-2xl text-sm font-bold transition-all"
-                  style={activeDay === i
-                    ? { background: hero, color: "white", boxShadow: `0 4px 12px ${theme.g[0]}40` }
-                    : { background: "white", color: "#6b7280", border: "2px solid #ffedd5" }}>
-                  Day {day.day}
+        {/* ITINERARY TAB */}
+        {activeTab === "itinerary" && (
+          <>
+            {/* AI Quick Actions */}
+            <section>
+              <div className="grid grid-cols-2 gap-3">
+                <button onClick={()=>setShowAI(true)}
+                  className="rounded-2xl p-4 text-white text-left shadow-md hover:-translate-y-0.5 transition-all" style={{background:G}}>
+                  <div className="text-2xl mb-2">🤖</div>
+                  <div className="font-black text-sm">Ask AI</div>
+                  <div className="text-white/70 text-xs mt-0.5">Tips, suggestions & more</div>
                 </button>
-              ))}
-            </div>
+                <button onClick={()=>setActiveTab("pack")}
+                  className="rounded-2xl p-4 text-white text-left shadow-md hover:-translate-y-0.5 transition-all" style={{background:"linear-gradient(135deg,#8b5cf6,#6366f1)"}}>
+                  <div className="text-2xl mb-2">🧳</div>
+                  <div className="font-black text-sm">Packing List</div>
+                  <div className="text-white/70 text-xs mt-0.5">AI-generated checklist</div>
+                </button>
+                <button onClick={()=>setActiveTab("expenses")}
+                  className="rounded-2xl p-4 text-white text-left shadow-md hover:-translate-y-0.5 transition-all" style={{background:"linear-gradient(135deg,#0d9488,#0ea5e9)"}}>
+                  <div className="text-2xl mb-2">💸</div>
+                  <div className="font-black text-sm">Track Expenses</div>
+                  <div className="text-white/70 text-xs mt-0.5">{expenses.length} expenses logged</div>
+                </button>
+                <button onClick={()=>setActiveTab("local")}
+                  className="rounded-2xl p-4 text-white text-left shadow-md hover:-translate-y-0.5 transition-all" style={{background:"linear-gradient(135deg,#d97706,#f59e0b)"}}>
+                  <div className="text-2xl mb-2">🗣️</div>
+                  <div className="font-black text-sm">Local Phrases</div>
+                  <div className="text-white/70 text-xs mt-0.5">Speak like a local</div>
+                </button>
+              </div>
+            </section>
 
-            {daily_itinerary[activeDay] && (
-              <div className="bg-white rounded-3xl border border-orange-100 overflow-hidden shadow-sm">
-                {/* Day header */}
-                <div className="p-5 sm:p-6 border-b border-orange-50" style={{ background: "#FFF8F0" }}>
-                  <div className="flex items-start justify-between gap-4 flex-wrap">
-                    <div>
-                      <div className="text-xs font-black uppercase tracking-widest mb-1" style={{ color: theme.g[0] }}>
-                        Day {daily_itinerary[activeDay].day} · {daily_itinerary[activeDay].date}
+            {/* Budget Breakdown */}
+            {totalBudget > 0 && (
+              <section>
+                <h2 className="text-lg font-black text-gray-900 mb-3">💰 Budget Breakdown</h2>
+                <div className="bg-white rounded-3xl border border-orange-100 p-5 shadow-sm">
+                  <div className="flex h-3 rounded-full overflow-hidden gap-0.5 mb-5">
+                    {Object.entries(budget_breakdown).map(([k,v])=>(
+                      <div key={k} className="rounded-full" style={{width:`${totalBudget>0?(v/totalBudget)*100:0}%`,background:BUDGET_CATS[k]?.color||"#9ca3af"}}/>
+                    ))}
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                    {Object.entries(budget_breakdown).map(([k,v])=>(
+                      <div key={k} className="flex items-center gap-3">
+                        <div className="w-3 h-3 rounded-full flex-shrink-0" style={{background:BUDGET_CATS[k]?.color||"#9ca3af"}}/>
+                        <div>
+                          <div className="text-xs text-gray-400">{BUDGET_CATS[k]?.label||k}</div>
+                          <div className="text-sm font-bold text-gray-900">
+                            {trip.currency} {editMode ? <EditableNumber value={v} onChange={val=>updateBudget(k,val)}/> : v?.toLocaleString()}
+                          </div>
+                        </div>
                       </div>
-                      <h3 className="text-xl font-black text-gray-900">
-                        {editMode ? <Editable value={daily_itinerary[activeDay].title} onChange={v => updateDayField(activeDay, "title", v)} /> : daily_itinerary[activeDay].title}
-                      </h3>
-                      <p className="text-sm text-gray-400 mt-1 font-medium">
-                        🏨 {editMode
-                          ? <Editable value={daily_itinerary[activeDay].accommodation} onChange={v => updateDayField(activeDay, "accommodation", v)} placeholder="Add hotel..." />
-                          : daily_itinerary[activeDay].accommodation}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="rounded-2xl px-4 py-2 text-center" style={{ background: "white", border: "2px solid #ffedd5" }}>
-                        <div className="text-lg font-black" style={{ color: theme.g[0] }}>{trip.currency} {daily_itinerary[activeDay].daily_cost?.toLocaleString()}</div>
-                        <div className="text-xs text-gray-400">day total</div>
-                      </div>
-                      {/* AI suggestions button per day */}
-                      <button onClick={() => setDaySuggestIndex(activeDay)}
-                        className="px-3 py-2 rounded-2xl text-white text-xs font-black shadow-sm hover:-translate-y-0.5 transition-all"
-                        style={{ background: G }}>
-                        ✨ AI
-                      </button>
-                    </div>
+                    ))}
                   </div>
                 </div>
+              </section>
+            )}
 
-                {/* Activities */}
-                <div className="divide-y divide-orange-50">
-                  {daily_itinerary[activeDay].activities?.map((a, j) => {
-                    const ts = TIME_STYLE[a.time] || TIME_STYLE.morning;
-                    return (
-                      <div key={j} className="p-4 sm:p-5 flex gap-3 sm:gap-4 hover:bg-orange-50/30 transition-colors group">
-                        <div className="flex-shrink-0 pt-0.5">
-                          {editMode ? (
-                            <select value={a.time} onChange={e => updateActivity(activeDay, j, "time", e.target.value)}
-                              className="text-xs font-bold px-2 py-1.5 rounded-full border-2 outline-none"
-                              style={{ background: ts.bg, color: ts.text, borderColor: ts.bg }}>
-                              {TIME_OPTS.map(t => <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>)}
-                            </select>
-                          ) : (
-                            <span className="text-xs font-bold px-3 py-1.5 rounded-full" style={{ background: ts.bg, color: ts.text }}>
-                              {a.time?.charAt(0).toUpperCase() + a.time?.slice(1)}
-                            </span>
-                          )}
+            {/* Daily Itinerary */}
+            {daily_itinerary.length > 0 && (
+              <section>
+                <h2 className="text-lg font-black text-gray-900 mb-3">🗓️ Day-by-Day</h2>
+                <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2 mb-4">
+                  {daily_itinerary.map((day,i)=>(
+                    <button key={i} onClick={()=>setActiveDay(i)}
+                      className="flex-shrink-0 px-4 py-2 rounded-2xl text-sm font-bold transition-all"
+                      style={activeDay===i ? {background:hero,color:"white",boxShadow:`0 4px 12px ${theme.g[0]}40`} : {background:"white",color:"#6b7280",border:"2px solid #ffedd5"}}>
+                      Day {day.day}
+                    </button>
+                  ))}
+                </div>
+
+                {daily_itinerary[activeDay] && (
+                  <div className="bg-white rounded-3xl border border-orange-100 overflow-hidden shadow-sm">
+                    <div className="p-5 border-b border-orange-50" style={{background:"#FFF8F0"}}>
+                      <div className="flex items-start justify-between gap-4 flex-wrap">
+                        <div>
+                          <div className="text-xs font-black uppercase tracking-widest mb-1" style={{color:theme.g[0]}}>
+                            Day {daily_itinerary[activeDay].day} · {daily_itinerary[activeDay].date}
+                          </div>
+                          <h3 className="text-xl font-black text-gray-900">
+                            {editMode ? <Editable value={daily_itinerary[activeDay].title} onChange={v=>updateDayField(activeDay,"title",v)}/> : daily_itinerary[activeDay].title}
+                          </h3>
+                          <p className="text-sm text-gray-400 mt-1">
+                            🏨 {editMode ? <Editable value={daily_itinerary[activeDay].accommodation} onChange={v=>updateDayField(activeDay,"accommodation",v)} placeholder="Add hotel..."/> : daily_itinerary[activeDay].accommodation}
+                          </p>
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between gap-2">
-                            <h4 className="font-bold text-gray-900 text-sm">
-                              {editMode ? <Editable value={a.name} onChange={v => updateActivity(activeDay, j, "name", v)} /> : a.name}
-                            </h4>
-                            <div className="flex items-center gap-2 flex-shrink-0">
-                              {a.estimated_cost > 0 && (
-                                <span className="text-xs font-bold text-gray-400">
-                                  {trip.currency} {editMode ? <EditableNumber value={a.estimated_cost} onChange={v => updateActivity(activeDay, j, "estimated_cost", v)} /> : a.estimated_cost?.toLocaleString()}
-                                </span>
-                              )}
-                              {editMode && (
-                                <button onClick={() => deleteActivity(activeDay, j)}
-                                  className="opacity-0 group-hover:opacity-100 w-6 h-6 rounded-lg bg-red-100 text-red-400 hover:bg-red-200 hover:text-red-600 transition-all flex items-center justify-center text-xs font-black">
-                                  ×
-                                </button>
+                        <div className="flex items-center gap-2">
+                          <div className="rounded-2xl px-4 py-2 text-center" style={{background:"white",border:"2px solid #ffedd5"}}>
+                            <div className="text-lg font-black" style={{color:theme.g[0]}}>{trip.currency} {daily_itinerary[activeDay].daily_cost?.toLocaleString()}</div>
+                            <div className="text-xs text-gray-400">day total</div>
+                          </div>
+                          <button onClick={()=>setDaySuggestIndex(activeDay)} className="px-3 py-2 rounded-2xl text-white text-xs font-black shadow-sm hover:-translate-y-0.5 transition-all" style={{background:G}}>✨ AI</button>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="divide-y divide-orange-50">
+                      {daily_itinerary[activeDay].activities?.map((a,j)=>{
+                        const ts = TIME_STYLE[a.time]||TIME_STYLE.morning;
+                        return (
+                          <div key={j} className="p-4 flex gap-3 hover:bg-orange-50/30 transition-colors group">
+                            <div className="flex-shrink-0 pt-0.5">
+                              {editMode ? (
+                                <select value={a.time} onChange={e=>updateActivity(activeDay,j,"time",e.target.value)}
+                                  className="text-xs font-bold px-2 py-1.5 rounded-full border-2 outline-none"
+                                  style={{background:ts.bg,color:ts.text,borderColor:ts.bg}}>
+                                  {["morning","afternoon","evening"].map(t=><option key={t} value={t}>{t.charAt(0).toUpperCase()+t.slice(1)}</option>)}
+                                </select>
+                              ) : (
+                                <span className="text-xs font-bold px-3 py-1.5 rounded-full" style={{background:ts.bg,color:ts.text}}>{a.time?.charAt(0).toUpperCase()+a.time?.slice(1)}</span>
                               )}
                             </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-start justify-between gap-2">
+                                <h4 className="font-bold text-gray-900 text-sm">{editMode ? <Editable value={a.name} onChange={v=>updateActivity(activeDay,j,"name",v)}/> : a.name}</h4>
+                                <div className="flex items-center gap-2 flex-shrink-0">
+                                  {a.estimated_cost>0 && <span className="text-xs font-bold text-gray-400">{trip.currency} {editMode ? <EditableNumber value={a.estimated_cost} onChange={v=>updateActivity(activeDay,j,"estimated_cost",v)}/> : a.estimated_cost?.toLocaleString()}</span>}
+                                  {editMode && <button onClick={()=>deleteActivity(activeDay,j)} className="opacity-0 group-hover:opacity-100 w-6 h-6 rounded-lg bg-red-100 text-red-400 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center text-xs font-black">×</button>}
+                                </div>
+                              </div>
+                              <p className="text-sm text-gray-400 mt-1 leading-relaxed">{editMode ? <Editable value={a.description} onChange={v=>updateActivity(activeDay,j,"description",v)} multiline/> : a.description}</p>
+                            </div>
                           </div>
-                          <p className="text-sm text-gray-400 mt-1 leading-relaxed">
-                            {editMode ? <Editable value={a.description} onChange={v => updateActivity(activeDay, j, "description", v)} multiline /> : a.description}
-                          </p>
-                          {editMode && a.estimated_cost === 0 && (
-                            <button onClick={() => updateActivity(activeDay, j, "estimated_cost", 50)} className="mt-1 text-xs text-orange-400 hover:text-orange-600 font-medium">+ Add cost</button>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {editMode && (
-                  <div className="p-4 border-t border-orange-50">
-                    <button onClick={() => addActivity(activeDay)}
-                      className="w-full py-3 rounded-2xl border-2 border-dashed border-orange-200 text-orange-400 hover:border-orange-300 hover:bg-orange-50 transition-all text-sm font-bold">
-                      + Add Activity
-                    </button>
+                        );
+                      })}
+                    </div>
+                    {editMode && <div className="p-4 border-t border-orange-50"><button onClick={()=>addActivity(activeDay)} className="w-full py-3 rounded-2xl border-2 border-dashed border-orange-200 text-orange-400 hover:border-orange-300 hover:bg-orange-50 transition-all text-sm font-bold">+ Add Activity</button></div>}
+                    <div className="px-5 py-4 flex justify-between" style={{background:"#FFF8F0"}}>
+                      <button onClick={()=>setActiveDay(p=>Math.max(0,p-1))} disabled={activeDay===0} className="text-sm font-bold text-gray-400 hover:text-orange-500 disabled:opacity-30 transition-colors">← Previous</button>
+                      <button onClick={()=>setActiveDay(p=>Math.min(daily_itinerary.length-1,p+1))} disabled={activeDay===daily_itinerary.length-1} className="text-sm font-bold text-gray-400 hover:text-orange-500 disabled:opacity-30 transition-colors">Next →</button>
+                    </div>
                   </div>
                 )}
-
-                <div className="px-5 py-4 flex justify-between" style={{ background: "#FFF8F0" }}>
-                  <button onClick={() => setActiveDay(p => Math.max(0, p - 1))} disabled={activeDay === 0}
-                    className="text-sm font-bold text-gray-400 hover:text-orange-500 disabled:opacity-30 transition-colors">← Previous</button>
-                  <button onClick={() => setActiveDay(p => Math.min(daily_itinerary.length - 1, p + 1))} disabled={activeDay === daily_itinerary.length - 1}
-                    className="text-sm font-bold text-gray-400 hover:text-orange-500 disabled:opacity-30 transition-colors">Next →</button>
-                </div>
-              </div>
+              </section>
             )}
-          </section>
-        )}
 
-        {/* ── Tips ── */}
-        {(tips.length > 0 || editMode) && (
-          <section>
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-lg font-black text-gray-900">💡 Tips for {trip.destination}</h2>
-              {editMode && <button onClick={addTip} className="text-xs font-bold px-4 py-2 rounded-xl border-2 border-orange-200 text-orange-500 bg-orange-50">+ Add Tip</button>}
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {tips.map((tip, i) => (
-                <div key={i} className="flex gap-3 bg-white rounded-2xl border border-orange-100 p-4 shadow-sm group">
-                  <span className="text-xs font-black flex-shrink-0 mt-0.5 w-6 h-6 rounded-full flex items-center justify-center text-white" style={{ background: hero }}>{i + 1}</span>
-                  <p className="text-gray-500 text-sm leading-relaxed flex-1">
-                    {editMode ? <Editable value={tip} onChange={v => updateTip(i, v)} multiline /> : tip}
-                  </p>
-                  {editMode && <button onClick={() => deleteTip(i)} className="opacity-0 group-hover:opacity-100 w-5 h-5 rounded-lg bg-red-100 text-red-400 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center text-xs font-black flex-shrink-0 mt-0.5">×</button>}
+            {/* Hotel & Restaurant Picks */}
+            {(trip.recommended_hotels?.length>0 || trip.recommended_restaurants?.length>0) && (
+              <section className="space-y-3">
+                {trip.recommended_hotels?.length>0 && (
+                  <div className="bg-white rounded-2xl border border-orange-100 p-4 shadow-sm">
+                    <div className="font-black text-gray-900 mb-3 text-sm">🏨 AI Hotel Picks</div>
+                    <div className="space-y-3">
+                      {trip.recommended_hotels.map((h,i)=>(
+                        <a key={i} href={`https://www.booking.com/search.html?ss=${encodeURIComponent(h.name+" "+trip.destination)}&checkin=${trip.form?.startDate||""}&checkout=${trip.form?.endDate||""}&group_adults=${trip.travelers||2}&aid=1269762&label=tp-712006`}
+                          target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 hover:bg-orange-50 rounded-xl p-2 -m-2 transition-colors group">
+                          <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg bg-orange-50 flex-shrink-0">🏨</div>
+                          <div className="flex-1 min-w-0">
+                            <div className="font-bold text-gray-900 text-sm">{h.name}</div>
+                            <div className="text-xs text-gray-400">{h.area} · {"★".repeat(Math.min(h.stars||3,5))}</div>
+                            <div className="text-xs text-orange-500">{h.why}</div>
+                          </div>
+                          <div className="text-right flex-shrink-0">
+                            <div className="font-black text-sm text-gray-900">{trip.currency} {h.price_per_night?.toLocaleString()}/night</div>
+                            <div className="text-xs text-blue-500 group-hover:text-blue-700">Book →</div>
+                          </div>
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {trip.recommended_restaurants?.length>0 && (
+                  <div className="bg-white rounded-2xl border border-orange-100 p-4 shadow-sm">
+                    <div className="font-black text-gray-900 mb-3 text-sm">🍽️ AI Restaurant Picks</div>
+                    <div className="grid grid-cols-2 gap-2">
+                      {trip.recommended_restaurants.map((r,i)=>(
+                        <a key={i} href={`https://www.google.com/search?q=${encodeURIComponent(r.name+" "+trip.destination)}`}
+                          target="_blank" rel="noopener noreferrer" className="rounded-xl border border-orange-100 p-3 hover:border-orange-300 hover:bg-orange-50 transition-all">
+                          <div className="font-bold text-gray-900 text-xs">{r.name}</div>
+                          <div className="text-xs text-gray-400 mt-0.5">{r.type} · {r.price_range}</div>
+                          <div className="text-xs text-orange-500 mt-1">Try: {r.must_try}</div>
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </section>
+            )}
+
+            {/* Book Your Trip */}
+            <BookingSection trip={trip}/>
+
+            {/* Tips */}
+            {(tips.length>0||editMode) && (
+              <section>
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="text-lg font-black text-gray-900">💡 Travel Tips</h2>
+                  {editMode && <button onClick={addTip} className="text-xs font-bold px-4 py-2 rounded-xl border-2 border-orange-200 text-orange-500 bg-orange-50">+ Add</button>}
                 </div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* ── Book Your Trip ── */}
-        <BookingSection trip={trip} />
-
-        {/* ── AI Hotel & Restaurant Picks ── */}
-        {(trip.recommended_hotels?.length > 0 || trip.recommended_restaurants?.length > 0) && (
-          <section className="space-y-3">
-            {trip.recommended_hotels?.length > 0 && (
-              <div className="bg-white rounded-2xl border border-orange-100 p-4 shadow-sm">
-                <div className="font-black text-gray-900 mb-3 text-sm">🏨 AI Hotel Picks</div>
-                <div className="space-y-3">
-                  {trip.recommended_hotels.map((h, i) => (
-                    <a key={i}
-                      href={`https://www.booking.com/search.html?ss=${encodeURIComponent(h.name + " " + trip.destination)}&checkin=${trip.form?.startDate || ""}&checkout=${trip.form?.endDate || ""}&group_adults=${trip.travelers || 2}&aid=304142`}
-                      target="_blank" rel="noopener noreferrer"
-                      className="flex items-center gap-3 hover:bg-orange-50 rounded-xl p-2 -m-2 transition-colors group">
-                      <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg flex-shrink-0 bg-orange-50">🏨</div>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-bold text-gray-900 text-sm">{h.name}</div>
-                        <div className="text-xs text-gray-400">{h.area} · {"★".repeat(Math.min(h.stars || 3, 5))}</div>
-                        <div className="text-xs text-orange-500 mt-0.5">{h.why}</div>
-                      </div>
-                      <div className="text-right flex-shrink-0">
-                        <div className="font-black text-sm text-gray-900">{trip.currency} {h.price_per_night?.toLocaleString()}/night</div>
-                        <div className="text-xs text-blue-500 group-hover:text-blue-700">Book →</div>
-                      </div>
-                    </a>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {tips.map((tip,i)=>(
+                    <div key={i} className="flex gap-3 bg-white rounded-2xl border border-orange-100 p-4 shadow-sm group">
+                      <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs text-white font-black flex-shrink-0 mt-0.5" style={{background:hero}}>{i+1}</span>
+                      <p className="text-gray-500 text-sm leading-relaxed flex-1">{editMode ? <Editable value={tip} onChange={v=>updateTip(i,v)} multiline/> : tip}</p>
+                      {editMode && <button onClick={()=>deleteTip(i)} className="opacity-0 group-hover:opacity-100 w-5 h-5 rounded-lg bg-red-100 text-red-400 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center text-xs font-black">×</button>}
+                    </div>
                   ))}
                 </div>
-              </div>
+              </section>
             )}
-            {trip.recommended_restaurants?.length > 0 && (
-              <div className="bg-white rounded-2xl border border-orange-100 p-4 shadow-sm">
-                <div className="font-black text-gray-900 mb-3 text-sm">🍽️ AI Restaurant Picks</div>
-                <div className="grid grid-cols-2 gap-2">
-                  {trip.recommended_restaurants.map((r, i) => (
-                    <a key={i} href={`https://www.google.com/search?q=${encodeURIComponent(r.name + " " + trip.destination)}`}
-                      target="_blank" rel="noopener noreferrer"
-                      className="rounded-xl border border-orange-100 p-3 hover:border-orange-300 hover:bg-orange-50 transition-all">
-                      <div className="font-bold text-gray-900 text-xs">{r.name}</div>
-                      <div className="text-xs text-gray-400 mt-0.5">{r.type} · {r.price_range}</div>
-                      <div className="text-xs text-orange-500 mt-1">Try: {r.must_try}</div>
-                    </a>
-                  ))}
+
+            {/* Share CTA */}
+            <section>
+              <div className="relative rounded-3xl overflow-hidden p-7 text-center text-white" style={{background:hero}}>
+                <div className="text-4xl mb-3">{theme.e}</div>
+                <h2 className="text-2xl font-black mb-2">Share your adventure! {theme.e}</h2>
+                <p className="text-white/70 mb-6 text-sm">Share this plan with your travel companions.</p>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <button onClick={copyLink} className="bg-white font-bold px-8 py-3.5 rounded-2xl shadow-lg hover:-translate-y-0.5 transition-all text-sm" style={{color:theme.g[0]}}>
+                    {copied ? "✓ Copied!" : "🔗 Copy Link"}
+                  </button>
+                  <Link href="/plan" className="font-bold px-8 py-3.5 rounded-2xl text-sm text-white border border-white/30" style={{background:"rgba(255,255,255,0.2)"}}>
+                    Plan Another Trip
+                  </Link>
                 </div>
               </div>
-            )}
-          </section>
+            </section>
+          </>
         )}
 
-        {/* ── Share CTA ── */}
-        <section>
-          <div className="relative rounded-3xl overflow-hidden p-7 sm:p-10 text-center text-white" style={{ background: hero }}>
-            <div className="text-4xl mb-3">{theme.e}</div>
-            <h2 className="text-2xl sm:text-3xl font-black mb-2">Your trip is ready! {theme.e}</h2>
-            <p className="text-white/70 mb-6 text-sm">Share this plan with your travel companions.</p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <button onClick={copyLink} className="bg-white font-bold px-8 py-3.5 rounded-2xl shadow-lg hover:-translate-y-0.5 transition-all text-sm" style={{ color: theme.g[0] }}>
-                {copied ? "✓ Copied!" : "🔗 Copy Share Link"}
-              </button>
-              <Link href="/plan" className="font-bold px-8 py-3.5 rounded-2xl transition-all text-sm text-white border border-white/30" style={{ background: "rgba(255,255,255,0.2)" }}>
-                Plan Another Trip
-              </Link>
-            </div>
-          </div>
-        </section>
+        {/* PACK TAB */}
+        {activeTab === "pack" && <PackTab trip={trip}/>}
 
+        {/* EXPENSES TAB */}
+        {activeTab === "expenses" && (
+          <ExpensesTab trip={trip} expenses={expenses} onAdd={addExpense} onDelete={deleteExpense}/>
+        )}
+
+        {/* LOCAL TAB */}
+        {activeTab === "local" && <LocalTab trip={trip}/>}
       </div>
 
       {/* ── Floating AI Button ── */}
-      <button
-        onClick={() => setShowAI(true)}
+      <button onClick={()=>setShowAI(true)}
         className="fixed bottom-28 right-4 z-30 w-14 h-14 rounded-2xl shadow-xl text-white text-2xl flex items-center justify-center hover:-translate-y-1 transition-all"
-        style={{ background: G, boxShadow: "0 8px 24px rgba(249,115,22,0.4)" }}>
+        style={{background:G,boxShadow:"0 8px 24px rgba(249,115,22,0.4)"}}>
         🤖
       </button>
-
     </main>
   );
 }
@@ -884,11 +1090,11 @@ function TripContent() {
 export default function TripPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center" style={{ background: "#FFF8F0" }}>
-        <div className="w-12 h-12 rounded-full border-4 border-orange-400 border-t-transparent animate-spin" />
+      <div className="min-h-screen flex items-center justify-center" style={{background:"#FFF8F0"}}>
+        <div className="w-12 h-12 rounded-full border-4 border-orange-400 border-t-transparent animate-spin"/>
       </div>
     }>
-      <TripContent />
+      <TripContent/>
     </Suspense>
   );
 }

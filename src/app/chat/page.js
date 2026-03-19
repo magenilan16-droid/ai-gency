@@ -216,12 +216,12 @@ function MessageContent({ text }) {
 // ─── Quick prompts ──────────────────────────────────────────────────────────
 
 const QUICK_PROMPTS = [
-  "Save a new trip for me",
-  "What should I pack?",
-  "Recommend hotels",
-  "Find me cheap flights",
-  "Optimize my budget",
-  "Best hidden gems?",
+  "🎲 Compare two destinations for me",
+  "💾 Save a new trip for me",
+  "🧳 What should I pack?",
+  "🏨 Recommend hotels",
+  "✈️ Find me cheap flights",
+  "💡 Best hidden gems?",
 ];
 
 // ─── Main component ─────────────────────────────────────────────────────────

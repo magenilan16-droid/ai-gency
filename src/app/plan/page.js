@@ -442,6 +442,31 @@ export default function PlanPage() {
     router.push(`/trip/${id}?edit=true`);
   }
 
+  async function generateSurprise(data) {
+    setGenerating(true);
+    setError("");
+    try {
+      const res = await fetch("/api/surprise", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...data, currency }),
+      });
+      const text = await res.text();
+      let tripData;
+      try { tripData = JSON.parse(text); }
+      catch { throw new Error("Server timeout — please retry."); }
+      if (!res.ok) throw new Error(tripData.error || "Generation failed.");
+      const id = generateId();
+      saveTrip(id, { ...tripData, isSurprise: true, form: data });
+      await new Promise(r => setTimeout(r, 100));
+      router.push(`/trip/${id}?surprise=true`);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setGenerating(false);
+    }
+  }
+
   // ── Mode selection ──
   if (!mode) return (
     <main className="min-h-screen flex flex-col items-center justify-center px-4 py-12" style={{ background: "#FFF8F0" }}>
@@ -473,20 +498,128 @@ export default function PlanPage() {
             </div>
           </button>
 
-          <button onClick={() => setMode("manual")}
-            className="relative overflow-hidden rounded-3xl p-7 text-left border-2 bg-white hover:-translate-y-1 transition-all shadow-sm"
-            style={{ borderColor: "#ffe4cc" }}>
-            <div className="relative">
+          <div className="grid grid-cols-2 gap-4">
+            <button onClick={() => setMode("manual")}
+              className="relative overflow-hidden rounded-3xl p-6 text-left border-2 bg-white hover:-translate-y-1 transition-all shadow-sm"
+              style={{ borderColor: "#ffe4cc" }}>
               <div className="text-3xl mb-3">✏️</div>
-              <div className="text-xl font-black text-gray-900 mb-1">Build It Yourself</div>
-              <div className="text-gray-400 text-sm leading-relaxed">Fill in the basics, then edit every detail yourself. Full creative control.</div>
-              <div className="mt-4 inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold text-orange-500 border-2 border-orange-100 bg-orange-50">Start Building →</div>
-            </div>
-          </button>
+              <div className="text-lg font-black text-gray-900 mb-1">Build It Yourself</div>
+              <div className="text-gray-400 text-xs leading-relaxed">Fill in the basics yourself. Full control.</div>
+            </button>
+
+            <button onClick={() => setMode("surprise")}
+              className="relative overflow-hidden rounded-3xl p-6 text-white text-left hover:-translate-y-1 transition-all shadow-xl"
+              style={{ background: "linear-gradient(135deg,#7c3aed,#a21caf)" }}>
+              <div className="absolute top-0 right-0 text-7xl opacity-10 font-black leading-none -mt-2 -mr-2">🎲</div>
+              <div className="relative">
+                <div className="text-3xl mb-3">🎲</div>
+                <div className="text-lg font-black mb-1">Surprise Me!</div>
+                <div className="text-white/70 text-xs leading-relaxed">Let AI pick a mystery destination for you.</div>
+              </div>
+            </button>
+          </div>
         </div>
       </div>
     </main>
   );
+
+  // ── Surprise mode ──
+  if (mode === "surprise") {
+    const today = new Date().toISOString().split("T")[0];
+    const STYLES_S = [
+      { value:"adventure", label:"Adventure", icon:"🧗" },
+      { value:"relaxed",   label:"Relaxed",   icon:"🏖️" },
+      { value:"cultural",  label:"Cultural",  icon:"🏛️" },
+      { value:"luxury",    label:"Luxury",    icon:"✨" },
+    ];
+    const BUDGETS = [500,1000,2000,3000,5000,8000];
+    const [sf, setSf] = useState({ startDate:"", endDate:"", travelers:2, budget:null, style:"cultural", accommodation:"mid-range" });
+    const setS = (k,v) => setSf(p=>({...p,[k]:v}));
+    const days  = sf.startDate && sf.endDate ? Math.ceil((new Date(sf.endDate)-new Date(sf.startDate))/86400000) : 0;
+    const valid = sf.startDate && sf.endDate && days > 0 && sf.budget;
+    return (
+      <main className="min-h-screen" style={{ background:"#FFF8F0" }}>
+        <nav className="px-4 py-4 sticky top-0 z-50">
+          <div className="max-w-lg mx-auto flex items-center justify-between bg-white rounded-2xl px-5 py-3 shadow-sm border border-orange-100">
+            <button onClick={()=>setMode(null)} className="text-gray-400 hover:text-gray-600 text-sm font-medium">← Back</button>
+            <span className="font-black" style={{background:"linear-gradient(135deg,#7c3aed,#a21caf)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>🎲 Surprise Me</span>
+            <select value={currency} onChange={e=>setCurrency(e.target.value)} className="text-xs font-bold px-2 py-1.5 rounded-xl border-2 border-orange-100 bg-white outline-none text-gray-600">
+              {CURRENCIES.map(c=><option key={c}>{c}</option>)}
+            </select>
+          </div>
+        </nav>
+        <div className="max-w-lg mx-auto px-4 py-6 space-y-5">
+          <div className="rounded-3xl p-6 text-white text-center" style={{background:"linear-gradient(135deg,#7c3aed,#a21caf)"}}>
+            <div className="text-5xl mb-3">🎲</div>
+            <h1 className="text-2xl font-black mb-1">Mystery Destination</h1>
+            <p className="text-white/70 text-sm">Tell us when & how much — Claude picks the perfect surprise destination for you.</p>
+          </div>
+
+          {/* Dates */}
+          <div className="bg-white rounded-2xl border-2 border-orange-100 p-4">
+            <label className="text-xs font-black text-orange-400 uppercase tracking-widest block mb-3">📅 When are you going?</label>
+            <div className="grid grid-cols-2 gap-3">
+              <div><p className="text-xs text-gray-400 mb-1">Depart</p><input type="date" value={sf.startDate} min={today} onChange={e=>setS("startDate",e.target.value)} className="w-full px-3 py-2.5 rounded-xl border-2 border-orange-100 focus:border-orange-300 outline-none text-sm"/></div>
+              <div><p className="text-xs text-gray-400 mb-1">Return</p><input type="date" value={sf.endDate} min={sf.startDate||today} onChange={e=>setS("endDate",e.target.value)} className="w-full px-3 py-2.5 rounded-xl border-2 border-orange-100 focus:border-orange-300 outline-none text-sm"/></div>
+            </div>
+            {days > 0 && <p className="text-xs font-black text-orange-500 mt-2">✓ {days} day adventure</p>}
+          </div>
+
+          {/* Travelers */}
+          <div className="bg-white rounded-2xl border-2 border-orange-100 p-4">
+            <label className="text-xs font-black text-orange-400 uppercase tracking-widest block mb-3">👥 How many travelers?</label>
+            <div className="flex items-center gap-4 justify-center">
+              <button type="button" onClick={()=>setS("travelers",Math.max(1,sf.travelers-1))} className="w-10 h-10 rounded-xl border-2 border-orange-100 text-orange-400 font-black text-xl hover:bg-orange-50 flex items-center justify-center">−</button>
+              <span className="text-3xl font-black text-gray-900">{sf.travelers}</span>
+              <button type="button" onClick={()=>setS("travelers",Math.min(20,sf.travelers+1))} className="w-10 h-10 rounded-xl border-2 border-orange-100 text-orange-400 font-black text-xl hover:bg-orange-50 flex items-center justify-center">+</button>
+            </div>
+          </div>
+
+          {/* Budget */}
+          <div className="bg-white rounded-2xl border-2 border-orange-100 p-4">
+            <label className="text-xs font-black text-orange-400 uppercase tracking-widest block mb-3">💰 Total Budget ({currency})</label>
+            <div className="flex flex-wrap gap-2">
+              {BUDGETS.map(b=>(
+                <button key={b} type="button" onClick={()=>setS("budget",b)}
+                  className="px-4 py-2 rounded-xl text-sm font-black border-2 transition-all"
+                  style={sf.budget===b ? {borderColor:"#7c3aed",background:"#f5f3ff",color:"#7c3aed"} : {borderColor:"#ffe4cc",color:"#6b7280"}}>
+                  {currency} {b.toLocaleString()}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Style */}
+          <div className="bg-white rounded-2xl border-2 border-orange-100 p-4">
+            <label className="text-xs font-black text-orange-400 uppercase tracking-widest block mb-3">✨ Trip Style</label>
+            <div className="grid grid-cols-2 gap-2">
+              {STYLES_S.map(s=>(
+                <button key={s.value} type="button" onClick={()=>setS("style",s.value)}
+                  className="flex items-center gap-2 p-3 rounded-xl border-2 text-left transition-all"
+                  style={sf.style===s.value ? {borderColor:"#7c3aed",background:"#f5f3ff"} : {borderColor:"#ffe4cc",background:"white"}}>
+                  <span className="text-xl">{s.icon}</span>
+                  <span className="text-xs font-bold text-gray-900">{s.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {error && <div className="text-sm text-red-500 bg-red-50 px-4 py-3 rounded-xl border border-red-100">{error}</div>}
+
+          <button onClick={()=>valid&&generateSurprise(sf)} disabled={!valid||generating}
+            className="w-full py-4 rounded-2xl text-white font-black text-lg shadow-xl disabled:opacity-40 hover:-translate-y-0.5 transition-all"
+            style={{background:"linear-gradient(135deg,#7c3aed,#a21caf)"}}>
+            {generating ? (
+              <span className="flex items-center justify-center gap-3">
+                <span className="w-5 h-5 rounded-full border-2 border-white/50 border-t-white animate-spin"/>
+                Claude is picking your surprise...
+              </span>
+            ) : "🎲 Reveal My Destination →"}
+          </button>
+        </div>
+      </main>
+    );
+  }
 
   // ── Manual mode ──
   if (mode === "manual") return (
