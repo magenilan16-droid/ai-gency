@@ -80,7 +80,8 @@ REQUIRED before outputting [READY]: destination + dates + travelers + budget. Mi
 
 export async function POST(req) {
   try {
-    const { messages } = await req.json();
+    const { messages, language } = await req.json();
+    const langRule = language === "he" ? "\n- CRITICAL: You MUST respond ONLY in Hebrew (עברית). Every word of your response must be in Hebrew, no exceptions." : "";
 
     if (!messages || messages.length === 0 || messages[0].role !== "user") {
       return new Response(JSON.stringify({ error: "Messages must start with a user message" }), { status: 400 });
@@ -89,7 +90,7 @@ export async function POST(req) {
     const stream = await client.messages.stream({
       model: "claude-opus-4-6",
       max_tokens: 1500,
-      system: SYSTEM,
+      system: SYSTEM + langRule,
       messages: messages.map(m => ({ role: m.role, content: m.content })),
     });
 

@@ -5,7 +5,8 @@ const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 export async function POST(req) {
   try {
-    const { startDate, endDate, travelers, budget, currency, style, accommodation } = await req.json();
+    const { startDate, endDate, travelers, budget, currency, style, accommodation, language } = await req.json();
+    const langInstruction = language === "he" ? "CRITICAL: Write ALL text values in Hebrew (עברית) — surprise_reveal, summary, titles, descriptions, tips, etc. JSON keys stay in English." : "";
 
     if (!startDate || !endDate || !budget) {
       return Response.json({ error: "Missing required fields" }, { status: 400 });
@@ -23,7 +24,7 @@ export async function POST(req) {
       culinary: "food & culinary focused: street food, markets, cooking classes",
     };
 
-    const prompt = `You are a surprise travel planner. Pick the PERFECT surprise destination for this traveler, then generate a complete itinerary.
+    const prompt = `You are a surprise travel planner. Pick the PERFECT surprise destination for this traveler, then generate a complete itinerary. ${langInstruction}
 
 TRAVELER PROFILE:
 - Budget: ${currency} ${budget} total for ${travelers} traveler(s)

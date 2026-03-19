@@ -402,7 +402,7 @@ export default function PlanPage() {
   const bottomRef = useRef(null);
   const inputRef  = useRef(null);
   const [mode, setMode] = useState(null);
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
 
   const [chatMsgs, setChatMsgs]       = useState([]);
   const [input, setInput]             = useState("");
@@ -476,7 +476,7 @@ export default function PlanPage() {
       const res = await fetch("/api/plan-chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: history }),
+        body: JSON.stringify({ messages: history, language: lang }),
       });
 
       const reader  = res.body.getReader();
@@ -567,7 +567,7 @@ export default function PlanPage() {
       const res = await fetch("/api/generate-trip", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...data, currency }),
+        body: JSON.stringify({ ...data, currency, language: lang }),
       });
       const text = await res.text();
       let tripData;
@@ -616,7 +616,7 @@ export default function PlanPage() {
       const res = await fetch("/api/surprise", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...data, destination: randomDest, currency }),
+        body: JSON.stringify({ ...data, destination: randomDest, currency, language: lang }),
       });
       const text = await res.text();
       let tripData;

@@ -157,13 +157,13 @@ function AIChatPanel({ trip, onClose }) {
 // ─── Day Suggestions ──────────────────────────────────────────────────────────
 function DaySuggestions({ trip, dayIndex, onApply, onClose }) {
   const G = "linear-gradient(135deg,#f97316,#ec4899)";
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const [suggestions, setSuggestions] = useState(null);
   const [loading, setLoading] = useState(true);
   const day = trip.daily_itinerary?.[dayIndex];
 
   useEffect(() => {
-    fetch("/api/suggest", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ type:"regenerate_day", trip, dayIndex }) })
+    fetch("/api/suggest", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ type:"regenerate_day", trip, dayIndex, language: lang }) })
       .then(r=>r.json()).then(r=>{ if(r.ok) setSuggestions(Array.isArray(r.data)?r.data:[]); }).finally(()=>setLoading(false));
   }, []);
 
@@ -354,7 +354,7 @@ function WeatherWidget({ destination, startDate, endDate }) {
 // ─── Pack Tab ─────────────────────────────────────────────────────────────────
 function PackTab({ trip }) {
   const G = "linear-gradient(135deg,#f97316,#ec4899)";
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const cacheKey = `aigency_pack_${trip.destination}_${trip.days}`;
   const checkedKey = `aigency_pack_checked_${trip.destination}_${trip.days}`;
   const [data, setData]       = useState(() => { try { const c = localStorage.getItem(cacheKey); return c ? JSON.parse(c) : null; } catch { return null; } });
@@ -371,7 +371,7 @@ function PackTab({ trip }) {
     if (loaded.current || data) return;
     loaded.current = true;
     setLoading(true);
-    fetch("/api/suggest", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ type:"packing", trip }) })
+    fetch("/api/suggest", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ type:"packing", trip, language: lang }) })
       .then(r=>r.json()).then(r=>{ if(r.ok) { setData(r.data); try { localStorage.setItem(cacheKey, JSON.stringify(r.data)); } catch {} } }).catch(()=>{}).finally(()=>setLoading(false));
   }, []);
 
@@ -592,7 +592,7 @@ function ExpensesTab({ trip, expenses, onAdd, onDelete }) {
 // ─── Local Tab ────────────────────────────────────────────────────────────────
 function LocalTab({ trip }) {
   const G = "linear-gradient(135deg,#f97316,#ec4899)";
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const cacheKey = `aigency_phrases_${trip.destination}`;
   const [data, setData]       = useState(() => { try { const c = localStorage.getItem(cacheKey); return c ? JSON.parse(c) : null; } catch { return null; } });
   const [loading, setLoading] = useState(false);
@@ -604,7 +604,7 @@ function LocalTab({ trip }) {
     loaded.current = true;
     setLoading(true);
     fetch("/api/phrases", { method:"POST", headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({ destination: trip.destination, style: trip.style, days: trip.days }) })
+      body: JSON.stringify({ destination: trip.destination, style: trip.style, days: trip.days, language: lang }) })
       .then(r=>r.json()).then(r=>{ if(r.ok) { setData(r.data); try { localStorage.setItem(cacheKey, JSON.stringify(r.data)); } catch {} } }).catch(()=>{}).finally(()=>setLoading(false));
   }, []);
 
@@ -731,7 +731,7 @@ function TripContent() {
   const { id }      = useParams();
   const router      = useRouter();
   const searchParams = useSearchParams();
-  const { t }       = useLanguage();
+  const { t, lang } = useLanguage();
 
   const [trip, setTrip]               = useState(null);
   const [activeTab, setActiveTab]     = useState("itinerary");
@@ -849,7 +849,7 @@ function TripContent() {
         const r = await fetch("/api/suggest", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ type: "packing", trip }),
+          body: JSON.stringify({ type: "packing", trip, language: lang }),
         });
         const data = await r.json();
         if (data.ok) setPackingData(data.data);

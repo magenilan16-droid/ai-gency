@@ -9,7 +9,8 @@ export async function POST(request) {
     try { body = await request.json(); }
     catch { return Response.json({ error: "Invalid request body" }, { status: 400 }); }
 
-    const { destination, startDate, endDate, travelers, budget, currency, style, accommodation, foodStyle, interests, budgetBreakdown } = body;
+    const { destination, startDate, endDate, travelers, budget, currency, style, accommodation, foodStyle, interests, budgetBreakdown, language } = body;
+    const langInstruction = language === "he" ? "CRITICAL: Write ALL text values in Hebrew (עברית) — summary, titles, descriptions, tips, hotel why, etc. JSON keys stay in English." : "";
 
     if (!destination || !startDate || !endDate || !budget) {
       return Response.json({ error: "Missing required fields: destination, dates, budget." }, { status: 400 });
@@ -50,7 +51,7 @@ export async function POST(request) {
     const restaurantCount = isLong ? 3 : 5;
     const maxTokens = isLong ? 6000 : 4096;
 
-    const prompt = `You are an expert travel planner. Create a personalized itinerary. Be CONCISE — descriptions must be ${descLength} max.
+    const prompt = `You are an expert travel planner. Create a personalized itinerary. Be CONCISE — descriptions must be ${descLength} max. ${langInstruction}
 
 TRIP:
 - Destination: ${destination}

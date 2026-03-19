@@ -4,15 +4,16 @@ const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 export async function POST(req) {
   try {
-    const { country } = await req.json();
+    const { country, language } = await req.json();
     if (!country) return Response.json({ error: "Missing country" }, { status: 400 });
+    const langInstruction = language === "he" ? "CRITICAL: Write ALL text values in Hebrew (עברית). JSON keys stay in English." : "";
 
     const message = await client.messages.create({
       model: "claude-haiku-4-5-20251001",
       max_tokens: 800,
       messages: [{
         role: "user",
-        content: `Give me travel info about ${country}. Return ONLY valid JSON, no markdown:
+        content: `Give me travel info about ${country}. ${langInstruction} Return ONLY valid JSON, no markdown:
 {
   "flag": "flag emoji",
   "capital": "city",

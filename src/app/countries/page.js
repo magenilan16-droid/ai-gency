@@ -70,7 +70,7 @@ function CountryCard({ country, trips, wishlisted, onWishlistToggle }) {
   const [info, setInfo]       = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState("");
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const color = countryColor(country);
   const totalCost = trips.reduce((s, tr) => s + (tr.total_estimated_cost || 0), 0);
   const currency = trips[0]?.currency || "USD";
@@ -84,7 +84,7 @@ function CountryCard({ country, trips, wishlisted, onWishlistToggle }) {
       const res = await fetch("/api/country-info", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ country }),
+        body: JSON.stringify({ country, language: lang }),
       });
       const data = await res.json();
       if (data.error) throw new Error(data.error);

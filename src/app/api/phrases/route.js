@@ -5,9 +5,10 @@ const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 export async function POST(req) {
   try {
-    const { destination, style, days } = await req.json();
+    const { destination, style, days, language } = await req.json();
+    const langInstruction = language === "he" ? "CRITICAL: Write the 'usage' field in Hebrew (עברית). Keep 'english' as the English phrase meaning, 'local' in the local language, 'pronunciation' in Hebrew." : "";
 
-    const prompt = `Generate 20 essential travel phrases for visiting ${destination}.
+    const prompt = `Generate 20 essential travel phrases for visiting ${destination}. ${langInstruction}
 Style: ${style || "general"} trip, ${days || 5} days.
 
 Return ONLY valid JSON:
