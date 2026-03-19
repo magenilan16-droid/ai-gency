@@ -262,6 +262,7 @@ function BookingSection({ trip }) {
 
 // ─── Weather Widget ───────────────────────────────────────────────────────────
 function WeatherWidget({ destination, startDate, endDate }) {
+  const { t } = useLanguage();
   const [weather, setWeather] = useState(null);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
@@ -309,7 +310,7 @@ function WeatherWidget({ destination, startDate, endDate }) {
       <button onClick={load} className="w-full flex items-center justify-between px-4 py-3">
         <div className="flex items-center gap-2">
           <span className="text-lg">🌤️</span>
-          <span className="font-black text-gray-900 text-sm">Weather Forecast</span>
+          <span className="font-black text-gray-900 text-sm">{t("weather_forecast")}</span>
         </div>
         {loading
           ? <div className="w-4 h-4 rounded-full border-2 border-orange-300 border-t-transparent animate-spin"/>
@@ -349,6 +350,7 @@ function WeatherWidget({ destination, startDate, endDate }) {
 // ─── Pack Tab ─────────────────────────────────────────────────────────────────
 function PackTab({ trip }) {
   const G = "linear-gradient(135deg,#f97316,#ec4899)";
+  const { t } = useLanguage();
   const [data, setData]       = useState(null);
   const [loading, setLoading] = useState(false);
   const [checked, setChecked] = useState({});
@@ -370,25 +372,25 @@ function PackTab({ trip }) {
       {total > 0 && (
         <div className="bg-white rounded-2xl border border-orange-100 p-4 shadow-sm">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-black text-gray-900">Packing Progress</span>
+            <span className="text-sm font-black text-gray-900">{t("packing_progress")}</span>
             <span className="text-sm font-black text-orange-500">{packed}/{total}</span>
           </div>
           <div className="h-3 bg-orange-50 rounded-full overflow-hidden">
             <div className="h-full rounded-full transition-all duration-500" style={{ width: total > 0 ? `${(packed/total)*100}%` : "0%", background: G }} />
           </div>
-          {packed === total && total > 0 && <p className="text-xs text-green-600 font-bold mt-2">✓ All packed! Have an amazing trip!</p>}
+          {packed === total && total > 0 && <p className="text-xs text-green-600 font-bold mt-2">{t("all_packed")}</p>}
         </div>
       )}
 
       {loading ? (
         <div className="flex flex-col items-center justify-center py-16 gap-3">
           <div className="w-12 h-12 rounded-full border-4 border-orange-300 border-t-transparent animate-spin"/>
-          <p className="text-sm text-gray-400 font-medium">AI is building your packing list...</p>
+          <p className="text-sm text-gray-400 font-medium">{t("ai_packing_list")}</p>
         </div>
       ) : !data ? (
         <div className="text-center py-12 text-gray-400">
           <div className="text-4xl mb-3">🧳</div>
-          <p className="font-medium">Could not load packing list. Please try again.</p>
+          <p className="font-medium">{t("could_not_load_packing")}</p>
         </div>
       ) : (
         (data.categories || []).map((cat, ci) => (
@@ -468,11 +470,11 @@ function ExpensesTab({ trip, expenses, onAdd, onDelete }) {
       <div className="rounded-2xl p-5 text-white shadow-lg" style={{ background: remaining >= 0 ? G : "linear-gradient(135deg,#ef4444,#dc2626)" }}>
         <div className="flex justify-between items-start mb-4">
           <div>
-            <p className="text-white/70 text-xs font-bold uppercase tracking-wide">Total Spent</p>
+            <p className="text-white/70 text-xs font-bold uppercase tracking-wide">{t("total_spent")}</p>
             <p className="text-3xl font-black">{trip.currency} {totalSpent.toLocaleString()}</p>
           </div>
           <div className="text-right">
-            <p className="text-white/70 text-xs font-bold uppercase tracking-wide">{remaining >= 0 ? "Remaining" : "Over Budget"}</p>
+            <p className="text-white/70 text-xs font-bold uppercase tracking-wide">{remaining >= 0 ? t("remaining") : "Over Budget"}</p>
             <p className="text-2xl font-black">{trip.currency} {Math.abs(remaining).toLocaleString()}</p>
           </div>
         </div>
@@ -505,7 +507,7 @@ function ExpensesTab({ trip, expenses, onAdd, onDelete }) {
       <button onClick={()=>setShowForm(true)}
         className="w-full py-4 rounded-2xl text-white font-black text-sm shadow-lg shadow-orange-200/50 hover:-translate-y-0.5 transition-all"
         style={{ background: G }}>
-        + Add Expense
+        {t("add_expense")}
       </button>
 
       {showForm && (
@@ -519,18 +521,18 @@ function ExpensesTab({ trip, expenses, onAdd, onDelete }) {
               className="w-full px-4 py-3 rounded-xl border-2 border-orange-100 focus:border-orange-300 outline-none text-sm font-medium"/>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs font-bold text-gray-400 block mb-1">Amount ({trip.currency})</label>
+                <label className="text-xs font-bold text-gray-400 block mb-1">{t("expense_amount")} ({trip.currency})</label>
                 <input required type="number" min="0" value={form.amount} onChange={e=>set("amount",e.target.value)} placeholder="0"
                   className="w-full px-4 py-3 rounded-xl border-2 border-orange-100 focus:border-orange-300 outline-none text-sm font-bold"/>
               </div>
               <div>
-                <label className="text-xs font-bold text-gray-400 block mb-1">Date</label>
+                <label className="text-xs font-bold text-gray-400 block mb-1">{t("expense_date")}</label>
                 <input type="date" value={form.date} onChange={e=>set("date",e.target.value)}
                   className="w-full px-3 py-3 rounded-xl border-2 border-orange-100 focus:border-orange-300 outline-none text-sm"/>
               </div>
             </div>
             <div>
-              <label className="text-xs font-bold text-gray-400 block mb-2">Category</label>
+              <label className="text-xs font-bold text-gray-400 block mb-2">{t("expense_category")}</label>
               <div className="flex flex-wrap gap-2">
                 {EXPENSE_CATS.map(c=>(
                   <button key={c.key} type="button" onClick={()=>set("category",c.key)}
@@ -541,7 +543,7 @@ function ExpensesTab({ trip, expenses, onAdd, onDelete }) {
                 ))}
               </div>
             </div>
-            <button type="submit" className="w-full py-4 rounded-xl text-white font-black text-sm" style={{background:G}}>Save Expense</button>
+            <button type="submit" className="w-full py-4 rounded-xl text-white font-black text-sm" style={{background:G}}>{t("save")}</button>
           </form>
         </div>
       )}
@@ -549,7 +551,7 @@ function ExpensesTab({ trip, expenses, onAdd, onDelete }) {
       {expenses.length === 0 ? (
         <div className="text-center py-10 text-gray-300">
           <div className="text-4xl mb-2">💸</div>
-          <p className="text-sm font-medium">No expenses yet. Start tracking!</p>
+          <p className="text-sm font-medium">{t("no_expenses")}</p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -920,7 +922,7 @@ function TripContent() {
     <div className="min-h-screen flex items-center justify-center" style={{ background:"var(--bg-page)" }}>
       <div className="text-center">
         <div className="w-12 h-12 rounded-full border-4 border-orange-400 border-t-transparent animate-spin mx-auto mb-4"/>
-        <p className="text-gray-400 font-medium">Loading your trip...</p>
+        <p className="text-gray-400 font-medium">{t("loading")}</p>
       </div>
     </div>
   );
@@ -1053,20 +1055,20 @@ function TripContent() {
                 <button onClick={()=>setActiveTab("pack")}
                   className="rounded-2xl p-4 text-white text-left shadow-md hover:-translate-y-0.5 transition-all" style={{background:"linear-gradient(135deg,#8b5cf6,#6366f1)"}}>
                   <div className="text-2xl mb-2">🧳</div>
-                  <div className="font-black text-sm">Packing List</div>
-                  <div className="text-white/70 text-xs mt-0.5">AI-generated checklist</div>
+                  <div className="font-black text-sm">{t("tab_pack")}</div>
+                  <div className="text-white/70 text-xs mt-0.5">{t("ai_packing_list")}</div>
                 </button>
                 <button onClick={()=>setActiveTab("expenses")}
                   className="rounded-2xl p-4 text-white text-left shadow-md hover:-translate-y-0.5 transition-all" style={{background:"linear-gradient(135deg,#0d9488,#0ea5e9)"}}>
                   <div className="text-2xl mb-2">💸</div>
-                  <div className="font-black text-sm">Track Expenses</div>
+                  <div className="font-black text-sm">{t("tab_expenses")}</div>
                   <div className="text-white/70 text-xs mt-0.5">{expenses.length} expenses logged</div>
                 </button>
                 <button onClick={()=>setActiveTab("local")}
                   className="rounded-2xl p-4 text-white text-left shadow-md hover:-translate-y-0.5 transition-all" style={{background:"linear-gradient(135deg,#d97706,#f59e0b)"}}>
                   <div className="text-2xl mb-2">🗣️</div>
-                  <div className="font-black text-sm">Local Phrases</div>
-                  <div className="text-white/70 text-xs mt-0.5">Speak like a local</div>
+                  <div className="font-black text-sm">{t("tab_local")}</div>
+                  <div className="text-white/70 text-xs mt-0.5">{t("local_phrases")}</div>
                 </button>
               </div>
             </section>
@@ -1130,7 +1132,7 @@ function TripContent() {
                         <div className="flex items-center gap-2">
                           <div className="rounded-2xl px-4 py-2 text-center" style={{background:"var(--bg-card)",border:"2px solid #ffedd5"}}>
                             <div className="text-lg font-black" style={{color:theme.g[0]}}>{trip.currency} {daily_itinerary[activeDay].daily_cost?.toLocaleString()}</div>
-                            <div className="text-xs text-gray-400">day total</div>
+                            <div className="text-xs text-gray-400">{t("day_total")}</div>
                           </div>
                           <button onClick={()=>setDaySuggestIndex(activeDay)} className="px-3 py-2 rounded-2xl text-white text-xs font-black shadow-sm hover:-translate-y-0.5 transition-all" style={{background:G}}>✨ AI</button>
                         </div>
@@ -1171,27 +1173,27 @@ function TripContent() {
                         );
                       })}
                     </div>
-                    {editMode && <div className="p-4 border-t border-orange-50"><button onClick={()=>addActivity(activeDay)} className="w-full py-3 rounded-2xl border-2 border-dashed border-orange-200 text-orange-400 hover:border-orange-300 hover:bg-orange-50 transition-all text-sm font-bold">+ Add Activity</button></div>}
+                    {editMode && <div className="p-4 border-t border-orange-50"><button onClick={()=>addActivity(activeDay)} className="w-full py-3 rounded-2xl border-2 border-dashed border-orange-200 text-orange-400 hover:border-orange-300 hover:bg-orange-50 transition-all text-sm font-bold">{t("add_activity")}</button></div>}
                     {/* Diary Notes */}
                     <div className="p-4 border-t border-orange-50">
                       <div className="bg-white rounded-2xl border border-orange-100 p-4 shadow-sm">
                         <div className="flex items-center gap-2 mb-2">
                           <span className="text-base">📝</span>
-                          <span className="font-black text-gray-900 text-sm">My Notes</span>
+                          <span className="font-black text-gray-900 text-sm">{t("my_notes")}</span>
                         </div>
                         <textarea
                           value={daily_itinerary[activeDay]?.notes || ""}
                           onChange={e => updateDayNote(activeDay, e.target.value)}
                           onBlur={e => updateDayNote(activeDay, e.target.value)}
-                          placeholder="Add your notes, memories, or reminders for this day..."
+                          placeholder={t("notes_placeholder")}
                           rows={3}
                           className="w-full text-sm text-gray-700 placeholder-gray-300 bg-orange-50 rounded-xl px-3 py-2.5 outline-none border-2 border-transparent focus:border-orange-300 resize-none leading-relaxed font-medium transition-all"
                         />
                       </div>
                     </div>
                     <div className="px-5 py-4 flex justify-between" style={{background:"var(--bg-page)"}}>
-                      <button onClick={()=>setActiveDay(p=>Math.max(0,p-1))} disabled={activeDay===0} className="text-sm font-bold text-gray-400 hover:text-orange-500 disabled:opacity-30 transition-colors">← Previous</button>
-                      <button onClick={()=>setActiveDay(p=>Math.min(daily_itinerary.length-1,p+1))} disabled={activeDay===daily_itinerary.length-1} className="text-sm font-bold text-gray-400 hover:text-orange-500 disabled:opacity-30 transition-colors">Next →</button>
+                      <button onClick={()=>setActiveDay(p=>Math.max(0,p-1))} disabled={activeDay===0} className="text-sm font-bold text-gray-400 hover:text-orange-500 disabled:opacity-30 transition-colors">{t("previous")}</button>
+                      <button onClick={()=>setActiveDay(p=>Math.min(daily_itinerary.length-1,p+1))} disabled={activeDay===daily_itinerary.length-1} className="text-sm font-bold text-gray-400 hover:text-orange-500 disabled:opacity-30 transition-colors">{t("next_day")}</button>
                     </div>
                   </div>
                 )}
@@ -1252,7 +1254,7 @@ function TripContent() {
               <section>
                 <div className="flex items-center justify-between mb-3">
                   <h2 className="text-lg font-black text-gray-900">💡 {t("tips_label")}</h2>
-                  {editMode && <button onClick={addTip} className="text-xs font-bold px-4 py-2 rounded-xl border-2 border-orange-200 text-orange-500 bg-orange-50">+ Add</button>}
+                  {editMode && <button onClick={addTip} className="text-xs font-bold px-4 py-2 rounded-xl border-2 border-orange-200 text-orange-500 bg-orange-50">{t("add_tip")}</button>}
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {tips.map((tip,i)=>(
@@ -1270,14 +1272,14 @@ function TripContent() {
             <section>
               <div className="relative rounded-3xl overflow-hidden p-7 text-center text-white" style={{background:hero}}>
                 <div className="text-4xl mb-3">{theme.e}</div>
-                <h2 className="text-2xl font-black mb-2">Share your adventure! {theme.e}</h2>
-                <p className="text-white/70 mb-6 text-sm">Share this plan with your travel companions.</p>
+                <h2 className="text-2xl font-black mb-2">{t("share_adventure")} {theme.e}</h2>
+                <p className="text-white/70 mb-6 text-sm">{t("share_with_friends")}</p>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
                   <button onClick={copyLink} className="bg-white font-bold px-8 py-3.5 rounded-2xl shadow-lg hover:-translate-y-0.5 transition-all text-sm" style={{color:theme.g[0]}}>
-                    {copied ? "✓ Copied!" : "🔗 Copy Link"}
+                    {copied ? "✓ Copied!" : t("copy_link")}
                   </button>
                   <Link href="/plan" className="font-bold px-8 py-3.5 rounded-2xl text-sm text-white border border-white/30" style={{background:"rgba(255,255,255,0.2)"}}>
-                    Plan Another Trip
+                    {t("plan_another")}
                   </Link>
                 </div>
               </div>

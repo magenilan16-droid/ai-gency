@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useLanguage } from "@/app/LanguageProvider";
 
 const G = "linear-gradient(135deg,#f97316,#ec4899)";
 
@@ -41,6 +42,7 @@ function saveExpenses(list) {
 }
 
 export default function BusinessPage() {
+  const { t } = useLanguage();
   const [tab, setTab] = useState("perdiem");
   const [city, setCity] = useState("New York");
   const [days, setDays] = useState(3);
@@ -98,17 +100,17 @@ export default function BusinessPage() {
       <div className="px-4 sm:px-6 pt-8 pb-4 max-w-2xl mx-auto">
         {/* Header */}
         <p className="text-xs font-black text-orange-400 uppercase tracking-widest mb-1">✦ Business Travel</p>
-        <h1 className="text-3xl font-black text-gray-900 mb-5">Business Tools</h1>
+        <h1 className="text-3xl font-black text-gray-900 mb-5">{t("business_title")}</h1>
 
         {/* Tabs */}
         <div className="flex gap-2 mb-5">
-          {[{ id: "perdiem", label: "💰 Per Diem" }, { id: "expenses", label: "📊 Expenses" }].map(t => (
-            <button key={t.id} onClick={() => setTab(t.id)}
+          {[{ id: "perdiem", label: "💰 Per Diem" }, { id: "expenses", label: "📊 Expenses" }].map(tab_item => (
+            <button key={tab_item.id} onClick={() => setTab(tab_item.id)}
               className="px-5 py-2.5 rounded-2xl text-sm font-black transition-all"
-              style={tab === t.id
+              style={tab === tab_item.id
                 ? { background: G, color: "white", boxShadow: "0 4px 14px rgba(249,115,22,0.3)" }
                 : { background: "white", color: "#9ca3af", border: "2px solid #fed7aa" }}>
-              {t.label}
+              {tab_item.label}
             </button>
           ))}
         </div>
@@ -117,17 +119,17 @@ export default function BusinessPage() {
         {tab === "perdiem" && (
           <div className="space-y-4">
             <div className="bg-white rounded-3xl border border-orange-100 p-5 shadow-sm">
-              <h2 className="font-black text-gray-900 mb-4">Per Diem Calculator</h2>
+              <h2 className="font-black text-gray-900 mb-4">{t("business_calculator")}</h2>
               <div className="space-y-3">
                 <div>
-                  <label className="text-xs font-black text-gray-400 uppercase tracking-wider mb-1.5 block">City</label>
+                  <label className="text-xs font-black text-gray-400 uppercase tracking-wider mb-1.5 block">{t("select_city")}</label>
                   <select value={city} onChange={e => setCity(e.target.value)}
                     className="w-full px-4 py-3 rounded-xl border-2 border-orange-100 text-sm font-bold text-gray-700 bg-white outline-none focus:border-orange-300">
                     {Object.keys(PER_DIEM).map(c => <option key={c}>{c}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="text-xs font-black text-gray-400 uppercase tracking-wider mb-1.5 block">Number of Days</label>
+                  <label className="text-xs font-black text-gray-400 uppercase tracking-wider mb-1.5 block">{t("num_days")}</label>
                   <div className="flex items-center gap-3">
                     <button onClick={() => setDays(d => Math.max(1, d - 1))}
                       className="w-10 h-10 rounded-xl bg-orange-50 font-black text-orange-500 text-xl flex items-center justify-center hover:bg-orange-100 transition-colors">−</button>
@@ -147,12 +149,12 @@ export default function BusinessPage() {
                 <div className="text-4xl font-black mb-4">${totalPerDiem.toLocaleString()}</div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="bg-white/20 rounded-2xl p-3">
-                    <div className="text-white/70 text-xs font-bold mb-1">🏨 Hotel</div>
+                    <div className="text-white/70 text-xs font-bold mb-1">🏨 {t("total_hotel")}</div>
                     <div className="font-black">${totalHotel.toLocaleString()}</div>
                     <div className="text-white/60 text-xs">${rates.hotel}/night</div>
                   </div>
                   <div className="bg-white/20 rounded-2xl p-3">
-                    <div className="text-white/70 text-xs font-bold mb-1">🍽️ Meals</div>
+                    <div className="text-white/70 text-xs font-bold mb-1">🍽️ {t("total_meals")}</div>
                     <div className="font-black">${totalMeals.toLocaleString()}</div>
                     <div className="text-white/60 text-xs">${rates.meals}/day</div>
                   </div>
@@ -162,7 +164,7 @@ export default function BusinessPage() {
 
             <div className="bg-white rounded-2xl border border-orange-100 p-4 shadow-sm">
               <p className="text-xs text-gray-400 leading-relaxed">
-                <strong className="text-gray-600">Note:</strong> Rates are based on approximate GSA guidelines and common international standards. Always verify with your company's travel policy.
+                <strong className="text-gray-600">Note:</strong> {t("per_diem_note")}
               </p>
             </div>
           </div>
@@ -175,7 +177,7 @@ export default function BusinessPage() {
             <div className="rounded-3xl p-5 text-white relative overflow-hidden" style={{ background: G }}>
               <div className="absolute top-0 right-0 text-8xl opacity-10 font-black -mt-2 -mr-2">📊</div>
               <div className="relative">
-                <p className="text-white/70 text-xs font-black uppercase tracking-widest mb-1">Total Expenses</p>
+                <p className="text-white/70 text-xs font-black uppercase tracking-widest mb-1">{t("total_spent")}</p>
                 <div className="text-4xl font-black mb-4">${totalExpenses.toFixed(2)}</div>
                 <div className="flex gap-2 flex-wrap">
                   {byCategory.filter(c => c.total > 0).map(c => (
@@ -191,7 +193,7 @@ export default function BusinessPage() {
             <div className="flex gap-2">
               <button onClick={() => setAddingExp(true)}
                 className="flex-1 py-3 rounded-2xl font-black text-white text-sm shadow-md" style={{ background: G }}>
-                + Add Expense
+                {t("add_expense")}
               </button>
               {expenses.length > 0 && (
                 <button onClick={exportCSV}
@@ -204,9 +206,9 @@ export default function BusinessPage() {
             {/* Add form */}
             {addingExp && (
               <div className="bg-white rounded-3xl border border-orange-100 p-5 shadow-sm space-y-3">
-                <h3 className="font-black text-gray-900">New Expense</h3>
+                <h3 className="font-black text-gray-900">{t("add_expense")}</h3>
                 <input value={newExp.description} onChange={e => setNewExp(p => ({ ...p, description: e.target.value }))}
-                  placeholder="Description"
+                  placeholder={t("expense_name")}
                   className="w-full px-4 py-3 rounded-xl border-2 border-orange-100 text-sm font-medium text-gray-700 outline-none focus:border-orange-300" />
                 <div className="grid grid-cols-2 gap-2">
                   <input value={newExp.amount} onChange={e => setNewExp(p => ({ ...p, amount: e.target.value }))}
@@ -223,11 +225,11 @@ export default function BusinessPage() {
                 <div className="flex gap-2">
                   <button onClick={addExpense}
                     className="flex-1 py-3 rounded-xl font-black text-white text-sm" style={{ background: G }}>
-                    Save
+                    {t("save")}
                   </button>
                   <button onClick={() => setAddingExp(false)}
                     className="flex-1 py-3 rounded-xl font-black text-sm border-2 border-gray-200 text-gray-400">
-                    Cancel
+                    {t("cancel")}
                   </button>
                 </div>
               </div>
@@ -237,8 +239,8 @@ export default function BusinessPage() {
             {expenses.length === 0 ? (
               <div className="text-center py-16 bg-white rounded-3xl border border-orange-100">
                 <div className="text-5xl mb-3">📋</div>
-                <p className="font-black text-gray-900 mb-1">No expenses yet</p>
-                <p className="text-sm text-gray-400">Track your business travel costs</p>
+                <p className="font-black text-gray-900 mb-1">{t("no_expenses")}</p>
+                <p className="text-sm text-gray-400">{t("no_expenses_sub")}</p>
               </div>
             ) : (
               <div className="space-y-2">

@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
+import { useLanguage } from "@/app/LanguageProvider";
 
 const G = "linear-gradient(135deg,#f97316,#ec4899)";
 const CHAT_STORAGE_KEY = "aigency_chat_history";
@@ -227,6 +228,7 @@ const QUICK_PROMPTS = [
 // ─── Main component ─────────────────────────────────────────────────────────
 
 function ChatContent() {
+  const { t } = useLanguage();
   const searchParams = useSearchParams();
   const initialTripId = searchParams.get("tripId");
 
@@ -245,8 +247,8 @@ function ChatContent() {
 
   useEffect(() => {
     setMounted(true);
-    const t = getAllTrips();
-    setTrips(t);
+    const allTrips = getAllTrips();
+    setTrips(allTrips);
 
     // Try to restore saved chat
     const saved = loadChatHistory();
@@ -254,9 +256,9 @@ function ChatContent() {
       setMessages(saved.messages);
       if (saved.tripId) setSelectedTripId(saved.tripId);
       setRestoredAt(saved.savedAt);
-    } else if (initialTripId && t.find(tr => tr.id === initialTripId)) {
+    } else if (initialTripId && allTrips.find(tr => tr.id === initialTripId)) {
       setSelectedTripId(initialTripId);
-      const trip = t.find(tr => tr.id === initialTripId);
+      const trip = allTrips.find(tr => tr.id === initialTripId);
       const welcomeBack = { role: "assistant", content: `Hey! 👋 I'm focused on your **${trip.destination}** trip. I can edit it, suggest hotels & flights, or help with anything else!` };
       setMessages([welcomeBack]);
     }
@@ -378,8 +380,8 @@ function ChatContent() {
             className="text-xs font-bold px-3 py-2 rounded-xl border-2 border-orange-100 bg-white text-gray-600 max-w-[160px] truncate"
           >
             <option value="">No trip selected</option>
-            {trips.map(t => (
-              <option key={t.id} value={t.id}>{t.destination || "Untitled"}</option>
+            {trips.map(trip => (
+              <option key={trip.id} value={trip.id}>{trip.destination || "Untitled"}</option>
             ))}
           </select>
         </div>
@@ -403,7 +405,7 @@ function ChatContent() {
             </div>
             <button onClick={startFresh}
               className="text-xs font-bold text-gray-400 hover:text-gray-600 px-3 py-1.5 rounded-xl border border-gray-200 bg-white transition-colors">
-              Start fresh
+              {t("start_fresh")}
             </button>
           </div>
         </div>
@@ -468,7 +470,7 @@ function ChatContent() {
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(input); } }}
-            placeholder="Save a trip, find hotels, ask anything..."
+            placeholder={t("chat_placeholder")}
             className="flex-1 bg-transparent text-sm text-gray-800 placeholder-gray-300 outline-none px-2 font-medium"
             disabled={loading}
           />
