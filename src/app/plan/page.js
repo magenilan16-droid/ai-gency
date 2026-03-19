@@ -413,6 +413,7 @@ export default function PlanPage() {
   const [usedWidgets, setUsedWidgets] = useState(new Set());
   const [restored, setRestored]       = useState(false);
   const [surpriseNote, setSurpriseNote] = useState("");
+  const [sf, setSf] = useState({ startDate:"", endDate:"", travelers:2, budget:null, style:"cultural", accommodation:"mid-range" });
 
   // ── Persist & restore plan chat ──
   useEffect(() => {
@@ -698,7 +699,6 @@ export default function PlanPage() {
       { value:"luxury",    labelKey:"style_luxury",    icon:"✨" },
     ];
     const BUDGETS = [500,1000,2000,3000,5000,8000];
-    const [sf, setSf] = useState({ startDate:"", endDate:"", travelers:2, budget:null, style:"cultural", accommodation:"mid-range" });
     const setS = (k,v) => setSf(p=>({...p,[k]:v}));
     const days  = sf.startDate && sf.endDate ? Math.ceil((new Date(sf.endDate)-new Date(sf.startDate))/86400000) : 0;
     const valid = sf.startDate && sf.endDate && days > 0 && sf.budget;
