@@ -680,6 +680,111 @@ function TripContent() {
           </section>
         )}
 
+        {/* ── Book Your Trip ── */}
+        <section>
+          <h2 className="text-lg font-black text-gray-900 mb-3">✈️ Book Your Trip</h2>
+
+          {/* Flight + Hotel booking links */}
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            {[
+              {
+                icon: "✈️", label: "Search Flights", sub: "Google Flights",
+                color: "linear-gradient(135deg,#4776E6,#8E54E9)",
+                href: `https://www.google.com/travel/flights/search?tfs=CBwQAhooagcIARIDdGx2EgoyMDI1LTA3LTAxcg8IAhILL20vMDQ0XzB6eRABGAEoAUABSAFwAYIBCwj_____BxABGAE`,
+                build: (t) => {
+                  const dest = encodeURIComponent(t.destination?.split(",")[0] || t.destination || "");
+                  const d1 = t.form?.startDate || "";
+                  const d2 = t.form?.endDate || "";
+                  return `https://www.google.com/travel/flights?q=Flights+to+${dest}&date=${d1}&return=${d2}`;
+                }
+              },
+              {
+                icon: "🏨", label: "Search Hotels", sub: "Booking.com",
+                color: "linear-gradient(135deg,#003580,#0066cc)",
+                build: (t) => {
+                  const dest = encodeURIComponent(t.destination?.split(",")[0] || t.destination || "");
+                  const checkin = t.form?.startDate || "";
+                  const checkout = t.form?.endDate || "";
+                  const adults = t.travelers || 2;
+                  return `https://www.booking.com/search.html?ss=${dest}&checkin=${checkin}&checkout=${checkout}&group_adults=${adults}&no_rooms=1`;
+                }
+              },
+              {
+                icon: "🏠", label: "Find Airbnb", sub: "airbnb.com",
+                color: "linear-gradient(135deg,#FF5A5F,#FF385C)",
+                build: (t) => {
+                  const dest = encodeURIComponent(t.destination?.split(",")[0] || t.destination || "");
+                  const checkin = t.form?.startDate || "";
+                  const checkout = t.form?.endDate || "";
+                  const adults = t.travelers || 2;
+                  return `https://www.airbnb.com/s/${dest}/homes?checkin=${checkin}&checkout=${checkout}&adults=${adults}`;
+                }
+              },
+              {
+                icon: "🎭", label: "Book Activities", sub: "GetYourGuide",
+                color: "linear-gradient(135deg,#FF6B35,#F7931A)",
+                build: (t) => {
+                  const dest = encodeURIComponent(t.destination?.split(",")[0] || t.destination || "");
+                  return `https://www.getyourguide.com/s/?q=${dest}&date_from=${t.form?.startDate || ""}&date_to=${t.form?.endDate || ""}`;
+                }
+              },
+            ].map(b => (
+              <a key={b.label} href={b.build(trip)} target="_blank" rel="noopener noreferrer"
+                className="rounded-2xl p-4 text-white shadow-md hover:-translate-y-0.5 transition-all"
+                style={{ background: b.color }}>
+                <div className="text-2xl mb-2">{b.icon}</div>
+                <div className="font-black text-sm">{b.label}</div>
+                <div className="text-white/70 text-xs mt-0.5">{b.sub}</div>
+              </a>
+            ))}
+          </div>
+
+          {/* AI-recommended hotels */}
+          {trip.recommended_hotels?.length > 0 && (
+            <div className="bg-white rounded-2xl border border-orange-100 p-4 shadow-sm mb-4">
+              <div className="font-black text-gray-900 mb-3 text-sm">🏨 AI Hotel Picks</div>
+              <div className="space-y-3">
+                {trip.recommended_hotels.map((h, i) => (
+                  <a key={i}
+                    href={`https://www.booking.com/search.html?ss=${encodeURIComponent(h.name + " " + trip.destination)}&checkin=${trip.form?.startDate || ""}&checkout=${trip.form?.endDate || ""}&group_adults=${trip.travelers || 2}`}
+                    target="_blank" rel="noopener noreferrer"
+                    className="flex items-center gap-3 hover:bg-orange-50 rounded-xl p-2 -m-2 transition-colors group">
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg flex-shrink-0 bg-orange-50">🏨</div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-bold text-gray-900 text-sm">{h.name}</div>
+                      <div className="text-xs text-gray-400">{h.area} · {"★".repeat(h.stars || 3)}</div>
+                      <div className="text-xs text-orange-500 mt-0.5">{h.why}</div>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <div className="font-black text-sm text-gray-900">{trip.currency} {h.price_per_night?.toLocaleString()}/night</div>
+                      <div className="text-xs text-blue-500 group-hover:text-blue-700 transition-colors">Book →</div>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* AI-recommended restaurants */}
+          {trip.recommended_restaurants?.length > 0 && (
+            <div className="bg-white rounded-2xl border border-orange-100 p-4 shadow-sm">
+              <div className="font-black text-gray-900 mb-3 text-sm">🍽️ AI Restaurant Picks</div>
+              <div className="grid grid-cols-2 gap-2">
+                {trip.recommended_restaurants.map((r, i) => (
+                  <a key={i}
+                    href={`https://www.google.com/search?q=${encodeURIComponent(r.name + " " + trip.destination)}`}
+                    target="_blank" rel="noopener noreferrer"
+                    className="rounded-xl border border-orange-100 p-3 hover:border-orange-300 hover:bg-orange-50 transition-all">
+                    <div className="font-bold text-gray-900 text-xs">{r.name}</div>
+                    <div className="text-xs text-gray-400 mt-0.5">{r.type} · {r.price_range}</div>
+                    <div className="text-xs text-orange-500 mt-1">Try: {r.must_try}</div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+        </section>
+
         {/* ── Share CTA ── */}
         <section>
           <div className="relative rounded-3xl overflow-hidden p-7 sm:p-10 text-center text-white" style={{ background: hero }}>
