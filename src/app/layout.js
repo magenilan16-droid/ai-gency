@@ -6,6 +6,11 @@ export const metadata = {
     "Plan your perfect trip with AI. Get personalized day-by-day itineraries, budget breakdowns, and travel tips in seconds.",
 };
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+};
+
 export default function RootLayout({ children }) {
   return (
     <html lang="en">

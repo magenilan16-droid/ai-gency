@@ -29,7 +29,7 @@ export default function HomePage() {
           <span className="inline-block bg-blue-100 text-blue-700 text-sm font-medium px-4 py-1.5 rounded-full mb-6">
             Powered by Claude AI
           </span>
-          <h1 className="text-5xl sm:text-6xl md:text-7xl font-extrabold text-gray-900 leading-tight mb-6">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-gray-900 leading-tight mb-6">
             Your Dream Trip,{" "}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-sky-500">
               Planned in Seconds

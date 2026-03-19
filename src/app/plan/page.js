@@ -317,30 +317,32 @@ export default function PlanPage() {
 
       case "counter":
         return (
-          <div className="flex items-center justify-between bg-white rounded-xl border border-gray-200 p-4">
-            <div className="flex items-center gap-5">
+          <div className="flex flex-col gap-3 bg-white rounded-xl border border-gray-200 p-4">
+            <div className="flex items-center justify-center gap-5">
               <button
                 onClick={() =>
                   setAnswers((p) => ({ ...p, travelers: Math.max(1, p.travelers - 1) }))
                 }
-                className="w-10 h-10 rounded-full border-2 border-gray-200 text-gray-600 font-bold text-xl hover:border-blue-400 hover:text-blue-600 transition-all flex items-center justify-center"
+                className="w-11 h-11 rounded-full border-2 border-gray-200 text-gray-600 font-bold text-xl hover:border-blue-400 hover:text-blue-600 transition-all flex items-center justify-center"
               >
                 −
               </button>
-              <span className="text-3xl font-bold text-gray-900 w-12 text-center">
-                {answers.travelers}
-              </span>
+              <div className="text-center">
+                <span className="text-4xl font-bold text-gray-900 block">
+                  {answers.travelers}
+                </span>
+                <span className="text-gray-500 text-sm">
+                  {answers.travelers === 1 ? "Solo traveler" : `${answers.travelers} people`}
+                </span>
+              </div>
               <button
                 onClick={() =>
                   setAnswers((p) => ({ ...p, travelers: Math.min(20, p.travelers + 1) }))
                 }
-                className="w-10 h-10 rounded-full border-2 border-gray-200 text-gray-600 font-bold text-xl hover:border-blue-400 hover:text-blue-600 transition-all flex items-center justify-center"
+                className="w-11 h-11 rounded-full border-2 border-gray-200 text-gray-600 font-bold text-xl hover:border-blue-400 hover:text-blue-600 transition-all flex items-center justify-center"
               >
                 +
               </button>
-              <span className="text-gray-500 text-sm">
-                {answers.travelers === 1 ? "Solo traveler" : `${answers.travelers} people`}
-              </span>
             </div>
             <button
               onClick={() =>
@@ -349,7 +351,7 @@ export default function PlanPage() {
                   answers.travelers === 1 ? "Just me!" : `${answers.travelers} travelers`
                 )
               }
-              className="bg-blue-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-blue-700 transition-colors"
+              className="w-full bg-blue-600 text-white py-3 rounded-xl font-medium hover:bg-blue-700 transition-colors"
             >
               Confirm →
             </button>
@@ -358,31 +360,33 @@ export default function PlanPage() {
 
       case "budget":
         return (
-          <form onSubmit={handleBudgetSubmit} className="flex gap-3">
-            <select
-              value={tempCurrency}
-              onChange={(e) => setTempCurrency(e.target.value)}
-              className="px-3 py-3 rounded-xl border border-gray-200 focus:border-blue-400 outline-none text-gray-900 bg-white font-medium transition-all"
-            >
-              {CURRENCIES.map((c) => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-            </select>
-            <input
-              autoFocus
-              type="number"
-              min="1"
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              placeholder={currentStep.placeholder}
-              className="flex-1 px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none text-gray-900 placeholder-gray-400 transition-all"
-            />
+          <form onSubmit={handleBudgetSubmit} className="flex flex-col gap-3">
+            <div className="flex gap-3">
+              <select
+                value={tempCurrency}
+                onChange={(e) => setTempCurrency(e.target.value)}
+                className="px-3 py-3 rounded-xl border border-gray-200 focus:border-blue-400 outline-none text-gray-900 bg-white font-medium transition-all"
+              >
+                {CURRENCIES.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+              <input
+                autoFocus
+                type="number"
+                min="1"
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                placeholder={currentStep.placeholder}
+                className="flex-1 min-w-0 px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none text-gray-900 placeholder-gray-400 transition-all"
+              />
+            </div>
             <button
               type="submit"
               disabled={!inputValue || Number(inputValue) <= 0}
-              className="bg-blue-600 text-white px-5 py-3 rounded-xl font-medium hover:bg-blue-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="w-full bg-blue-600 text-white py-3 rounded-xl font-medium hover:bg-blue-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              →
+              Confirm →
             </button>
           </form>
         );
