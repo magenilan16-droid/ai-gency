@@ -4,6 +4,7 @@ import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 
 const G = "linear-gradient(135deg,#f97316,#ec4899)";
+const CHAT_STORAGE_KEY = "aigency_chat_history";
 
 // ─── localStorage helpers ───────────────────────────────────────────────────
 
@@ -53,12 +54,11 @@ function updateTripField(tripId, field, value) {
   if (!raw) return false;
   try {
     const trip = JSON.parse(raw);
-    // handle nested form fields
     if (["startDate","endDate","travelers","budget"].includes(field)) {
       trip.form = trip.form || {};
       trip.form[field] = isNaN(value) ? value : Number(value);
     }
-    trip[field] = isNaN(value) ? value : (field === "total_estimated_cost" || field === "travelers" || field === "budget" || field === "days" ? Number(value) : value);
+    trip[field] = isNaN(value) ? value : (["total_estimated_cost","travelers","budget","days"].includes(field) ? Number(value) : value);
     localStorage.setItem(`aigency_trip_${tripId}`, JSON.stringify(trip));
     return true;
   } catch { return false; }
@@ -68,12 +68,53 @@ function deleteTrip(tripId) {
   localStorage.removeItem(`aigency_trip_${tripId}`);
 }
 
+// ─── Chat persistence ───────────────────────────────────────────────────────
+
+function saveChatHistory(messages, tripId) {
+  if (typeof window === "undefined") return;
+  // Only save if there's actual conversation (more than the initial greeting)
+  if (messages.length <= 1) {
+    localStorage.removeItem(CHAT_STORAGE_KEY);
+    return;
+  }
+  localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify({
+    messages,
+    tripId: tripId || null,
+    savedAt: Date.now(),
+  }));
+}
+
+function loadChatHistory() {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(CHAT_STORAGE_KEY);
+    if (!raw) return null;
+    const data = JSON.parse(raw);
+    if (!data.messages || data.messages.length <= 1) return null;
+    return data;
+  } catch { return null; }
+}
+
+function clearChatHistory() {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem(CHAT_STORAGE_KEY);
+}
+
+function timeAgo(ts) {
+  const diff = Date.now() - ts;
+  const m = Math.floor(diff / 60000);
+  if (m < 1) return "just now";
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
+}
+
 // ─── Command parser ─────────────────────────────────────────────────────────
 
-function parseAndExecuteCommands(text, setTrips, setMessages) {
+function parseAndExecuteCommands(text, setTrips) {
   let notifications = [];
 
-  // SAVE_TRIP
   const saveMatch = text.match(/\[SAVE_TRIP\]([\s\S]*?)\[\/SAVE_TRIP\]/);
   if (saveMatch) {
     try {
@@ -83,22 +124,19 @@ function parseAndExecuteCommands(text, setTrips, setMessages) {
     } catch (e) { console.error("SAVE_TRIP parse error", e); }
   }
 
-  // EDIT_TRIP
   const editMatches = [...text.matchAll(/\[EDIT_TRIP:([^:]+):([^:]+):([^\]]+)\]/g)];
   for (const m of editMatches) {
     const [, tripId, field, value] = m;
     updateTripField(tripId.trim(), field.trim(), value.trim());
-    notifications.push({ type: "edited", tripId, field, value });
+    notifications.push({ type: "edited" });
   }
 
-  // DELETE_TRIP
   const deleteMatches = [...text.matchAll(/\[DELETE_TRIP:([^\]]+)\]/g)];
   for (const m of deleteMatches) {
     deleteTrip(m[1].trim());
-    notifications.push({ type: "deleted", tripId: m[1].trim() });
+    notifications.push({ type: "deleted" });
   }
 
-  // Refresh trips list if any mutation happened
   if (notifications.length > 0) {
     setTrips(getAllTrips());
   }
@@ -119,7 +157,6 @@ function cleanText(text) {
 }
 
 function HotelCard({ raw }) {
-  // HOTEL:Name|Stars|Neighborhood|PricePerNight|URL
   const parts = raw.split("|");
   if (parts.length < 5) return null;
   const [name, stars, area, price, url] = parts;
@@ -138,7 +175,6 @@ function HotelCard({ raw }) {
 }
 
 function FlightCard({ raw }) {
-  // FLIGHT:Origin|Destination|DepartDate|ReturnDate|EstPrice|URL
   const parts = raw.split("|");
   if (parts.length < 6) return null;
   const [origin, dest, depart, ret, price, url] = parts;
@@ -164,10 +200,8 @@ function MessageContent({ text }) {
     </span>
   );
 
-  // Extract hotels and flights for rendering as cards
   const hotelMatches = [...text.matchAll(/\[HOTEL:([^\]]+)\]/g)];
   const flightMatches = [...text.matchAll(/\[FLIGHT:([^\]]+)\]/g)];
-
   const displayText = cleanText(text);
 
   return (
@@ -184,10 +218,10 @@ function MessageContent({ text }) {
 const QUICK_PROMPTS = [
   "Save a new trip for me",
   "What should I pack?",
-  "Recommend hotels in my trip destination",
+  "Recommend hotels",
   "Find me cheap flights",
-  "Help me optimize my budget",
-  "What are the best hidden gems?",
+  "Optimize my budget",
+  "Best hidden gems?",
 ];
 
 // ─── Main component ─────────────────────────────────────────────────────────
@@ -196,15 +230,16 @@ function ChatContent() {
   const searchParams = useSearchParams();
   const initialTripId = searchParams.get("tripId");
 
+  const INITIAL_MESSAGE = { role: "assistant", content: "Hey! 👋 I'm your AI travel assistant. I can save, edit and delete your trips, plus recommend hotels and flights with real booking links. What would you like to do?" };
+
   const [trips, setTrips] = useState([]);
   const [selectedTripId, setSelectedTripId] = useState(initialTripId || "");
-  const [messages, setMessages] = useState([
-    { role: "assistant", content: "Hey! 👋 I'm your AI travel assistant. I can save, edit and delete your trips, plus recommend hotels and flights with real booking links. What would you like to do?" }
-  ]);
+  const [messages, setMessages] = useState([INITIAL_MESSAGE]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [toast, setToast] = useState(null);
+  const [restoredAt, setRestoredAt] = useState(null); // timestamp of restored chat
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -212,13 +247,18 @@ function ChatContent() {
     setMounted(true);
     const t = getAllTrips();
     setTrips(t);
-    if (initialTripId && t.find(tr => tr.id === initialTripId)) {
+
+    // Try to restore saved chat
+    const saved = loadChatHistory();
+    if (saved && !initialTripId) {
+      setMessages(saved.messages);
+      if (saved.tripId) setSelectedTripId(saved.tripId);
+      setRestoredAt(saved.savedAt);
+    } else if (initialTripId && t.find(tr => tr.id === initialTripId)) {
       setSelectedTripId(initialTripId);
       const trip = t.find(tr => tr.id === initialTripId);
-      setMessages([{
-        role: "assistant",
-        content: `Hey! 👋 I'm focused on your **${trip.destination}** trip. I can edit it, suggest hotels & flights, or help with anything else!`
-      }]);
+      const welcomeBack = { role: "assistant", content: `Hey! 👋 I'm focused on your **${trip.destination}** trip. I can edit it, suggest hotels & flights, or help with anything else!` };
+      setMessages([welcomeBack]);
     }
   }, []);
 
@@ -226,9 +266,22 @@ function ChatContent() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
 
+  // Auto-save chat whenever messages change
+  useEffect(() => {
+    if (!mounted) return;
+    saveChatHistory(messages, selectedTripId);
+  }, [messages, selectedTripId, mounted]);
+
   function showToast(msg) {
     setToast(msg);
     setTimeout(() => setToast(null), 3000);
+  }
+
+  function startFresh() {
+    clearChatHistory();
+    setMessages([INITIAL_MESSAGE]);
+    setRestoredAt(null);
+    setSelectedTripId("");
   }
 
   async function sendMessage(text) {
@@ -238,6 +291,7 @@ function ChatContent() {
     setMessages(newMessages);
     setInput("");
     setLoading(true);
+    setRestoredAt(null); // hide banner once they start chatting
 
     try {
       const res = await fetch("/api/chat", {
@@ -261,8 +315,7 @@ function ChatContent() {
         const { done, value } = await reader.read();
         if (done) break;
         const chunk = decoder.decode(value);
-        const lines = chunk.split("\n");
-        for (const line of lines) {
+        for (const line of chunk.split("\n")) {
           if (line.startsWith("data: ")) {
             const data = line.slice(6);
             if (data === "[DONE]") break;
@@ -281,8 +334,7 @@ function ChatContent() {
         }
       }
 
-      // After full response, execute commands
-      const notifications = parseAndExecuteCommands(assistantText, setTrips, setMessages);
+      const notifications = parseAndExecuteCommands(assistantText, setTrips);
       for (const n of notifications) {
         if (n.type === "saved") showToast(`✅ Trip to ${n.destination} saved!`);
         else if (n.type === "edited") showToast(`✅ Trip updated!`);
@@ -310,7 +362,7 @@ function ChatContent() {
 
       {/* Toast */}
       {toast && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-gray-900 text-white text-sm font-bold px-5 py-3 rounded-2xl shadow-xl animate-fade-in">
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-gray-900 text-white text-sm font-bold px-5 py-3 rounded-2xl shadow-xl">
           {toast}
         </div>
       )}
@@ -338,13 +390,32 @@ function ChatContent() {
         )}
       </div>
 
+      {/* Restored chat banner */}
+      {restoredAt && (
+        <div className="px-4 max-w-2xl mx-auto w-full mb-2">
+          <div className="flex items-center justify-between bg-orange-50 border border-orange-200 rounded-2xl px-4 py-3">
+            <div className="flex items-center gap-2">
+              <span className="text-base">💬</span>
+              <div>
+                <p className="text-xs font-black text-orange-700">Continuing your conversation</p>
+                <p className="text-xs text-orange-400">Saved {timeAgo(restoredAt)}</p>
+              </div>
+            </div>
+            <button onClick={startFresh}
+              className="text-xs font-bold text-gray-400 hover:text-gray-600 px-3 py-1.5 rounded-xl border border-gray-200 bg-white transition-colors">
+              Start fresh
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-2 max-w-2xl mx-auto w-full space-y-3">
         {messages.map((m, i) => (
           <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
             <div className={`max-w-[85%] ${m.role === "user" ? "order-1" : "order-2"}`}>
               {m.role === "assistant" && (
-                <div className="w-8 h-8 rounded-2xl flex items-center justify-center text-sm mb-1 flex-shrink-0" style={{ background: G }}>🤖</div>
+                <div className="w-8 h-8 rounded-2xl flex items-center justify-center text-sm mb-1" style={{ background: G }}>🤖</div>
               )}
               <div
                 className={`px-4 py-3 rounded-2xl text-sm leading-relaxed ${
@@ -375,7 +446,7 @@ function ChatContent() {
         <div ref={bottomRef} />
       </div>
 
-      {/* Quick prompts */}
+      {/* Quick prompts — only on fresh chat */}
       {messages.length <= 1 && (
         <div className="px-4 pb-2 max-w-2xl mx-auto w-full">
           <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
