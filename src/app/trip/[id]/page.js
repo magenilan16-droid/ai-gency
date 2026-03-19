@@ -99,7 +99,7 @@ function EditableNumber({ value, onChange, prefix = "", className = "" }) {
 // ─── AI Chat Panel (overlay) ──────────────────────────────────────────────────
 function AIChatPanel({ trip, onClose }) {
   const G = "linear-gradient(135deg,#f97316,#ec4899)";
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const [msgs, setMsgs] = useState([{ role: "assistant", content: t("ai_panel_greeting", { dest: trip.destination }) }]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -111,7 +111,7 @@ function AIChatPanel({ trip, onClose }) {
     setMsgs(newMsgs); setInput(""); setLoading(true);
     try {
       const res = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: newMsgs, trips: [{ ...trip, id: "current" }], currentTripId: "current" }) });
+        body: JSON.stringify({ messages: newMsgs, trips: [{ ...trip, id: "current" }], currentTripId: "current", language: lang }) });
       const reader = res.body.getReader(); const decoder = new TextDecoder(); let txt = "";
       setMsgs(prev => [...prev, { role: "assistant", content: "" }]);
       while (true) {

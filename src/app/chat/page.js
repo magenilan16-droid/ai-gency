@@ -228,7 +228,7 @@ const QUICK_PROMPTS = [
 // ─── Main component ─────────────────────────────────────────────────────────
 
 function ChatContent() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const searchParams = useSearchParams();
   const initialTripId = searchParams.get("tripId");
 
@@ -303,6 +303,7 @@ function ChatContent() {
           messages: newMessages,
           trips,
           currentTripId: selectedTripId || null,
+          language: lang,
         }),
       });
 

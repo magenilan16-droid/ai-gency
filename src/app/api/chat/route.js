@@ -7,7 +7,7 @@ const TP_MARKER = "712006";
 
 export async function POST(req) {
   try {
-    const { messages, trips, currentTripId } = await req.json();
+    const { messages, trips, currentTripId, language } = await req.json();
 
     const tripContext = trips?.length
       ? `USER'S SAVED TRIPS:\n${trips.map(t =>
@@ -56,7 +56,8 @@ Example: [FLIGHT:Tel Aviv|Tokyo|2026-05-01|2026-05-14|650|https://www.aviasales.
 - When recommending hotels/flights, ALWAYS include affiliate booking links in the format above
 - Keep text responses short and friendly (2-4 sentences)
 - When you output a command block, also write a brief confirmation to the user
-- Currency: use the trip's currency, default USD`;
+- Currency: use the trip's currency, default USD
+${language === "he" ? "- CRITICAL: You MUST respond ONLY in Hebrew (עברית). Every single word of your response must be in Hebrew, no exceptions." : "- Respond in English."}`;
 
     const stream = await client.messages.stream({
       model: "claude-opus-4-6",
