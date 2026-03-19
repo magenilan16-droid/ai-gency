@@ -259,10 +259,10 @@ function renderMarkdown(text) {
 // ─── Chat bubbles ─────────────────────────────────────────────────────────────
 function BotBubble({ text, cities, options, multiOptions, datePicker, budgetPicker, countryPicker, onChip, onWidget, currency, streaming, widgetUsed, t }) {
   return (
-    <div className="flex items-end gap-3">
+    <div className="flex items-end gap-3 rtl:flex-row-reverse">
       <div className="w-9 h-9 rounded-2xl flex items-center justify-center text-base flex-shrink-0 shadow-md" style={{ background: G }}>🤖</div>
       <div className="flex-1 space-y-3">
-        <div className="rounded-3xl rounded-bl-sm px-5 py-4 max-w-sm shadow-sm bg-white" style={{ border: "1.5px solid #ffe4cc" }}>
+        <div className="chat-bot-bubble rounded-3xl rounded-bl-sm rtl:rounded-bl-3xl rtl:rounded-br-sm px-5 py-4 max-w-sm shadow-sm bg-white" style={{ border: "1.5px solid #ffe4cc" }}>
           {renderMarkdown(text)}
           {streaming && <span className="inline-block w-1.5 h-4 bg-orange-300 rounded animate-pulse ml-1 align-middle" />}
         </div>
@@ -304,8 +304,8 @@ function BotBubble({ text, cities, options, multiOptions, datePicker, budgetPick
 
 function UserBubble({ text }) {
   return (
-    <div className="flex justify-end">
-      <div className="rounded-3xl rounded-br-sm px-5 py-4 max-w-xs shadow-md text-white text-sm font-medium" style={{ background: G }}>{text}</div>
+    <div className="flex justify-end rtl:justify-start">
+      <div className="chat-user-bubble rounded-3xl rounded-br-sm rtl:rounded-br-3xl rtl:rounded-bl-sm px-5 py-4 max-w-xs shadow-md text-white text-sm font-medium" style={{ background: G }}>{text}</div>
     </div>
   );
 }
@@ -437,6 +437,8 @@ export default function PlanPage() {
   }
 
   function startAI() {
+    clearPlanChat();
+    setRestored(false);
     setMode("ai");
     setChatMsgs([{
       role: "assistant",
@@ -561,6 +563,14 @@ export default function PlanPage() {
       const id = generateId();
       saveTrip(id, { ...tripData, form: data });
       clearPlanChat();
+      // Request notification permission & send trip-ready notification
+      if ("Notification" in window && Notification.permission === "default") {
+        Notification.requestPermission().then(perm => {
+          if (perm === "granted") new Notification("✈️ Trip Ready!", { body: `Your ${tripData.destination} itinerary is ready!`, icon: "/icons/icon-192.png" });
+        });
+      } else if (Notification.permission === "granted") {
+        new Notification("✈️ Trip Ready!", { body: `Your ${tripData.destination} itinerary is ready!`, icon: "/icons/icon-192.png" });
+      }
       await new Promise(r => setTimeout(r, 100));
       router.push(`/trip/${id}`);
     } catch (err) {
@@ -786,7 +796,7 @@ export default function PlanPage() {
       {/* Nav */}
       <nav className="flex-shrink-0 px-4 py-4">
         <div className="max-w-2xl mx-auto flex items-center justify-between bg-white rounded-2xl px-5 py-3 shadow-sm border border-orange-100">
-          <button onClick={() => { clearPlanChat(); setMode(null); setChatMsgs([]); }} className="text-gray-400 hover:text-gray-600 transition-colors text-sm font-medium">← {t("back")}</button>
+          <button onClick={() => { setMode(null); setChatMsgs([]); }} className="text-gray-400 hover:text-gray-600 transition-colors text-sm font-medium">← {t("back")}</button>
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
             <span className="text-sm font-black text-gray-900">{t("claude_planner")}</span>

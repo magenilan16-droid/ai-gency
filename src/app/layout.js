@@ -7,6 +7,19 @@ export const metadata = {
   description: "Plan trips, manage business travel, and coordinate group adventures — all with AI.",
   manifest: "/manifest.json",
   appleWebApp: { capable: true, statusBarStyle: "default", title: "AI-gency" },
+  openGraph: {
+    title: "AI-gency — Travel OS",
+    description: "AI builds your perfect day-by-day travel itinerary in seconds. Plan trips, track expenses, and explore the world.",
+    type: "website",
+    siteName: "AI-gency",
+    images: [{ url: "/icons/icon-512.png", width: 512, height: 512, alt: "AI-gency Travel Planner" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "AI-gency — Travel OS",
+    description: "AI builds your perfect travel itinerary in seconds.",
+    images: ["/icons/icon-512.png"],
+  },
 };
 
 export const viewport = {

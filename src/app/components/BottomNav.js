@@ -9,7 +9,21 @@ const HIDE_ON = ["/plan"];
 export default function BottomNav() {
   const path = usePathname();
   const [hasSavedChat, setHasSavedChat] = useState(false);
+  const [dark, setDark] = useState(false);
   const { lang, setLang, t } = useLanguage();
+
+  useEffect(() => {
+    const saved = localStorage.getItem("aigency_dark") === "1";
+    setDark(saved);
+    document.documentElement.classList.toggle("dark", saved);
+  }, []);
+
+  function toggleDark() {
+    const next = !dark;
+    setDark(next);
+    document.documentElement.classList.toggle("dark", next);
+    localStorage.setItem("aigency_dark", next ? "1" : "0");
+  }
 
   const TABS = [
     { href: "/",         icon: "🏠", labelKey: "nav_home"     },
@@ -45,8 +59,15 @@ export default function BottomNav() {
         className="max-w-lg mx-auto rounded-2xl mb-3 shadow-2xl shadow-orange-200/50"
         style={{ background: "rgba(255,255,255,0.95)", backdropFilter: "blur(20px)", border: "1px solid #ffedd5" }}
       >
-        {/* Language toggle — top-right corner */}
-        <div className="flex justify-end px-3 pt-1.5">
+        {/* Top bar: language + dark mode */}
+        <div className="flex justify-between items-center px-3 pt-1.5">
+          <button
+            onClick={toggleDark}
+            className="text-sm leading-none hover:scale-110 transition-transform"
+            title={dark ? "Light mode" : "Dark mode"}
+          >
+            {dark ? "☀️" : "🌙"}
+          </button>
           <button
             onClick={() => setLang(lang === "en" ? "he" : "en")}
             className="text-base leading-none hover:scale-110 transition-transform"

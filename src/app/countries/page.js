@@ -47,6 +47,15 @@ function extractCountry(destination) {
   return parts[parts.length - 1]?.trim() || destination.trim();
 }
 
+// --- Wishlist helpers ---
+function getWishlist() {
+  if (typeof window === "undefined") return [];
+  try { return JSON.parse(localStorage.getItem("aigency_wishlist") || "[]"); } catch { return []; }
+}
+function saveWishlist(list) {
+  localStorage.setItem("aigency_wishlist", JSON.stringify(list));
+}
+
 function InfoRow({ label, value }) {
   return (
     <div className="flex items-start gap-2 py-2 border-b border-gray-50 last:border-0">
@@ -56,11 +65,11 @@ function InfoRow({ label, value }) {
   );
 }
 
-function CountryCard({ country, trips }) {
-  const [open, setOpen]     = useState(false);
-  const [info, setInfo]     = useState(null);
+function CountryCard({ country, trips, wishlisted, onWishlistToggle }) {
+  const [open, setOpen]       = useState(false);
+  const [info, setInfo]       = useState(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError]   = useState("");
+  const [error, setError]     = useState("");
   const { t } = useLanguage();
   const color = countryColor(country);
   const totalCost = trips.reduce((s, tr) => s + (tr.total_estimated_cost || 0), 0);
@@ -112,6 +121,17 @@ function CountryCard({ country, trips }) {
               ))}
             </div>
           </div>
+
+          {/* Wishlist heart button */}
+          <button
+            onClick={e => { e.stopPropagation(); onWishlistToggle(country); }}
+            className="flex-shrink-0 text-xl leading-none px-1 py-1 rounded-full hover:bg-orange-50 transition-colors"
+            aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
+            style={{ color: wishlisted ? "#f97316" : "#d1d5db" }}
+          >
+            {wishlisted ? "♥" : "♡"}
+          </button>
+
           <div className="flex-shrink-0 text-gray-300 text-lg font-black transition-transform"
             style={{ transform: open ? "rotate(90deg)" : "none" }}>
             ›
@@ -182,13 +202,16 @@ function CountryCard({ country, trips }) {
 }
 
 export default function CountriesPage() {
-  const [trips, setTrips]     = useState([]);
-  const [mounted, setMounted] = useState(false);
+  const [trips, setTrips]           = useState([]);
+  const [mounted, setMounted]       = useState(false);
+  const [wishlist, setWishlist]     = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const { t } = useLanguage();
 
   useEffect(() => {
     setMounted(true);
     setTrips(getAllTrips());
+    setWishlist(getWishlist());
   }, []);
 
   if (!mounted) return (
@@ -206,6 +229,33 @@ export default function CountriesPage() {
     byCountry[c].push(trip);
   }
   const countryList = Object.entries(byCountry).sort((a, b) => b[1].length - a[1].length);
+
+  // Filtered list based on search
+  const filteredList = searchQuery.trim()
+    ? countryList.filter(([country]) =>
+        country.toLowerCase().includes(searchQuery.trim().toLowerCase())
+      )
+    : countryList;
+
+  // Wishlist helpers
+  const wishlistNames = wishlist.map(w => w.name);
+
+  function handleWishlistToggle(countryName) {
+    let updated;
+    if (wishlistNames.includes(countryName)) {
+      updated = wishlist.filter(w => w.name !== countryName);
+    } else {
+      updated = [...wishlist, { name: countryName, addedAt: Date.now() }];
+    }
+    setWishlist(updated);
+    saveWishlist(updated);
+  }
+
+  function removeFromWishlist(countryName) {
+    const updated = wishlist.filter(w => w.name !== countryName);
+    setWishlist(updated);
+    saveWishlist(updated);
+  }
 
   return (
     <div className="min-h-screen" style={{ background: "#FFF8F0" }}>
@@ -228,6 +278,30 @@ export default function CountriesPage() {
           </p>
         </div>
 
+        {/* Wishlist section — shown only when wishlist has items */}
+        {wishlist.length > 0 && (
+          <div className="mb-5">
+            <p className="text-xs font-black uppercase tracking-widest text-orange-500 mb-2">❤️ Wishlist</p>
+            <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
+              {wishlist.map(w => (
+                <div
+                  key={w.name}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-orange-300 bg-white flex-shrink-0"
+                >
+                  <span className="text-sm font-bold text-gray-800">{w.name}</span>
+                  <button
+                    onClick={() => removeFromWishlist(w.name)}
+                    className="text-orange-400 hover:text-orange-600 text-xs font-black leading-none"
+                    aria-label={`Remove ${w.name} from wishlist`}
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {countryList.length === 0 ? (
           <div className="text-center py-16">
             <div className="text-6xl mb-4">🗺️</div>
@@ -239,11 +313,47 @@ export default function CountriesPage() {
             </Link>
           </div>
         ) : (
-          <div className="space-y-3">
-            {countryList.map(([country, cTrips]) => (
-              <CountryCard key={country} country={country} trips={cTrips} />
-            ))}
-          </div>
+          <>
+            {/* Search bar — shown only when there are countries */}
+            <div className="relative mb-4">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-base pointer-events-none">🔍</span>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder="Search countries..."
+                className="w-full bg-white border border-orange-100 rounded-2xl pl-10 pr-10 py-3 text-sm font-medium text-gray-800 placeholder-gray-300 shadow-sm outline-none focus:border-orange-400 transition-colors"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-lg font-black leading-none"
+                  aria-label="Clear search"
+                >
+                  ×
+                </button>
+              )}
+            </div>
+
+            {/* No results message */}
+            {filteredList.length === 0 ? (
+              <div className="text-center py-10">
+                <p className="text-gray-400 font-medium">No results for &ldquo;{searchQuery}&rdquo;</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {filteredList.map(([country, cTrips]) => (
+                  <CountryCard
+                    key={country}
+                    country={country}
+                    trips={cTrips}
+                    wishlisted={wishlistNames.includes(country)}
+                    onWishlistToggle={handleWishlistToggle}
+                  />
+                ))}
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

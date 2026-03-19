@@ -260,6 +260,92 @@ function BookingSection({ trip }) {
   );
 }
 
+// ─── Weather Widget ───────────────────────────────────────────────────────────
+function WeatherWidget({ destination, startDate, endDate }) {
+  const [weather, setWeather] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
+
+  async function load() {
+    if (weather) { setOpen(o => !o); return; }
+    setOpen(true);
+    setLoading(true);
+    try {
+      // Step 1: geocode the destination
+      const geo = await fetch(
+        `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(destination?.split(",")[0] || "")}&count=1`
+      ).then(r => r.json());
+      const loc = geo.results?.[0];
+      if (!loc) throw new Error("Location not found");
+
+      // Step 2: get weather forecast
+      const start = startDate || new Date().toISOString().split("T")[0];
+      const end = endDate || start;
+      const wx = await fetch(
+        `https://api.open-meteo.com/v1/forecast?latitude=${loc.latitude}&longitude=${loc.longitude}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_mean,weathercode&start_date=${start}&end_date=${end}&timezone=auto`
+      ).then(r => r.json());
+      setWeather({ loc, daily: wx.daily });
+    } catch { setWeather(null); }
+    finally { setLoading(false); }
+  }
+
+  // WMO weather codes to emoji
+  function wxEmoji(code) {
+    if (code <= 1) return "☀️";
+    if (code <= 3) return "⛅";
+    if (code <= 49) return "🌫️";
+    if (code <= 59) return "🌧️";
+    if (code <= 69) return "❄️";
+    if (code <= 79) return "🌨️";
+    if (code <= 82) return "🌧️";
+    if (code <= 99) return "⛈️";
+    return "🌡️";
+  }
+
+  const days = weather?.daily?.time || [];
+
+  return (
+    <div className="bg-white rounded-2xl border border-orange-100 shadow-sm overflow-hidden">
+      <button onClick={load} className="w-full flex items-center justify-between px-4 py-3">
+        <div className="flex items-center gap-2">
+          <span className="text-lg">🌤️</span>
+          <span className="font-black text-gray-900 text-sm">Weather Forecast</span>
+        </div>
+        {loading
+          ? <div className="w-4 h-4 rounded-full border-2 border-orange-300 border-t-transparent animate-spin"/>
+          : <span className="text-gray-400 text-sm">{open ? "▲" : "▼"}</span>}
+      </button>
+      {open && !loading && (
+        <div className="px-4 pb-4 border-t border-orange-50">
+          {!weather ? (
+            <p className="text-sm text-gray-400 py-3 text-center">Could not load weather.</p>
+          ) : (
+            <>
+              <p className="text-xs text-gray-400 py-2">{weather.loc.name}, {weather.loc.country}</p>
+              <div className="overflow-x-auto no-scrollbar">
+                <div className="flex gap-2 pb-1" style={{ minWidth: "max-content" }}>
+                  {days.slice(0, 14).map((date, i) => (
+                    <div key={date} className="flex flex-col items-center bg-orange-50 rounded-xl px-3 py-2 min-w-[56px]">
+                      <span className="text-xs text-gray-400 font-bold">{new Date(date + "T12:00:00").toLocaleDateString("en", { weekday: "short" })}</span>
+                      <span className="text-xl my-1">{wxEmoji(weather.daily.weathercode?.[i])}</span>
+                      <span className="text-xs font-black text-gray-900">{Math.round(weather.daily.temperature_2m_max?.[i])}°</span>
+                      <span className="text-xs text-gray-400">{Math.round(weather.daily.temperature_2m_min?.[i])}°</span>
+                      {(weather.daily.precipitation_probability_mean?.[i] || 0) > 30 && (
+                        <span className="text-xs text-blue-400 font-bold">{weather.daily.precipitation_probability_mean[i]}%💧</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <p className="text-xs text-gray-300 mt-2 text-center">Open-Meteo · Not a forecast guarantee</p>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Pack Tab ─────────────────────────────────────────────────────────────────
 function PackTab({ trip }) {
   const G = "linear-gradient(135deg,#f97316,#ec4899)";
@@ -479,7 +565,7 @@ function ExpensesTab({ trip, expenses, onAdd, onDelete }) {
                 </div>
                 <div className="text-right flex-shrink-0">
                   <div className="font-black text-gray-900 text-sm">{trip.currency} {Number(exp.amount).toLocaleString()}</div>
-                  <button onClick={()=>onDelete(exp.id)} className="text-xs text-red-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all">remove</button>
+                  <button onClick={()=>{ if(window.confirm("Remove this expense?")) onDelete(exp.id); }} className="text-xs text-red-400 hover:text-red-600 transition-all">remove</button>
                 </div>
               </div>
             );
@@ -706,6 +792,13 @@ function TripContent() {
       return tr;
     });
   }
+  function updateDayNote(di, note) {
+    setTripAndSave(p => {
+      const tr = JSON.parse(JSON.stringify(p));
+      tr.daily_itinerary[di].notes = note;
+      return tr;
+    });
+  }
   function updateDayField(di, field, value) {
     setTripAndSave(p => { const tr=JSON.parse(JSON.stringify(p)); tr.daily_itinerary[di][field]=value; return tr; });
   }
@@ -733,7 +826,75 @@ function TripContent() {
     setTripAndSave(p => ({ ...p, expenses: updated }));
   }
   function copyLink() {
-    navigator.clipboard.writeText(window.location.href).then(()=>{ setCopied(true); setTimeout(()=>setCopied(false),2500); });
+    try {
+      // Encode trip data into URL hash for real sharing
+      const shareData = JSON.stringify({
+        destination: trip.destination,
+        days: trip.days,
+        travelers: trip.travelers,
+        currency: trip.currency,
+        total_estimated_cost: trip.total_estimated_cost,
+        style: trip.style,
+        summary: trip.summary,
+        daily_itinerary: trip.daily_itinerary,
+        budget_breakdown: trip.budget_breakdown,
+        tips: trip.tips,
+        form: trip.form,
+      });
+      const encoded = btoa(unescape(encodeURIComponent(shareData)));
+      const shareUrl = `${window.location.origin}/trip/shared#${encoded}`;
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2500);
+      });
+    } catch {
+      // Fallback: just copy current URL
+      navigator.clipboard.writeText(window.location.href).then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2500);
+      });
+    }
+  }
+
+  function downloadCalendar() {
+    if (!trip) return;
+    const pad = n => String(n).padStart(2, "0");
+    function toICS(dateStr, hour = 9) {
+      const d = new Date(dateStr + "T00:00:00");
+      return `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}T${pad(hour)}0000`;
+    }
+
+    const lines = [
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      "PRODID:-//AI-gency//Travel Planner//EN",
+      "CALSCALE:GREGORIAN",
+      "METHOD:PUBLISH",
+    ];
+
+    for (const day of (trip.daily_itinerary || [])) {
+      const dateStr = day.date || trip.form?.startDate;
+      if (!dateStr) continue;
+      lines.push(
+        "BEGIN:VEVENT",
+        `UID:aigency-day${day.day}-${trip.destination?.replace(/\s/g,"")}@aigency`,
+        `DTSTART:${toICS(dateStr, 9)}`,
+        `DTEND:${toICS(dateStr, 21)}`,
+        `SUMMARY:Day ${day.day} — ${day.title || trip.destination}`,
+        `DESCRIPTION:${(day.activities || []).map(a => `${a.time}: ${a.name}`).join("\\n")}`,
+        `LOCATION:${trip.destination || ""}`,
+        "END:VEVENT"
+      );
+    }
+    lines.push("END:VCALENDAR");
+
+    const blob = new Blob([lines.join("\r\n")], { type: "text/calendar;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${trip.destination?.replace(/[^a-z0-9]/gi, "_")}_itinerary.ics`;
+    a.click();
+    URL.revokeObjectURL(url);
   }
 
   if (!trip) return (
@@ -772,6 +933,12 @@ function TripContent() {
               className="text-xs font-bold px-3 py-2 rounded-xl border-2 transition-all"
               style={editMode ? {borderColor:"#f97316",background:"#fff7ed",color:"#f97316"} : {borderColor:"#ffedd5",background:"white",color:"#9ca3af"}}>
               {editMode ? `✓ Done` : t("edit_trip")}
+            </button>
+            <button onClick={() => window.print()} className="no-print text-xs font-bold px-3 py-2 rounded-xl border-2 border-orange-100 text-gray-500 hover:bg-orange-50 transition-all">
+              🖨️
+            </button>
+            <button onClick={downloadCalendar} className="no-print text-xs font-bold px-3 py-2 rounded-xl border-2 border-orange-100 text-gray-500 hover:bg-orange-50 transition-all">
+              📅
             </button>
             <button onClick={copyLink} className="text-xs font-bold px-3 py-2 rounded-xl text-white shadow-sm" style={{background:hero}}>
               {copied ? "✓ Copied!" : t("share_trip")}
@@ -981,6 +1148,23 @@ function TripContent() {
                       })}
                     </div>
                     {editMode && <div className="p-4 border-t border-orange-50"><button onClick={()=>addActivity(activeDay)} className="w-full py-3 rounded-2xl border-2 border-dashed border-orange-200 text-orange-400 hover:border-orange-300 hover:bg-orange-50 transition-all text-sm font-bold">+ Add Activity</button></div>}
+                    {/* Diary Notes */}
+                    <div className="p-4 border-t border-orange-50">
+                      <div className="bg-white rounded-2xl border border-orange-100 p-4 shadow-sm">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-base">📝</span>
+                          <span className="font-black text-gray-900 text-sm">My Notes</span>
+                        </div>
+                        <textarea
+                          value={daily_itinerary[activeDay]?.notes || ""}
+                          onChange={e => updateDayNote(activeDay, e.target.value)}
+                          onBlur={e => updateDayNote(activeDay, e.target.value)}
+                          placeholder="Add your notes, memories, or reminders for this day..."
+                          rows={3}
+                          className="w-full text-sm text-gray-700 placeholder-gray-300 bg-orange-50 rounded-xl px-3 py-2.5 outline-none border-2 border-transparent focus:border-orange-300 resize-none leading-relaxed font-medium transition-all"
+                        />
+                      </div>
+                    </div>
                     <div className="px-5 py-4 flex justify-between" style={{background:"#FFF8F0"}}>
                       <button onClick={()=>setActiveDay(p=>Math.max(0,p-1))} disabled={activeDay===0} className="text-sm font-bold text-gray-400 hover:text-orange-500 disabled:opacity-30 transition-colors">← Previous</button>
                       <button onClick={()=>setActiveDay(p=>Math.min(daily_itinerary.length-1,p+1))} disabled={activeDay===daily_itinerary.length-1} className="text-sm font-bold text-gray-400 hover:text-orange-500 disabled:opacity-30 transition-colors">Next →</button>
@@ -1035,6 +1219,9 @@ function TripContent() {
 
             {/* Book Your Trip */}
             <BookingSection trip={trip}/>
+
+            {/* Weather Forecast */}
+            <WeatherWidget destination={trip.destination} startDate={form?.startDate} endDate={form?.endDate}/>
 
             {/* Tips */}
             {(tips.length>0||editMode) && (
