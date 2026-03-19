@@ -40,26 +40,31 @@ export async function POST(request) {
 
     const interestStr = interests?.length ? `Special interests: ${interests.join(", ")}.` : "";
     const budgetHint = budgetBreakdown
-      ? `AI-assessed budget breakdown: flights ${currency} ${budgetBreakdown.flights}, accommodation ${budgetBreakdown.accommodation}, food ${budgetBreakdown.food}, activities ${budgetBreakdown.activities}, other ${budgetBreakdown.other}.`
+      ? `Budget breakdown hint: flights ${currency} ${budgetBreakdown.flights}, accommodation ${budgetBreakdown.accommodation}, food ${budgetBreakdown.food}, activities ${budgetBreakdown.activities}, other ${budgetBreakdown.other}.`
       : "";
 
-    const prompt = `You are an expert travel planner. Create a highly personalized, realistic itinerary.
+    // For long trips, use compact format to fit within token limits
+    const isLong = days > 8;
+    const activitiesPerDay = isLong ? 2 : 3;
+    const descLength = isLong ? "ONE short sentence" : "1-2 sentences with local details";
+    const restaurantCount = isLong ? 3 : 5;
+    const maxTokens = isLong ? 6000 : 4096;
 
-TRIP DETAILS:
+    const prompt = `You are an expert travel planner. Create a personalized itinerary. Be CONCISE — descriptions must be ${descLength} max.
+
+TRIP:
 - Destination: ${destination}
 - Dates: ${startDate} to ${endDate} (${days} days)
-- Travelers: ${travelers}
-- Total Budget: ${budget} ${currency}
+- Travelers: ${travelers} | Budget: ${budget} ${currency}
 - Style: ${styleDesc[style] || style || "balanced"}
-- Accommodation: ${accomDesc[accommodation] || "mid-range hotels"}
-- Food: ${foodDesc[foodStyle] || "mix of local and restaurants"}
+- Accommodation: ${accomDesc[accommodation] || "mid-range"}
 - ${interestStr}
 - ${budgetHint}
 
-Return ONLY valid JSON. No markdown. No text outside the JSON.
+Return ONLY valid JSON. No markdown. No text outside JSON.
 
 {
-  "summary": "3-sentence personalized overview mentioning their specific preferences",
+  "summary": "2-sentence personalized overview",
   "destination": "${destination}",
   "days": ${days},
   "travelers": ${Number(travelers) || 1},
@@ -71,47 +76,38 @@ Return ONLY valid JSON. No markdown. No text outside the JSON.
     {
       "day": 1,
       "date": "${startDate}",
-      "title": "Descriptive day theme",
+      "title": "Day theme (3-4 words)",
       "activities": [
-        { "time": "morning", "name": "Specific activity name", "description": "2-sentence description with local details.", "estimated_cost": 0 },
-        { "time": "afternoon", "name": "Activity name", "description": "Description.", "estimated_cost": 0 },
-        { "time": "evening", "name": "Activity name", "description": "Description.", "estimated_cost": 0 }
+        { "time": "morning", "name": "Activity name", "description": "${descLength}.", "estimated_cost": 0 },
+        { "time": "afternoon", "name": "Activity name", "description": "${descLength}.", "estimated_cost": 0 }${activitiesPerDay > 2 ? `,\n        { "time": "evening", "name": "Activity name", "description": "${descLength}.", "estimated_cost": 0 }` : ""}
       ],
       "daily_cost": 0,
-      "accommodation": "Specific hotel/area recommendation with brief reason"
+      "accommodation": "Hotel name, area"
     }
   ],
-  "budget_breakdown": {
-    "accommodation": 0,
-    "food": 0,
-    "activities": 0,
-    "transportation": 0,
-    "other": 0
-  },
-  "tips": ["Practical tip 1", "Practical tip 2", "Practical tip 3", "Cultural tip", "Money-saving tip"],
+  "budget_breakdown": { "accommodation": 0, "food": 0, "activities": 0, "transportation": 0, "other": 0 },
+  "tips": ["Tip 1", "Tip 2", "Tip 3"],
   "recommended_hotels": [
-    { "name": "Hotel Name", "stars": 4, "area": "Neighborhood", "why": "One reason to stay here", "price_per_night": 0 }
+    { "name": "Hotel", "stars": 3, "area": "Area", "why": "Brief reason", "price_per_night": 0 }
   ],
   "recommended_restaurants": [
-    { "name": "Restaurant name", "type": "Cuisine type", "price_range": "$$", "must_try": "Dish name" }
+    { "name": "Restaurant", "type": "Cuisine", "price_range": "$$", "must_try": "Dish" }
   ]
 }
 
-Rules:
-- Replace ALL 0s with realistic numbers for ${destination}
+CRITICAL RULES:
+- Generate ALL ${days} days — do NOT stop early
+- Replace ALL 0s with realistic numbers
 - Stay within ${budget} ${currency} total
-- Include 3-4 activities per day matching their style and interests
-- Costs are for ALL ${travelers} travelers combined
-- budget_breakdown must sum to approximately total_estimated_cost
-- Make activity descriptions specific to ${destination} — real places, real neighborhoods
-- recommended_hotels: 3 options matching their accommodation preference
-- recommended_restaurants: 4-5 options matching their food style`;
+- budget_breakdown must sum to total_estimated_cost
+- recommended_hotels: 3 options | recommended_restaurants: ${restaurantCount} options
+- Keep descriptions SHORT (${descLength}) to save space`;
 
     let message;
     try {
       message = await client.messages.create({
         model: "claude-haiku-4-5-20251001",
-        max_tokens: 4096,
+        max_tokens: maxTokens,
         messages: [{ role: "user", content: prompt }],
       });
     } catch (apiErr) {
