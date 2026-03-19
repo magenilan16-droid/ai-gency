@@ -1,46 +1,44 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, Suspense } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { getTrip, updateTrip } from "@/lib/trips";
 
-// ─── Destination themes ───────────────────────────────────────────────────────
+// ─── Destination themes ────────────────────────────────────────────────────────
 const THEMES = {
-  japan:     { g: ["#FF6B6B","#FF8E53"], e: "🗾", hi: "Konnichiwa!", fact: "Japan has 14 UNESCO World Heritage Sites and some of the world's best street food." },
-  tokyo:     { g: ["#FF6B6B","#FF8E53"], e: "🗼", hi: "Konnichiwa!", fact: "Tokyo is the world's most populous metro area — over 37 million people." },
-  paris:     { g: ["#667eea","#764ba2"], e: "🗼", hi: "Bonjour!", fact: "Paris has 1,800+ monuments and 173 museums, including the world's most visited." },
-  france:    { g: ["#667eea","#764ba2"], e: "🇫🇷", hi: "Bonjour!", fact: "France is the most visited country on earth, welcoming 90M tourists per year." },
-  italy:     { g: ["#11998e","#38ef7d"], e: "🇮🇹", hi: "Benvenuto!", fact: "Italy has more UNESCO World Heritage Sites than any other country — 58 total." },
-  rome:      { g: ["#f7971e","#ffd200"], e: "🏛️", hi: "When in Rome!", fact: "Rome has more ancient fountains than any other city in the world." },
-  greece:    { g: ["#2980B9","#6DD5FA"], e: "🏛️", hi: "Kalimera!", fact: "Greece has over 6,000 islands, though only 250 are inhabited." },
-  spain:     { g: ["#ee0979","#ff6a00"], e: "🇪🇸", hi: "¡Hola!", fact: "Spain hosts La Tomatina — the world's largest tomato fight, every August." },
-  thailand:  { g: ["#f7971e","#ffd200"], e: "🐘", hi: "Sawasdee!", fact: "Thailand has 40,000+ temples, including the sacred Wat Phra Kaew." },
-  bali:      { g: ["#11998e","#38ef7d"], e: "🌺", hi: "Om Swastiastu!", fact: "Bali has 20,000+ temples — known as the Island of the Gods." },
-  "new york":{ g: ["#4776E6","#8E54E9"], e: "🗽", hi: "Welcome to NYC!", fact: "NYC's subway has 472 stations — the most of any metro in the world." },
-  london:    { g: ["#4776E6","#8E54E9"], e: "🎡", hi: "Cheerio!", fact: "London's Tube is the world's oldest metro system, opened in 1863." },
-  dubai:     { g: ["#f7971e","#ffd200"], e: "🏙️", hi: "Welcome to Dubai!", fact: "The Burj Khalifa is the tallest building on earth at 828 meters." },
-  australia: { g: ["#f46b45","#eea849"], e: "🦘", hi: "G'day!", fact: "Australia is home to 80% of species found nowhere else on earth." },
-  israel:    { g: ["#2980B9","#6DD5FA"], e: "🕍", hi: "Shalom!", fact: "Israel has more museums per capita than any other country." },
-  "tel aviv":{ g: ["#11998e","#38ef7d"], e: "🏖️", hi: "Shalom!", fact: "Tel Aviv was founded in 1909 and has the world's highest concentration of Bauhaus buildings." },
-  default:   { g: ["#f97316","#ec4899"], e: "🌍", hi: "Adventure awaits!", fact: null },
+  japan:      { g: ["#FF6B6B","#FF8E53"], e: "🗾", hi: "Konnichiwa!", fact: "Japan has 14 UNESCO World Heritage Sites and some of the world's best street food." },
+  tokyo:      { g: ["#FF6B6B","#FF8E53"], e: "🗼", hi: "Konnichiwa!", fact: "Tokyo is the world's most populous metro area — over 37 million people." },
+  paris:      { g: ["#667eea","#764ba2"], e: "🗼", hi: "Bonjour!", fact: "Paris has 1,800+ monuments and 173 museums, including the world's most visited." },
+  france:     { g: ["#667eea","#764ba2"], e: "🇫🇷", hi: "Bonjour!", fact: "France is the most visited country on earth, welcoming 90M tourists per year." },
+  italy:      { g: ["#11998e","#38ef7d"], e: "🇮🇹", hi: "Benvenuto!", fact: "Italy has more UNESCO World Heritage Sites than any other country — 58 total." },
+  rome:       { g: ["#f7971e","#ffd200"], e: "🏛️", hi: "When in Rome!", fact: "Rome has more ancient fountains than any other city in the world." },
+  greece:     { g: ["#2980B9","#6DD5FA"], e: "🏛️", hi: "Kalimera!", fact: "Greece has over 6,000 islands, though only 250 are inhabited." },
+  spain:      { g: ["#ee0979","#ff6a00"], e: "🇪🇸", hi: "¡Hola!", fact: "Spain hosts La Tomatina — the world's largest tomato fight, every August." },
+  thailand:   { g: ["#f7971e","#ffd200"], e: "🐘", hi: "Sawasdee!", fact: "Thailand has 40,000+ temples, including the sacred Wat Phra Kaew." },
+  bali:       { g: ["#11998e","#38ef7d"], e: "🌺", hi: "Om Swastiastu!", fact: "Bali has 20,000+ temples — known as the Island of the Gods." },
+  "new york": { g: ["#4776E6","#8E54E9"], e: "🗽", hi: "Welcome to NYC!", fact: "NYC's subway has 472 stations — the most of any metro in the world." },
+  london:     { g: ["#4776E6","#8E54E9"], e: "🎡", hi: "Cheerio!", fact: "London's Tube is the world's oldest metro system, opened in 1863." },
+  dubai:      { g: ["#f7971e","#ffd200"], e: "🏙️", hi: "Welcome to Dubai!", fact: "The Burj Khalifa is the tallest building on earth at 828 meters." },
+  australia:  { g: ["#f46b45","#eea849"], e: "🦘", hi: "G'day!", fact: "Australia is home to 80% of species found nowhere else on earth." },
+  israel:     { g: ["#2980B9","#6DD5FA"], e: "🕍", hi: "Shalom!", fact: "Israel has more museums per capita than any other country." },
+  "tel aviv": { g: ["#11998e","#38ef7d"], e: "🏖️", hi: "Shalom!", fact: "Tel Aviv was founded in 1909 and has the world's highest concentration of Bauhaus buildings." },
+  default:    { g: ["#f97316","#ec4899"], e: "🌍", hi: "Adventure awaits!", fact: null },
 };
 
 function getTheme(dest) {
   if (!dest) return THEMES.default;
   const k = dest.toLowerCase();
-  for (const [key, val] of Object.entries(THEMES)) {
-    if (k.includes(key)) return val;
-  }
+  for (const [key, val] of Object.entries(THEMES)) { if (k.includes(key)) return val; }
   return THEMES.default;
 }
 
 const BUDGET_CATS = {
-  accommodation: { color: "#f97316", label: "Accommodation" },
-  food:          { color: "#ec4899", label: "Food & Dining" },
-  activities:    { color: "#8b5cf6", label: "Activities" },
-  transportation:{ color: "#3b82f6", label: "Transportation" },
-  other:         { color: "#9ca3af", label: "Other" },
+  accommodation:  { color: "#f97316", label: "Accommodation" },
+  food:           { color: "#ec4899", label: "Food & Dining" },
+  activities:     { color: "#8b5cf6", label: "Activities" },
+  transportation: { color: "#3b82f6", label: "Transportation" },
+  other:          { color: "#9ca3af", label: "Other" },
 };
 const STYLE_ICONS = { adventure:"🧗", relaxed:"🏖️", cultural:"🏛️", luxury:"✨" };
 const TIME_OPTS = ["morning","afternoon","evening"];
@@ -50,25 +48,18 @@ const TIME_STYLE = {
   evening:   { bg:"#eff6ff", text:"#2563eb" },
 };
 
-// ─── Editable text field ──────────────────────────────────────────────────────
+// ─── Editable field ────────────────────────────────────────────────────────────
 function Editable({ value, onChange, className = "", multiline = false, placeholder = "Click to edit..." }) {
   const [editing, setEditing] = useState(false);
   const [local, setLocal] = useState(value);
-
   useEffect(() => { setLocal(value); }, [value]);
-
-  function done() {
-    setEditing(false);
-    if (local !== value) onChange(local);
-  }
-
+  function done() { setEditing(false); if (local !== value) onChange(local); }
   if (editing) {
     const cls = "w-full bg-orange-50 border-2 border-orange-300 rounded-xl px-3 py-2 outline-none text-sm text-gray-900 font-medium " + className;
     return multiline
       ? <textarea autoFocus rows={2} value={local} onChange={e => setLocal(e.target.value)} onBlur={done} className={cls} />
       : <input autoFocus type="text" value={local} onChange={e => setLocal(e.target.value)} onBlur={done} onKeyDown={e => e.key === "Enter" && done()} className={cls} />;
   }
-
   return (
     <span onClick={() => setEditing(true)} className={"cursor-text hover:bg-orange-50 rounded-lg px-1 -mx-1 transition-colors border border-dashed border-transparent hover:border-orange-200 " + className} title="Click to edit">
       {value || <span className="text-gray-300 italic">{placeholder}</span>}
@@ -76,7 +67,6 @@ function Editable({ value, onChange, className = "", multiline = false, placehol
   );
 }
 
-// ─── Number editable ──────────────────────────────────────────────────────────
 function EditableNumber({ value, onChange, prefix = "", className = "" }) {
   const [editing, setEditing] = useState(false);
   const [local, setLocal] = useState(value);
@@ -86,8 +76,235 @@ function EditableNumber({ value, onChange, prefix = "", className = "" }) {
   return <span onClick={() => setEditing(true)} className={"cursor-text hover:bg-orange-50 rounded-lg px-1 -mx-1 transition-colors border border-dashed border-transparent hover:border-orange-200 font-bold " + className} title="Click to edit">{prefix}{value?.toLocaleString()}</span>;
 }
 
-// ─── Main component ───────────────────────────────────────────────────────────
-export default function TripPage() {
+// ─── AI Chat Panel ─────────────────────────────────────────────────────────────
+function AIChatPanel({ trip, onClose }) {
+  const [msgs, setMsgs] = useState([{
+    role: "assistant",
+    content: `Hey! 👋 I know all about your **${trip.destination}** trip. Ask me anything — best restaurants, hidden gems, packing tips, or how to optimize your itinerary!`
+  }]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const bottomRef = useState(null)[0];
+
+  async function send(text) {
+    if (!text.trim() || loading) return;
+    const newMsgs = [...msgs, { role: "user", content: text }];
+    setMsgs(newMsgs);
+    setInput("");
+    setLoading(true);
+
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: newMsgs, trips: [{ ...trip, id: "current" }], currentTripId: "current" }),
+      });
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let text = "";
+      setMsgs(prev => [...prev, { role: "assistant", content: "" }]);
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        for (const line of decoder.decode(value).split("\n")) {
+          if (line.startsWith("data: ") && line !== "data: [DONE]") {
+            try { const p = JSON.parse(line.slice(6)); if (p.text) { text += p.text; setMsgs(prev => { const u = [...prev]; u[u.length-1] = { role: "assistant", content: text }; return u; }); } } catch {}
+          }
+        }
+      }
+    } catch { setMsgs(prev => [...prev, { role: "assistant", content: "Sorry, something went wrong." }]); }
+    finally { setLoading(false); }
+  }
+
+  const G = "linear-gradient(135deg,#f97316,#ec4899)";
+  const QUICK = ["Best restaurants nearby?", "What to pack?", "Hidden gems?", "Is it safe?", "Best photo spots?"];
+
+  return (
+    <div className="fixed inset-0 z-50 flex flex-col" style={{ background: "#FFF8F0" }}>
+      {/* Header */}
+      <div className="flex items-center gap-3 px-4 pt-8 pb-4 bg-white border-b border-orange-100">
+        <button onClick={onClose} className="w-9 h-9 rounded-xl bg-orange-50 flex items-center justify-center text-orange-400 font-black text-lg">←</button>
+        <div className="w-9 h-9 rounded-2xl flex items-center justify-center text-lg" style={{ background: G }}>🤖</div>
+        <div>
+          <div className="font-black text-gray-900 text-sm">AI Assistant</div>
+          <div className="text-xs text-gray-400">{trip.destination}</div>
+        </div>
+        <Link href={`/chat?tripId=${trip.id || ""}`} className="ml-auto text-xs font-bold text-orange-500 border-2 border-orange-100 px-3 py-1.5 rounded-xl hover:bg-orange-50">Full Chat →</Link>
+      </div>
+
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+        {msgs.map((m, i) => (
+          <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+            <div className={`max-w-[85%] px-4 py-3 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${
+              m.role === "user" ? "text-white rounded-tr-sm" : "bg-white border border-orange-100 text-gray-800 rounded-tl-sm shadow-sm"
+            }`} style={m.role === "user" ? { background: G } : {}}>
+              {m.content || <span className="inline-flex gap-1"><span className="w-1.5 h-1.5 bg-orange-300 rounded-full animate-bounce" /><span className="w-1.5 h-1.5 bg-orange-300 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} /><span className="w-1.5 h-1.5 bg-orange-300 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} /></span>}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Quick prompts */}
+      {msgs.length <= 1 && (
+        <div className="px-4 pb-2">
+          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+            {QUICK.map(q => (
+              <button key={q} onClick={() => send(q)} className="flex-shrink-0 text-xs font-bold px-3 py-2 rounded-xl bg-white border-2 border-orange-100 text-orange-500 whitespace-nowrap">{q}</button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Input */}
+      <div className="px-4 pb-6 pt-2">
+        <div className="flex gap-2 bg-white rounded-2xl border-2 border-orange-100 p-2 shadow-sm">
+          <input value={input} onChange={e => setInput(e.target.value)}
+            onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); send(input); } }}
+            placeholder="Ask anything..." disabled={loading}
+            className="flex-1 bg-transparent text-sm text-gray-800 placeholder-gray-300 outline-none px-2 font-medium" />
+          <button onClick={() => send(input)} disabled={loading || !input.trim()}
+            className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-black disabled:opacity-40"
+            style={{ background: G }}>↑</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Packing List ──────────────────────────────────────────────────────────────
+function PackingList({ trip, onClose }) {
+  const [packing, setPacking] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [checked, setChecked] = useState({});
+
+  useEffect(() => {
+    fetch("/api/suggest", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: "packing", trip }),
+    })
+      .then(r => r.json())
+      .then(r => { if (r.ok) setPacking(r.data); })
+      .finally(() => setLoading(false));
+  }, []);
+
+  const G = "linear-gradient(135deg,#f97316,#ec4899)";
+
+  return (
+    <div className="fixed inset-0 z-50 flex flex-col" style={{ background: "#FFF8F0" }}>
+      <div className="flex items-center gap-3 px-4 pt-8 pb-4 bg-white border-b border-orange-100">
+        <button onClick={onClose} className="w-9 h-9 rounded-xl bg-orange-50 flex items-center justify-center text-orange-400 font-black text-lg">←</button>
+        <div className="w-9 h-9 rounded-2xl flex items-center justify-center text-xl" style={{ background: G }}>🧳</div>
+        <div>
+          <div className="font-black text-gray-900 text-sm">AI Packing List</div>
+          <div className="text-xs text-gray-400">{trip.destination} · {trip.days} days</div>
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto px-4 py-4">
+        {loading ? (
+          <div className="flex flex-col items-center justify-center h-48 gap-3">
+            <div className="w-10 h-10 rounded-full border-4 border-orange-300 border-t-transparent animate-spin" />
+            <p className="text-sm text-gray-400 font-medium">AI is building your packing list...</p>
+          </div>
+        ) : !packing ? (
+          <div className="text-center py-12 text-gray-400">Failed to generate. Please try again.</div>
+        ) : (
+          <div className="space-y-4">
+            {(packing.categories || []).map((cat, ci) => (
+              <div key={ci} className="bg-white rounded-2xl border border-orange-100 p-4 shadow-sm">
+                <h3 className="font-black text-gray-900 mb-3 text-sm">{cat.name}</h3>
+                <div className="space-y-2">
+                  {(cat.items || []).map((item, ii) => {
+                    const key = `${ci}-${ii}`;
+                    return (
+                      <label key={ii} className="flex items-center gap-3 cursor-pointer group">
+                        <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all ${checked[key] ? "border-orange-400 bg-orange-400" : "border-orange-200"}`}
+                          onClick={() => setChecked(p => ({ ...p, [key]: !p[key] }))}>
+                          {checked[key] && <span className="text-white text-xs font-black">✓</span>}
+                        </div>
+                        <span className={`text-sm font-medium transition-all ${checked[key] ? "line-through text-gray-300" : "text-gray-700"}`}>{item}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Day AI Suggestions ────────────────────────────────────────────────────────
+function DaySuggestions({ trip, dayIndex, onApply, onClose }) {
+  const [suggestions, setSuggestions] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/suggest", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: "regenerate_day", trip, dayIndex }),
+    })
+      .then(r => r.json())
+      .then(r => { if (r.ok) setSuggestions(Array.isArray(r.data) ? r.data : []); })
+      .finally(() => setLoading(false));
+  }, []);
+
+  const G = "linear-gradient(135deg,#f97316,#ec4899)";
+  const day = trip.daily_itinerary?.[dayIndex];
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/40 flex items-end">
+      <div className="bg-white rounded-t-3xl w-full max-w-lg mx-auto p-6 max-h-[80vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <div className="font-black text-gray-900">✨ AI Suggestions</div>
+            <div className="text-xs text-gray-400">Day {day?.day} — {day?.title}</div>
+          </div>
+          <button onClick={onClose} className="text-gray-400 font-black text-xl w-9 h-9 rounded-xl bg-gray-50 flex items-center justify-center">×</button>
+        </div>
+
+        {loading ? (
+          <div className="flex flex-col items-center py-10 gap-3">
+            <div className="w-10 h-10 rounded-full border-4 border-orange-300 border-t-transparent animate-spin" />
+            <p className="text-sm text-gray-400">AI is suggesting alternatives...</p>
+          </div>
+        ) : !suggestions?.length ? (
+          <p className="text-center py-8 text-gray-400 text-sm">No suggestions available.</p>
+        ) : (
+          <div className="space-y-3">
+            {suggestions.map((s, i) => {
+              const ts = TIME_STYLE[s.time] || TIME_STYLE.morning;
+              return (
+                <div key={i} className="border-2 border-orange-100 rounded-2xl p-4">
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <span className="text-xs font-bold px-2 py-1 rounded-full" style={{ background: ts.bg, color: ts.text }}>
+                      {s.time?.charAt(0).toUpperCase() + s.time?.slice(1)}
+                    </span>
+                    <span className="text-xs font-bold text-gray-400">{trip.currency} {s.estimated_cost}</span>
+                  </div>
+                  <div className="font-black text-gray-900 text-sm mb-1">{s.name}</div>
+                  <p className="text-xs text-gray-400 mb-3">{s.description}</p>
+                  <button onClick={() => { onApply(s); onClose(); }}
+                    className="w-full py-2 rounded-xl text-white text-xs font-black" style={{ background: G }}>
+                    + Add to Day {day?.day}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Main ──────────────────────────────────────────────────────────────────────
+function TripContent() {
   const { id } = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -96,6 +313,9 @@ export default function TripPage() {
   const [editMode, setEditMode] = useState(false);
   const [copied, setCopied] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [showAI, setShowAI] = useState(false);
+  const [showPacking, setShowPacking] = useState(false);
+  const [daySuggestIndex, setDaySuggestIndex] = useState(null);
 
   useEffect(() => {
     const t = getTrip(id);
@@ -118,23 +338,20 @@ export default function TripPage() {
     });
   }
 
-  // ── Activity helpers ──
   function updateActivity(di, ai, field, value) {
     setTripAndSave(p => {
       const t = JSON.parse(JSON.stringify(p));
       t.daily_itinerary[di].activities[ai][field] = value;
-      // Recalculate daily cost
       t.daily_itinerary[di].daily_cost = t.daily_itinerary[di].activities.reduce((s, a) => s + (Number(a.estimated_cost) || 0) * (t.travelers || 1), 0);
-      // Recalculate total
       t.total_estimated_cost = t.daily_itinerary.reduce((s, d) => s + (d.daily_cost || 0), 0);
       return t;
     });
   }
 
-  function addActivity(di) {
+  function addActivity(di, activity) {
     setTripAndSave(p => {
       const t = JSON.parse(JSON.stringify(p));
-      t.daily_itinerary[di].activities.push({ time: "morning", name: "New Activity", description: "Describe this activity.", estimated_cost: 0 });
+      t.daily_itinerary[di].activities.push(activity || { time: "morning", name: "New Activity", description: "Describe this activity.", estimated_cost: 0 });
       return t;
     });
   }
@@ -156,24 +373,19 @@ export default function TripPage() {
   function updateTip(i, value) {
     setTripAndSave(p => { const t = JSON.parse(JSON.stringify(p)); t.tips[i] = value; return t; });
   }
-
   function deleteTip(i) {
     setTripAndSave(p => { const t = JSON.parse(JSON.stringify(p)); t.tips.splice(i, 1); return t; });
   }
-
   function addTip() {
     setTripAndSave(p => { const t = JSON.parse(JSON.stringify(p)); t.tips.push("Add your tip here"); return t; });
   }
-
   function updateBudget(key, value) {
     setTripAndSave(p => { const t = JSON.parse(JSON.stringify(p)); t.budget_breakdown[key] = Number(value); t.total_estimated_cost = Object.values(t.budget_breakdown).reduce((a, b) => a + b, 0); return t; });
   }
-
   function copyLink() {
     navigator.clipboard.writeText(window.location.href).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2500); });
   }
 
-  // ── Loading ──
   if (!trip) return (
     <div className="min-h-screen flex items-center justify-center" style={{ background: "#FFF8F0" }}>
       <div className="text-center">
@@ -183,34 +395,41 @@ export default function TripPage() {
     </div>
   );
 
+  // Overlays
+  if (showAI) return <AIChatPanel trip={{ ...trip, id }} onClose={() => setShowAI(false)} />;
+  if (showPacking) return <PackingList trip={trip} onClose={() => setShowPacking(false)} />;
+
   const { daily_itinerary = [], budget_breakdown = {}, tips = [], form } = trip;
   const totalBudget = Object.values(budget_breakdown).reduce((a, b) => a + b, 0);
   const theme = getTheme(trip.destination || form?.destination);
   const hero = `linear-gradient(135deg,${theme.g[0]},${theme.g[1]})`;
+  const G = "linear-gradient(135deg,#f97316,#ec4899)";
 
   return (
     <main className="min-h-screen" style={{ background: "#FFF8F0" }}>
 
+      {/* Day suggestions modal */}
+      {daySuggestIndex !== null && (
+        <DaySuggestions
+          trip={trip}
+          dayIndex={daySuggestIndex}
+          onApply={(s) => addActivity(daySuggestIndex, s)}
+          onClose={() => setDaySuggestIndex(null)}
+        />
+      )}
+
       {/* ── Nav ── */}
-      <nav className="sticky top-0 z-50 px-3 sm:px-6 py-3">
+      <nav className="sticky top-0 z-40 px-3 sm:px-6 py-3">
         <div className="max-w-5xl mx-auto flex items-center justify-between bg-white/90 backdrop-blur-xl rounded-2xl px-4 py-3 shadow-sm border border-orange-100">
+          <Link href="/" className="text-gray-400 hover:text-gray-600 text-xs sm:text-sm font-medium transition-colors">← Home</Link>
           <div className="flex items-center gap-2">
-            <Link href="/" className="text-gray-400 hover:text-gray-600 text-xs sm:text-sm font-medium transition-colors">← Home</Link>
-            <span className="text-gray-200 hidden sm:inline">|</span>
-            <span className="font-black text-gray-900 text-sm hidden sm:inline">✈️ <span className="gradient-text">AI-gency</span></span>
-          </div>
-          <div className="flex items-center gap-2">
-            {/* Edit toggle */}
             <button onClick={() => setEditMode(e => !e)}
               className="text-xs font-bold px-3 py-2 rounded-xl border-2 transition-all"
               style={editMode ? { borderColor: "#f97316", background: "#fff7ed", color: "#f97316" } : { borderColor: "#ffe4cc", background: "white", color: "#9ca3af" }}>
               {editMode ? "✓ Editing" : "✏️ Edit"}
             </button>
-            <Link href="/plan" className="text-xs font-bold px-3 py-2 rounded-xl border-2 border-orange-100 text-gray-500 bg-white hover:border-orange-200 transition-colors hidden sm:block">
-              New Trip
-            </Link>
             <button onClick={copyLink}
-              className="text-xs font-bold px-3 py-2 rounded-xl text-white shadow-sm transition-all hover:opacity-90"
+              className="text-xs font-bold px-3 py-2 rounded-xl text-white shadow-sm"
               style={{ background: hero }}>
               {copied ? "✓ Copied!" : "🔗 Share"}
             </button>
@@ -218,13 +437,11 @@ export default function TripPage() {
         </div>
       </nav>
 
-      {/* Edit mode banner */}
       {editMode && (
-        <div className="mx-3 sm:mx-6 mb-3 rounded-2xl px-5 py-3 flex items-center gap-3 text-sm font-medium"
-          style={{ background: "#fff7ed", border: "2px solid #fed7aa" }}>
+        <div className="mx-3 sm:mx-6 mb-3 rounded-2xl px-5 py-3 flex items-center gap-3 text-sm font-medium" style={{ background: "#fff7ed", border: "2px solid #fed7aa" }}>
           <span className="text-orange-500">✏️</span>
           <span className="text-orange-700 font-bold">Edit Mode</span>
-          <span className="text-orange-500 font-medium">— Click on any text to edit it directly.</span>
+          <span className="text-orange-500 font-medium hidden sm:inline">— Click any text to edit</span>
           {saved && <span className="ml-auto text-green-600 font-bold text-xs">✓ Saved!</span>}
         </div>
       )}
@@ -233,7 +450,6 @@ export default function TripPage() {
       <div className="mx-3 sm:mx-6 rounded-3xl overflow-hidden mb-6" style={{ background: hero }}>
         <div className="max-w-5xl mx-auto px-5 sm:px-8 py-8 sm:py-10">
           <p className="text-white/70 text-xs font-black uppercase tracking-widest mb-1">✦ {theme.hi}</p>
-
           <div className="flex flex-wrap items-start justify-between gap-5">
             <div className="flex-1 min-w-0">
               <div className="flex flex-wrap gap-2 mb-3">
@@ -252,28 +468,17 @@ export default function TripPage() {
               </h1>
               <p className="text-white/60 text-sm font-medium">{form?.startDate} → {form?.endDate}</p>
             </div>
-
             <div className="rounded-2xl p-4 text-center flex-shrink-0" style={{ background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.25)" }}>
-              <div className="text-2xl sm:text-3xl font-black text-white">
-                {trip.currency} {trip.total_estimated_cost?.toLocaleString()}
-              </div>
+              <div className="text-2xl sm:text-3xl font-black text-white">{trip.currency} {trip.total_estimated_cost?.toLocaleString()}</div>
               <div className="text-white/60 text-xs mt-1 font-medium">Total Estimate</div>
-              {trip.travelers > 1 && (
-                <div className="text-white/50 text-xs mt-0.5">
-                  ≈ {trip.currency} {Math.round(trip.total_estimated_cost / trip.travelers).toLocaleString()} / person
-                </div>
-              )}
+              {trip.travelers > 1 && <div className="text-white/50 text-xs mt-0.5">≈ {trip.currency} {Math.round(trip.total_estimated_cost / trip.travelers).toLocaleString()} / person</div>}
             </div>
           </div>
-
           {trip.summary && (
             <p className="mt-5 text-white/75 text-sm leading-relaxed max-w-2xl rounded-2xl px-5 py-4" style={{ background: "rgba(255,255,255,0.12)" }}>
-              {editMode
-                ? <Editable value={trip.summary} onChange={v => setTripAndSave(p => ({ ...p, summary: v }))} multiline className="text-white" />
-                : trip.summary}
+              {editMode ? <Editable value={trip.summary} onChange={v => setTripAndSave(p => ({ ...p, summary: v }))} multiline className="text-white" /> : trip.summary}
             </p>
           )}
-
           {theme.fact && !editMode && (
             <div className="mt-3 flex items-start gap-3 max-w-2xl rounded-2xl px-5 py-3" style={{ background: "rgba(255,255,255,0.1)" }}>
               <span className="text-yellow-300 flex-shrink-0">💡</span>
@@ -283,12 +488,33 @@ export default function TripPage() {
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-3 sm:px-6 space-y-8 pb-12">
+      <div className="max-w-5xl mx-auto px-3 sm:px-6 space-y-6 pb-32">
+
+        {/* ── AI Quick Actions ── */}
+        <section>
+          <h2 className="text-lg font-black text-gray-900 mb-3">🤖 AI Tools</h2>
+          <div className="grid grid-cols-2 gap-3">
+            <button onClick={() => setShowAI(true)}
+              className="rounded-2xl p-4 text-white text-left shadow-md hover:-translate-y-0.5 transition-all"
+              style={{ background: G }}>
+              <div className="text-2xl mb-2">🤖</div>
+              <div className="font-black text-sm">Ask AI</div>
+              <div className="text-white/70 text-xs mt-0.5">Tips, suggestions & more</div>
+            </button>
+            <button onClick={() => setShowPacking(true)}
+              className="rounded-2xl p-4 text-white text-left shadow-md hover:-translate-y-0.5 transition-all"
+              style={{ background: "linear-gradient(135deg,#8b5cf6,#6366f1)" }}>
+              <div className="text-2xl mb-2">🧳</div>
+              <div className="font-black text-sm">Packing List</div>
+              <div className="text-white/70 text-xs mt-0.5">AI-generated for your trip</div>
+            </button>
+          </div>
+        </section>
 
         {/* ── Budget Breakdown ── */}
         {totalBudget > 0 && (
           <section>
-            <h2 className="text-2xl font-black text-gray-900 mb-4">💰 Budget Breakdown</h2>
+            <h2 className="text-lg font-black text-gray-900 mb-3">💰 Budget Breakdown</h2>
             <div className="bg-white rounded-3xl border border-orange-100 p-5 sm:p-6 shadow-sm">
               <div className="flex h-3 rounded-full overflow-hidden gap-0.5 mb-5">
                 {Object.entries(budget_breakdown).map(([k, v]) => (
@@ -302,10 +528,7 @@ export default function TripPage() {
                     <div>
                       <div className="text-xs text-gray-400">{BUDGET_CATS[k]?.label || k}</div>
                       <div className="text-sm font-bold text-gray-900">
-                        {trip.currency}{" "}
-                        {editMode
-                          ? <EditableNumber value={v} onChange={val => updateBudget(k, val)} />
-                          : v?.toLocaleString()}
+                        {trip.currency} {editMode ? <EditableNumber value={v} onChange={val => updateBudget(k, val)} /> : v?.toLocaleString()}
                       </div>
                     </div>
                   </div>
@@ -318,7 +541,7 @@ export default function TripPage() {
         {/* ── Itinerary ── */}
         {daily_itinerary.length > 0 && (
           <section>
-            <h2 className="text-2xl font-black text-gray-900 mb-4">🗓️ Day-by-Day Itinerary</h2>
+            <h2 className="text-lg font-black text-gray-900 mb-3">🗓️ Day-by-Day Itinerary</h2>
 
             {/* Day tabs */}
             <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2 mb-4">
@@ -333,7 +556,6 @@ export default function TripPage() {
               ))}
             </div>
 
-            {/* Active day card */}
             {daily_itinerary[activeDay] && (
               <div className="bg-white rounded-3xl border border-orange-100 overflow-hidden shadow-sm">
                 {/* Day header */}
@@ -344,9 +566,7 @@ export default function TripPage() {
                         Day {daily_itinerary[activeDay].day} · {daily_itinerary[activeDay].date}
                       </div>
                       <h3 className="text-xl font-black text-gray-900">
-                        {editMode
-                          ? <Editable value={daily_itinerary[activeDay].title} onChange={v => updateDayField(activeDay, "title", v)} />
-                          : daily_itinerary[activeDay].title}
+                        {editMode ? <Editable value={daily_itinerary[activeDay].title} onChange={v => updateDayField(activeDay, "title", v)} /> : daily_itinerary[activeDay].title}
                       </h3>
                       <p className="text-sm text-gray-400 mt-1 font-medium">
                         🏨 {editMode
@@ -354,11 +574,17 @@ export default function TripPage() {
                           : daily_itinerary[activeDay].accommodation}
                       </p>
                     </div>
-                    <div className="rounded-2xl px-4 py-2 text-center" style={{ background: "white", border: "2px solid #ffedd5" }}>
-                      <div className="text-lg font-black" style={{ color: theme.g[0] }}>
-                        {trip.currency} {daily_itinerary[activeDay].daily_cost?.toLocaleString()}
+                    <div className="flex items-center gap-2">
+                      <div className="rounded-2xl px-4 py-2 text-center" style={{ background: "white", border: "2px solid #ffedd5" }}>
+                        <div className="text-lg font-black" style={{ color: theme.g[0] }}>{trip.currency} {daily_itinerary[activeDay].daily_cost?.toLocaleString()}</div>
+                        <div className="text-xs text-gray-400">day total</div>
                       </div>
-                      <div className="text-xs text-gray-400">day total</div>
+                      {/* AI suggestions button per day */}
+                      <button onClick={() => setDaySuggestIndex(activeDay)}
+                        className="px-3 py-2 rounded-2xl text-white text-xs font-black shadow-sm hover:-translate-y-0.5 transition-all"
+                        style={{ background: G }}>
+                        ✨ AI
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -385,16 +611,12 @@ export default function TripPage() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-2">
                             <h4 className="font-bold text-gray-900 text-sm">
-                              {editMode
-                                ? <Editable value={a.name} onChange={v => updateActivity(activeDay, j, "name", v)} />
-                                : a.name}
+                              {editMode ? <Editable value={a.name} onChange={v => updateActivity(activeDay, j, "name", v)} /> : a.name}
                             </h4>
                             <div className="flex items-center gap-2 flex-shrink-0">
                               {a.estimated_cost > 0 && (
                                 <span className="text-xs font-bold text-gray-400">
-                                  {trip.currency} {editMode
-                                    ? <EditableNumber value={a.estimated_cost} onChange={v => updateActivity(activeDay, j, "estimated_cost", v)} />
-                                    : a.estimated_cost?.toLocaleString()}
+                                  {trip.currency} {editMode ? <EditableNumber value={a.estimated_cost} onChange={v => updateActivity(activeDay, j, "estimated_cost", v)} /> : a.estimated_cost?.toLocaleString()}
                                 </span>
                               )}
                               {editMode && (
@@ -406,15 +628,10 @@ export default function TripPage() {
                             </div>
                           </div>
                           <p className="text-sm text-gray-400 mt-1 leading-relaxed">
-                            {editMode
-                              ? <Editable value={a.description} onChange={v => updateActivity(activeDay, j, "description", v)} multiline />
-                              : a.description}
+                            {editMode ? <Editable value={a.description} onChange={v => updateActivity(activeDay, j, "description", v)} multiline /> : a.description}
                           </p>
                           {editMode && a.estimated_cost === 0 && (
-                            <button onClick={() => updateActivity(activeDay, j, "estimated_cost", 50)}
-                              className="mt-1 text-xs text-orange-400 hover:text-orange-600 font-medium">
-                              + Add cost
-                            </button>
+                            <button onClick={() => updateActivity(activeDay, j, "estimated_cost", 50)} className="mt-1 text-xs text-orange-400 hover:text-orange-600 font-medium">+ Add cost</button>
                           )}
                         </div>
                       </div>
@@ -422,7 +639,6 @@ export default function TripPage() {
                   })}
                 </div>
 
-                {/* Add activity button */}
                 {editMode && (
                   <div className="p-4 border-t border-orange-50">
                     <button onClick={() => addActivity(activeDay)}
@@ -432,16 +648,11 @@ export default function TripPage() {
                   </div>
                 )}
 
-                {/* Prev/Next */}
                 <div className="px-5 py-4 flex justify-between" style={{ background: "#FFF8F0" }}>
                   <button onClick={() => setActiveDay(p => Math.max(0, p - 1))} disabled={activeDay === 0}
-                    className="text-sm font-bold text-gray-400 hover:text-orange-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
-                    ← Previous
-                  </button>
+                    className="text-sm font-bold text-gray-400 hover:text-orange-500 disabled:opacity-30 transition-colors">← Previous</button>
                   <button onClick={() => setActiveDay(p => Math.min(daily_itinerary.length - 1, p + 1))} disabled={activeDay === daily_itinerary.length - 1}
-                    className="text-sm font-bold text-gray-400 hover:text-orange-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
-                    Next →
-                  </button>
+                    className="text-sm font-bold text-gray-400 hover:text-orange-500 disabled:opacity-30 transition-colors">Next →</button>
                 </div>
               </div>
             )}
@@ -451,30 +662,18 @@ export default function TripPage() {
         {/* ── Tips ── */}
         {(tips.length > 0 || editMode) && (
           <section>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-black text-gray-900">💡 Tips for {trip.destination}</h2>
-              {editMode && (
-                <button onClick={addTip} className="text-xs font-bold px-4 py-2 rounded-xl border-2 border-orange-200 text-orange-500 bg-orange-50 hover:bg-orange-100 transition-colors">
-                  + Add Tip
-                </button>
-              )}
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-lg font-black text-gray-900">💡 Tips for {trip.destination}</h2>
+              {editMode && <button onClick={addTip} className="text-xs font-bold px-4 py-2 rounded-xl border-2 border-orange-200 text-orange-500 bg-orange-50">+ Add Tip</button>}
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {tips.map((tip, i) => (
-                <div key={i} className="flex gap-3 bg-white rounded-2xl border border-orange-100 p-5 shadow-sm group">
-                  <span className="text-xs font-black flex-shrink-0 mt-0.5 w-6 h-6 rounded-full flex items-center justify-center text-white"
-                    style={{ background: hero }}>{i + 1}</span>
+                <div key={i} className="flex gap-3 bg-white rounded-2xl border border-orange-100 p-4 shadow-sm group">
+                  <span className="text-xs font-black flex-shrink-0 mt-0.5 w-6 h-6 rounded-full flex items-center justify-center text-white" style={{ background: hero }}>{i + 1}</span>
                   <p className="text-gray-500 text-sm leading-relaxed flex-1">
-                    {editMode
-                      ? <Editable value={tip} onChange={v => updateTip(i, v)} multiline />
-                      : tip}
+                    {editMode ? <Editable value={tip} onChange={v => updateTip(i, v)} multiline /> : tip}
                   </p>
-                  {editMode && (
-                    <button onClick={() => deleteTip(i)}
-                      className="opacity-0 group-hover:opacity-100 w-5 h-5 rounded-lg bg-red-100 text-red-400 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center text-xs font-black flex-shrink-0 mt-0.5">
-                      ×
-                    </button>
-                  )}
+                  {editMode && <button onClick={() => deleteTip(i)} className="opacity-0 group-hover:opacity-100 w-5 h-5 rounded-lg bg-red-100 text-red-400 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center text-xs font-black flex-shrink-0 mt-0.5">×</button>}
                 </div>
               ))}
             </div>
@@ -485,33 +684,41 @@ export default function TripPage() {
         <section>
           <div className="relative rounded-3xl overflow-hidden p-7 sm:p-10 text-center text-white" style={{ background: hero }}>
             <div className="text-4xl mb-3">{theme.e}</div>
-            <h2 className="text-2xl sm:text-3xl font-black mb-2">
-              {trip.isManual ? "Your trip template is ready!" : "Your trip is ready!"}
-            </h2>
-            <p className="text-white/70 mb-6 text-sm">
-              {trip.isManual ? "Keep editing to fill in all the details." : "Share this plan with your travel companions."}
-            </p>
+            <h2 className="text-2xl sm:text-3xl font-black mb-2">Your trip is ready! {theme.e}</h2>
+            <p className="text-white/70 mb-6 text-sm">Share this plan with your travel companions.</p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <button onClick={copyLink}
-                className="bg-white font-bold px-8 py-3.5 rounded-2xl shadow-lg hover:-translate-y-0.5 transition-all text-sm"
-                style={{ color: theme.g[0] }}>
+              <button onClick={copyLink} className="bg-white font-bold px-8 py-3.5 rounded-2xl shadow-lg hover:-translate-y-0.5 transition-all text-sm" style={{ color: theme.g[0] }}>
                 {copied ? "✓ Copied!" : "🔗 Copy Share Link"}
               </button>
-              <Link href="/plan"
-                className="font-bold px-8 py-3.5 rounded-2xl transition-all text-sm text-white border border-white/30"
-                style={{ background: "rgba(255,255,255,0.2)" }}>
+              <Link href="/plan" className="font-bold px-8 py-3.5 rounded-2xl transition-all text-sm text-white border border-white/30" style={{ background: "rgba(255,255,255,0.2)" }}>
                 Plan Another Trip
               </Link>
             </div>
-            {!editMode && (
-              <button onClick={() => setEditMode(true)} className="mt-4 block mx-auto text-white/60 text-xs font-medium hover:text-white/80 transition-colors">
-                ✏️ Want to edit this trip?
-              </button>
-            )}
           </div>
         </section>
 
       </div>
+
+      {/* ── Floating AI Button ── */}
+      <button
+        onClick={() => setShowAI(true)}
+        className="fixed bottom-28 right-4 z-30 w-14 h-14 rounded-2xl shadow-xl text-white text-2xl flex items-center justify-center hover:-translate-y-1 transition-all"
+        style={{ background: G, boxShadow: "0 8px 24px rgba(249,115,22,0.4)" }}>
+        🤖
+      </button>
+
     </main>
+  );
+}
+
+export default function TripPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "#FFF8F0" }}>
+        <div className="w-12 h-12 rounded-full border-4 border-orange-400 border-t-transparent animate-spin" />
+      </div>
+    }>
+      <TripContent />
+    </Suspense>
   );
 }
