@@ -372,36 +372,28 @@ function BookingSection({ trip }) {
   const G = "linear-gradient(135deg,#f97316,#ec4899)";
 
   // Travelpayouts deep links (replace MARKER with your affiliate marker after signup at travelpayouts.com)
-  const MARKER = "YOUR_TP_MARKER"; // → sign up free at travelpayouts.com
+  const MARKER = "712006";
 
   const bookings = [
     {
       icon: "✈️", label: "Search Flights", sub: "via Aviasales",
       color: "linear-gradient(135deg,#4776E6,#8E54E9)",
-      // Travelpayouts flight search — earns ~1.5% commission
-      href: `https://www.aviasales.com/search/TLV0${city.toUpperCase().slice(0,3)}${checkin.replace(/-/g,"").slice(2)}1?marker=${MARKER}`,
-      fallback: `https://www.google.com/travel/flights?q=Flights+to+${city}&date=${checkin}&return=${checkout}`,
+      href: `https://www.aviasales.com/?marker=${MARKER}&origin=TLV&destination=${cityRaw.slice(0,3).toUpperCase()}&depart_date=${checkin}&return_date=${checkout}&adults=${adults}`,
     },
     {
       icon: "🏨", label: "Search Hotels", sub: "via Booking.com",
       color: "linear-gradient(135deg,#003580,#0ea5e9)",
-      // Booking.com via Travelpayouts — earns 4-5% commission
-      href: `https://www.booking.com/search.html?ss=${city}&checkin=${checkin}&checkout=${checkout}&group_adults=${adults}&no_rooms=1&aid=304142`,
-      fallback: `https://www.booking.com/search.html?ss=${city}&checkin=${checkin}&checkout=${checkout}&group_adults=${adults}`,
+      href: `https://www.booking.com/search.html?ss=${city}&checkin=${checkin}&checkout=${checkout}&group_adults=${adults}&no_rooms=1&aid=1269762&label=tp-${MARKER}`,
     },
     {
       icon: "🎭", label: "Book Activities", sub: "via GetYourGuide",
       color: "linear-gradient(135deg,#FF6B35,#F7931A)",
-      // GetYourGuide via Travelpayouts — earns 8% commission
-      href: `https://www.getyourguide.com/s/?q=${city}&date_from=${checkin}&date_to=${checkout}&partner_id=YOUR_GYG_ID`,
-      fallback: `https://www.getyourguide.com/s/?q=${city}&date_from=${checkin}&date_to=${checkout}`,
+      href: `https://www.getyourguide.com/s/?q=${city}&date_from=${checkin}&date_to=${checkout}&utm_source=partner&utm_medium=affiliate&partner_id=TY2AC55`,
     },
     {
       icon: "🚗", label: "Rent a Car", sub: "via RentalCars",
       color: "linear-gradient(135deg,#10b981,#0ea5e9)",
-      // RentalCars via Travelpayouts — earns 2-5% commission
-      href: `https://www.rentalcars.com/en/search/?dropoff=${city}&pickup=${city}&puDay=${checkin}&doDay=${checkout}&adults=${adults}`,
-      fallback: `https://www.rentalcars.com/en/search/?pickup=${city}&puDay=${checkin}`,
+      href: `https://www.rentalcars.com/?affiliateCode=travelpay&preflang=en&puLocation=${city}&puDay=${checkin}&doDay=${checkout}&marker=${MARKER}`,
     },
   ];
 
