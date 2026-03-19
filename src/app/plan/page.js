@@ -150,6 +150,7 @@ function BudgetPickerWidget({ currency, onConfirm, t }) {
 }
 
 function MultiOptionsWidget({ options, onConfirm }) {
+  const { t } = useLanguage();
   const [selected, setSelected] = useState(new Set());
 
   function toggle(o) {
@@ -178,7 +179,7 @@ function MultiOptionsWidget({ options, onConfirm }) {
         onClick={() => onConfirm(Array.from(selected).join(", "))}
         className="w-full py-3.5 rounded-xl text-white text-sm font-black disabled:opacity-40 transition-opacity"
         style={{ background: G }}>
-        {selected.size > 0 ? `Confirm (${selected.size} selected) →` : "Select at least one →"}
+        {selected.size > 0 ? t("confirm_selection", { n: selected.size }) : t("select_at_least_one")}
       </button>
     </div>
   );
@@ -524,7 +525,7 @@ export default function PlanPage() {
     } catch (err) {
       setChatMsgs(prev => {
         const updated = [...prev];
-        updated[updated.length - 1] = { role: "assistant", content: "Sorry, something went wrong. Please try again.", streaming: false };
+        updated[updated.length - 1] = { role: "assistant", content: t("error_something_wrong"), streaming: false };
         return updated;
       });
       setError(err.message);
@@ -558,7 +559,7 @@ export default function PlanPage() {
     setGenerating(true);
     setChatMsgs(prev => [...prev, {
       role: "assistant",
-      content: `Perfect! I have everything I need. 🗺️\n\nBuilding your personalized ${data.destination} itinerary now... This takes about 15 seconds.`,
+      content: t("building_itinerary_msg", { destination: data.destination }),
     }]);
     scrollBottom();
 
@@ -571,7 +572,7 @@ export default function PlanPage() {
       const text = await res.text();
       let tripData;
       try { tripData = JSON.parse(text); }
-      catch { throw new Error("Server timeout — please retry."); }
+      catch { throw new Error(t("server_timeout")); }
       if (!res.ok) throw new Error(tripData.error || "Generation failed.");
 
       const id = generateId();
@@ -609,7 +610,7 @@ export default function PlanPage() {
     setGenerating(true);
     setError("");
     const randomDest = SURPRISE_DESTINATIONS[Math.floor(Math.random() * SURPRISE_DESTINATIONS.length)];
-    setSurpriseNote("🎲 Verify visa requirements before booking!");
+    setSurpriseNote(t("visa_verify_warning"));
     setTimeout(() => setSurpriseNote(""), 4000);
     try {
       const res = await fetch("/api/surprise", {
@@ -620,7 +621,7 @@ export default function PlanPage() {
       const text = await res.text();
       let tripData;
       try { tripData = JSON.parse(text); }
-      catch { throw new Error("Server timeout — please retry."); }
+      catch { throw new Error(t("server_timeout")); }
       if (!res.ok) throw new Error(tripData.error || "Generation failed.");
       const id = generateId();
       saveTrip(id, { ...tripData, isSurprise: true, form: data });
@@ -777,10 +778,10 @@ export default function PlanPage() {
 
           {error && (
             <div className="mx-4 my-2 p-4 rounded-2xl border-2" style={{ background: "#fff5f5", borderColor: "#fecaca" }}>
-              <p className="font-black text-sm mb-1" style={{ color: "#ef4444" }}>⚠️ Something went wrong</p>
+              <p className="font-black text-sm mb-1" style={{ color: "#ef4444" }}>{t("error_title")}</p>
               <p className="text-xs" style={{ color: "#f87171" }}>{error}</p>
               <button onClick={() => setError("")} className="mt-2 text-xs font-bold underline" style={{ color: "#f87171" }}>
-                Dismiss
+                {t("dismiss_btn")}
               </button>
             </div>
           )}
@@ -890,11 +891,11 @@ export default function PlanPage() {
         <div className="max-w-xl mx-auto">
           {error && (
             <div className="mx-4 my-2 p-4 rounded-2xl border-2" style={{ background: "#fff5f5", borderColor: "#fecaca" }}>
-              <p className="font-black text-sm mb-1" style={{ color: "#ef4444" }}>⚠️ Something went wrong</p>
+              <p className="font-black text-sm mb-1" style={{ color: "#ef4444" }}>{t("error_title")}</p>
               <p className="text-xs" style={{ color: "#f87171" }}>{error}</p>
               <div className="flex items-center gap-3 mt-2">
                 <button onClick={() => setError("")} className="text-xs font-bold underline" style={{ color: "#f87171" }}>
-                  Dismiss
+                  {t("dismiss_btn")}
                 </button>
                 {collectedData && (
                   <button onClick={() => generateTrip(collectedData)}
