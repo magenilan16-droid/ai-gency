@@ -270,7 +270,7 @@ export default function PlanPage() {
       const text = await res.text();
       let tripData;
       try { tripData = JSON.parse(text); }
-      catch { throw new Error("Unexpected response from server."); }
+      catch { throw new Error("Server timeout — please retry."); }
       if (!res.ok) throw new Error(tripData.error || "Generation failed.");
 
       const id = generateId();
@@ -278,9 +278,10 @@ export default function PlanPage() {
       await new Promise(r => setTimeout(r, 100));
       router.push(`/trip/${id}`);
     } catch (err) {
-      setGenerating(false);
       setError(err.message);
       setChatMsgs(prev => [...prev, { role: "assistant", content: `Oops! ${err.message}\n\nLet me try again — just click retry below.` }]);
+    } finally {
+      setGenerating(false);
     }
   }
 
