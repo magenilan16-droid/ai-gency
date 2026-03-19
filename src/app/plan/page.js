@@ -156,18 +156,21 @@ export default function PlanPage() {
     setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 80);
   }
 
-  async function startAI() {
+  function startAI() {
     setMode("ai");
-    setChatMsgs([]);
+    // Show hardcoded greeting — no API call yet (API requires user message first)
+    setChatMsgs([{
+      role: "assistant",
+      content: "Hey! I'm Claude, your personal AI travel planner 🌍\nWhere in the world are you dreaming of going? Tell me a country or city!",
+      cities: null, options: null, streaming: false, initial: true,
+    }]);
     setCollectedData(null);
     setError("");
-    // Send opening message from Claude
-    await callClaude([], "Hi! I'm Claude, your personal AI travel planner. 🌍 Tell me — where in the world do you want to go?");
   }
 
-  // Actually call Claude and stream the response
-  async function callClaude(history, userText) {
-    const newHistory = userText ? [...history, { role: "user", content: userText }] : history;
+  // Stream a response from Claude given a message history (must start with user message)
+  async function callClaude(history) {
+    if (!history.length || history[0].role !== "user") return;
 
     setStreaming(true);
     let fullText = "";
@@ -241,8 +244,12 @@ export default function PlanPage() {
     setInput("");
     setError("");
 
-    // Add user message
-    const history = chatMsgs.map(m => ({ role: m.role, content: m.content }));
+    // Build API history: skip initial hardcoded greeting (not sent to API)
+    // Anthropic API requires alternating user/assistant messages, starting with user
+    const history = chatMsgs
+      .filter(m => !m.initial)
+      .map(m => ({ role: m.role, content: m.content }));
+
     setChatMsgs(prev => [...prev, { role: "user", content: userMsg }]);
     scrollBottom();
 
