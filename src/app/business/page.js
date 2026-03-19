@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 
-const G = "linear-gradient(135deg,#10b981,#0ea5e9)";
+const G = "linear-gradient(135deg,#f97316,#ec4899)";
 
 // GSA per diem rates (approximate USD/day)
 const PER_DIEM = {
@@ -89,15 +89,15 @@ export default function BusinessPage() {
 
   if (!mounted) return (
     <div className="min-h-screen flex items-center justify-center">
-      <div className="w-10 h-10 rounded-full border-4 border-emerald-300 border-t-transparent animate-spin" />
+      <div className="w-10 h-10 rounded-full border-4 border-orange-300 border-t-transparent animate-spin" />
     </div>
   );
 
   return (
-    <div className="min-h-screen" style={{ background: "#F0FDF8" }}>
+    <div className="min-h-screen" style={{ background: "var(--bg-page)" }}>
       <div className="px-4 sm:px-6 pt-8 pb-4 max-w-2xl mx-auto">
         {/* Header */}
-        <p className="text-xs font-black text-emerald-500 uppercase tracking-widest mb-1">✦ Business Travel</p>
+        <p className="text-xs font-black text-orange-400 uppercase tracking-widest mb-1">✦ Business Travel</p>
         <h1 className="text-3xl font-black text-gray-900 mb-5">Business Tools</h1>
 
         {/* Tabs */}
@@ -106,8 +106,8 @@ export default function BusinessPage() {
             <button key={t.id} onClick={() => setTab(t.id)}
               className="px-5 py-2.5 rounded-2xl text-sm font-black transition-all"
               style={tab === t.id
-                ? { background: G, color: "white", boxShadow: "0 4px 14px rgba(16,185,129,0.3)" }
-                : { background: "white", color: "#9ca3af", border: "2px solid #d1fae5" }}>
+                ? { background: G, color: "white", boxShadow: "0 4px 14px rgba(249,115,22,0.3)" }
+                : { background: "white", color: "#9ca3af", border: "2px solid #fed7aa" }}>
               {t.label}
             </button>
           ))}
@@ -116,13 +116,13 @@ export default function BusinessPage() {
         {/* Per Diem Calculator */}
         {tab === "perdiem" && (
           <div className="space-y-4">
-            <div className="bg-white rounded-3xl border border-emerald-100 p-5 shadow-sm">
+            <div className="bg-white rounded-3xl border border-orange-100 p-5 shadow-sm">
               <h2 className="font-black text-gray-900 mb-4">Per Diem Calculator</h2>
               <div className="space-y-3">
                 <div>
                   <label className="text-xs font-black text-gray-400 uppercase tracking-wider mb-1.5 block">City</label>
                   <select value={city} onChange={e => setCity(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border-2 border-emerald-100 text-sm font-bold text-gray-700 bg-white outline-none focus:border-emerald-300">
+                    className="w-full px-4 py-3 rounded-xl border-2 border-orange-100 text-sm font-bold text-gray-700 bg-white outline-none focus:border-orange-300">
                     {Object.keys(PER_DIEM).map(c => <option key={c}>{c}</option>)}
                   </select>
                 </div>
@@ -130,10 +130,10 @@ export default function BusinessPage() {
                   <label className="text-xs font-black text-gray-400 uppercase tracking-wider mb-1.5 block">Number of Days</label>
                   <div className="flex items-center gap-3">
                     <button onClick={() => setDays(d => Math.max(1, d - 1))}
-                      className="w-10 h-10 rounded-xl bg-emerald-50 font-black text-emerald-600 text-xl flex items-center justify-center hover:bg-emerald-100 transition-colors">−</button>
+                      className="w-10 h-10 rounded-xl bg-orange-50 font-black text-orange-500 text-xl flex items-center justify-center hover:bg-orange-100 transition-colors">−</button>
                     <span className="text-2xl font-black text-gray-900 w-8 text-center">{days}</span>
                     <button onClick={() => setDays(d => d + 1)}
-                      className="w-10 h-10 rounded-xl bg-emerald-50 font-black text-emerald-600 text-xl flex items-center justify-center hover:bg-emerald-100 transition-colors">+</button>
+                      className="w-10 h-10 rounded-xl bg-orange-50 font-black text-orange-500 text-xl flex items-center justify-center hover:bg-orange-100 transition-colors">+</button>
                   </div>
                 </div>
               </div>
@@ -160,7 +160,7 @@ export default function BusinessPage() {
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl border border-emerald-100 p-4 shadow-sm">
+            <div className="bg-white rounded-2xl border border-orange-100 p-4 shadow-sm">
               <p className="text-xs text-gray-400 leading-relaxed">
                 <strong className="text-gray-600">Note:</strong> Rates are based on approximate GSA guidelines and common international standards. Always verify with your company's travel policy.
               </p>
@@ -195,7 +195,7 @@ export default function BusinessPage() {
               </button>
               {expenses.length > 0 && (
                 <button onClick={exportCSV}
-                  className="py-3 px-4 rounded-2xl font-black text-sm border-2 border-emerald-100 text-emerald-600 bg-white hover:bg-emerald-50 transition-colors">
+                  className="py-3 px-4 rounded-2xl font-black text-sm border-2 border-orange-100 text-orange-500 bg-white hover:bg-orange-50 transition-colors">
                   ⬇️ CSV
                 </button>
               )}
@@ -203,21 +203,21 @@ export default function BusinessPage() {
 
             {/* Add form */}
             {addingExp && (
-              <div className="bg-white rounded-3xl border border-emerald-100 p-5 shadow-sm space-y-3">
+              <div className="bg-white rounded-3xl border border-orange-100 p-5 shadow-sm space-y-3">
                 <h3 className="font-black text-gray-900">New Expense</h3>
                 <input value={newExp.description} onChange={e => setNewExp(p => ({ ...p, description: e.target.value }))}
                   placeholder="Description"
-                  className="w-full px-4 py-3 rounded-xl border-2 border-emerald-100 text-sm font-medium text-gray-700 outline-none focus:border-emerald-300" />
+                  className="w-full px-4 py-3 rounded-xl border-2 border-orange-100 text-sm font-medium text-gray-700 outline-none focus:border-orange-300" />
                 <div className="grid grid-cols-2 gap-2">
                   <input value={newExp.amount} onChange={e => setNewExp(p => ({ ...p, amount: e.target.value }))}
                     placeholder="Amount ($)" type="number" min="0"
-                    className="px-4 py-3 rounded-xl border-2 border-emerald-100 text-sm font-medium text-gray-700 outline-none focus:border-emerald-300" />
+                    className="px-4 py-3 rounded-xl border-2 border-orange-100 text-sm font-medium text-gray-700 outline-none focus:border-orange-300" />
                   <input value={newExp.date} onChange={e => setNewExp(p => ({ ...p, date: e.target.value }))}
                     type="date"
-                    className="px-4 py-3 rounded-xl border-2 border-emerald-100 text-sm font-medium text-gray-700 outline-none focus:border-emerald-300" />
+                    className="px-4 py-3 rounded-xl border-2 border-orange-100 text-sm font-medium text-gray-700 outline-none focus:border-orange-300" />
                 </div>
                 <select value={newExp.category} onChange={e => setNewExp(p => ({ ...p, category: e.target.value }))}
-                  className="w-full px-4 py-3 rounded-xl border-2 border-emerald-100 text-sm font-bold text-gray-700 bg-white outline-none focus:border-emerald-300">
+                  className="w-full px-4 py-3 rounded-xl border-2 border-orange-100 text-sm font-bold text-gray-700 bg-white outline-none focus:border-orange-300">
                   {EXPENSE_CATS.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
                 </select>
                 <div className="flex gap-2">
@@ -235,7 +235,7 @@ export default function BusinessPage() {
 
             {/* List */}
             {expenses.length === 0 ? (
-              <div className="text-center py-16 bg-white rounded-3xl border border-emerald-100">
+              <div className="text-center py-16 bg-white rounded-3xl border border-orange-100">
                 <div className="text-5xl mb-3">📋</div>
                 <p className="font-black text-gray-900 mb-1">No expenses yet</p>
                 <p className="text-sm text-gray-400">Track your business travel costs</p>
@@ -245,7 +245,7 @@ export default function BusinessPage() {
                 {[...expenses].reverse().map(e => {
                   const cat = EXPENSE_CATS.find(c => c.id === e.category);
                   return (
-                    <div key={e.id} className="flex items-center gap-3 bg-white rounded-2xl border border-emerald-100 p-4 shadow-sm">
+                    <div key={e.id} className="flex items-center gap-3 bg-white rounded-2xl border border-orange-100 p-4 shadow-sm">
                       <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg flex-shrink-0"
                         style={{ background: `${cat?.color || "#10b981"}15` }}>
                         {cat?.label.split(" ")[0] || "📎"}

@@ -66,7 +66,7 @@ export default function Dashboard() {
   );
 
   return (
-    <div className="min-h-screen" style={{ background: "#FFF8F0" }}>
+    <div className="min-h-screen" style={{ background: "var(--bg-page)" }}>
       {/* Header */}
       <div className="px-4 sm:px-6 pt-8 pb-4">
         <div className="max-w-2xl mx-auto flex items-center justify-between">
@@ -117,6 +117,20 @@ export default function Dashboard() {
             </div>
           </div>
         )}
+
+        {/* Trust bar */}
+        <div className="flex flex-wrap gap-2">
+          {[
+            "✈️ Powered by Claude AI",
+            "🔒 No signup required",
+            "📱 Works on any device",
+            "🌍 200+ destinations",
+          ].map(label => (
+            <span key={label} className="text-xs font-bold px-3 py-1.5 rounded-full border border-orange-200 text-orange-500" style={{ background: "var(--bg-card-alt)" }}>
+              {label}
+            </span>
+          ))}
+        </div>
 
         {/* Stats row */}
         {trips.length > 0 && (

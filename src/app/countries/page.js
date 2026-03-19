@@ -258,7 +258,7 @@ export default function CountriesPage() {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: "#FFF8F0" }}>
+    <div className="min-h-screen" style={{ background: "var(--bg-page)" }}>
       <nav className="px-4 py-4 sticky top-0 z-50">
         <div className="max-w-lg mx-auto flex items-center justify-between bg-white rounded-2xl px-5 py-3 shadow-sm border border-orange-100">
           <Link href="/" className="text-gray-400 hover:text-gray-600 text-sm font-medium">← {t("nav_home")}</Link>

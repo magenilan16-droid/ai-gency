@@ -9,6 +9,18 @@ import { useLanguage } from "@/app/LanguageProvider";
 const G = "linear-gradient(135deg,#f97316,#ec4899)";
 const CURRENCIES = ["USD", "EUR", "GBP", "ILS", "JPY", "AUD", "CAD"];
 
+const SURPRISE_DESTINATIONS = [
+  "Paris, France", "Rome, Italy", "Barcelona, Spain", "Amsterdam, Netherlands",
+  "Prague, Czech Republic", "Lisbon, Portugal", "Vienna, Austria", "Athens, Greece",
+  "Copenhagen, Denmark", "Edinburgh, Scotland", "Budapest, Hungary", "Dubrovnik, Croatia",
+  "Tokyo, Japan", "Bali, Indonesia", "Bangkok, Thailand", "Singapore",
+  "Kyoto, Japan", "Seoul, South Korea", "Chiang Mai, Thailand", "Hong Kong",
+  "New York, USA", "Mexico City, Mexico", "Buenos Aires, Argentina",
+  "Rio de Janeiro, Brazil", "Cartagena, Colombia", "Vancouver, Canada",
+  "Dubai, UAE", "Tel Aviv, Israel", "Marrakech, Morocco", "Cape Town, South Africa",
+  "Sydney, Australia", "Queenstown, New Zealand"
+];
+
 const COUNTRIES = [
   { name: "Japan", flag: "🇯🇵" }, { name: "Thailand", flag: "🇹🇭" },
   { name: "Italy", flag: "🇮🇹" }, { name: "France", flag: "🇫🇷" },
@@ -400,6 +412,7 @@ export default function PlanPage() {
   const [currency, setCurrency]       = useState("USD");
   const [usedWidgets, setUsedWidgets] = useState(new Set());
   const [restored, setRestored]       = useState(false);
+  const [surpriseNote, setSurpriseNote] = useState("");
 
   // ── Persist & restore plan chat ──
   useEffect(() => {
@@ -594,11 +607,14 @@ export default function PlanPage() {
   async function generateSurprise(data) {
     setGenerating(true);
     setError("");
+    const randomDest = SURPRISE_DESTINATIONS[Math.floor(Math.random() * SURPRISE_DESTINATIONS.length)];
+    setSurpriseNote("🎲 Verify visa requirements before booking!");
+    setTimeout(() => setSurpriseNote(""), 4000);
     try {
       const res = await fetch("/api/surprise", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...data, currency }),
+        body: JSON.stringify({ ...data, destination: randomDest, currency }),
       });
       const text = await res.text();
       let tripData;
@@ -618,7 +634,7 @@ export default function PlanPage() {
 
   // ── Mode selection ──
   if (!mode) return (
-    <main className="min-h-screen flex flex-col items-center justify-center px-4 py-12" style={{ background: "#FFF8F0" }}>
+    <main className="min-h-screen flex flex-col items-center justify-center px-4 py-12" style={{ background: "var(--bg-page)" }}>
       <nav className="fixed top-0 left-0 right-0 px-4 py-4 z-50">
         <div className="max-w-2xl mx-auto flex items-center justify-between bg-white rounded-2xl px-5 py-3 shadow-sm border border-orange-100">
           <Link href="/" className="text-gray-400 hover:text-gray-600 transition-colors text-sm font-medium">← {t("nav_home")}</Link>
@@ -687,7 +703,7 @@ export default function PlanPage() {
     const days  = sf.startDate && sf.endDate ? Math.ceil((new Date(sf.endDate)-new Date(sf.startDate))/86400000) : 0;
     const valid = sf.startDate && sf.endDate && days > 0 && sf.budget;
     return (
-      <main className="min-h-screen" style={{ background:"#FFF8F0" }}>
+      <main className="min-h-screen" style={{ background:"var(--bg-page)" }}>
         <nav className="px-4 py-4 sticky top-0 z-50">
           <div className="max-w-lg mx-auto flex items-center justify-between bg-white rounded-2xl px-5 py-3 shadow-sm border border-orange-100">
             <button onClick={()=>setMode(null)} className="text-gray-400 hover:text-gray-600 text-sm font-medium">← {t("back")}</button>
@@ -753,7 +769,21 @@ export default function PlanPage() {
             </div>
           </div>
 
-          {error && <div className="text-sm text-red-500 bg-red-50 px-4 py-3 rounded-xl border border-red-100">{error}</div>}
+          {surpriseNote && (
+            <div className="mx-4 mt-2 px-4 py-2 rounded-xl text-xs font-bold text-orange-600 border border-orange-200" style={{ background: "#fff7ed" }}>
+              {surpriseNote}
+            </div>
+          )}
+
+          {error && (
+            <div className="mx-4 my-2 p-4 rounded-2xl border-2" style={{ background: "#fff5f5", borderColor: "#fecaca" }}>
+              <p className="font-black text-sm mb-1" style={{ color: "#ef4444" }}>⚠️ Something went wrong</p>
+              <p className="text-xs" style={{ color: "#f87171" }}>{error}</p>
+              <button onClick={() => setError("")} className="mt-2 text-xs font-bold underline" style={{ color: "#f87171" }}>
+                Dismiss
+              </button>
+            </div>
+          )}
 
           <button onClick={()=>valid&&generateSurprise(sf)} disabled={!valid||generating}
             className="w-full py-4 rounded-2xl text-white font-black text-lg shadow-xl disabled:opacity-40 hover:-translate-y-0.5 transition-all"
@@ -772,7 +802,7 @@ export default function PlanPage() {
 
   // ── Manual mode ──
   if (mode === "manual") return (
-    <main className="min-h-screen" style={{ background: "#FFF8F0" }}>
+    <main className="min-h-screen" style={{ background: "var(--bg-page)" }}>
       <nav className="px-4 py-4 sticky top-0 z-50">
         <div className="max-w-lg mx-auto flex items-center justify-between bg-white rounded-2xl px-5 py-3 shadow-sm border border-orange-100">
           <button onClick={() => setMode(null)} className="text-gray-400 hover:text-gray-600 transition-colors text-sm font-medium">← {t("back")}</button>
@@ -792,7 +822,7 @@ export default function PlanPage() {
 
   // ── AI Chat mode ──
   return (
-    <main className="min-h-screen flex flex-col" style={{ background: "#FFF8F0" }}>
+    <main className="min-h-screen flex flex-col" style={{ background: "var(--bg-page)" }}>
       {/* Nav */}
       <nav className="flex-shrink-0 px-4 py-4">
         <div className="max-w-2xl mx-auto flex items-center justify-between bg-white rounded-2xl px-5 py-3 shadow-sm border border-orange-100">
@@ -859,14 +889,20 @@ export default function PlanPage() {
       <div className="flex-shrink-0 px-4 sm:px-6 pb-6 pt-3">
         <div className="max-w-xl mx-auto">
           {error && (
-            <div className="mb-3 flex items-center gap-3 text-sm text-red-500 bg-red-50 px-4 py-3 rounded-2xl border border-red-100">
-              <span className="flex-1">{error}</span>
-              {collectedData && (
-                <button onClick={() => generateTrip(collectedData)}
-                  className="text-xs bg-red-500 text-white px-3 py-1.5 rounded-lg font-bold hover:bg-red-600 flex-shrink-0">
-                  {t("retry")}
+            <div className="mx-4 my-2 p-4 rounded-2xl border-2" style={{ background: "#fff5f5", borderColor: "#fecaca" }}>
+              <p className="font-black text-sm mb-1" style={{ color: "#ef4444" }}>⚠️ Something went wrong</p>
+              <p className="text-xs" style={{ color: "#f87171" }}>{error}</p>
+              <div className="flex items-center gap-3 mt-2">
+                <button onClick={() => setError("")} className="text-xs font-bold underline" style={{ color: "#f87171" }}>
+                  Dismiss
                 </button>
-              )}
+                {collectedData && (
+                  <button onClick={() => generateTrip(collectedData)}
+                    className="text-xs bg-red-500 text-white px-3 py-1.5 rounded-lg font-bold hover:bg-red-600">
+                    {t("retry")}
+                  </button>
+                )}
+              </div>
             </div>
           )}
 

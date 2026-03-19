@@ -70,7 +70,7 @@ export default function TripsPage() {
   );
 
   return (
-    <div className="min-h-screen" style={{ background: "#FFF8F0" }}>
+    <div className="min-h-screen" style={{ background: "var(--bg-page)" }}>
       <div className="px-4 sm:px-6 pt-8 pb-4 max-w-2xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <div>

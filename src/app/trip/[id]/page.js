@@ -126,7 +126,7 @@ function AIChatPanel({ trip, onClose }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col" style={{ background: "#FFF8F0" }}>
+    <div className="fixed inset-0 z-50 flex flex-col" style={{ background: "var(--bg-page)" }}>
       <div className="flex items-center gap-3 px-4 pt-8 pb-4 bg-white border-b border-orange-100">
         <button onClick={onClose} className="w-9 h-9 rounded-xl bg-orange-50 flex items-center justify-center text-orange-400 font-black text-lg">←</button>
         <div className="w-9 h-9 rounded-2xl flex items-center justify-center text-lg" style={{ background: G }}>🤖</div>
@@ -631,7 +631,7 @@ function LocalTab({ trip }) {
       ) : (
         Object.entries(grouped).map(([cat, phrases]) => (
           <div key={cat} className="bg-white rounded-2xl border border-orange-100 shadow-sm overflow-hidden">
-            <div className="px-4 py-3 border-b border-orange-50" style={{ background: "#FFF8F0" }}>
+            <div className="px-4 py-3 border-b border-orange-50" style={{ background: "var(--bg-page)" }}>
               <span className="font-black text-gray-900 text-sm">{CATEGORY_ICONS[cat] || "💬"} {cat.charAt(0).toUpperCase()+cat.slice(1)}</span>
             </div>
             <div className="divide-y divide-orange-50">
@@ -898,7 +898,7 @@ function TripContent() {
   }
 
   if (!trip) return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background:"#FFF8F0" }}>
+    <div className="min-h-screen flex items-center justify-center" style={{ background:"var(--bg-page)" }}>
       <div className="text-center">
         <div className="w-12 h-12 rounded-full border-4 border-orange-400 border-t-transparent animate-spin mx-auto mb-4"/>
         <p className="text-gray-400 font-medium">Loading your trip...</p>
@@ -915,7 +915,7 @@ function TripContent() {
   const G     = "linear-gradient(135deg,#f97316,#ec4899)";
 
   return (
-    <main className="min-h-screen" style={{ background:"#FFF8F0" }}>
+    <main className="min-h-screen" style={{ background:"var(--bg-page)" }}>
 
       {showSurprise && <SurpriseReveal destination={trip.destination} onDone={()=>setShowSurprise(false)}/>}
 
@@ -929,10 +929,15 @@ function TripContent() {
         <div className="max-w-5xl mx-auto flex items-center justify-between bg-white/90 backdrop-blur-xl rounded-2xl px-4 py-3 shadow-sm border border-orange-100">
           <Link href="/trips" className="text-gray-400 hover:text-gray-600 text-sm font-medium transition-colors">← {t("nav_trips")}</Link>
           <div className="flex items-center gap-2">
-            <button onClick={()=>setEditMode(e=>!e)}
-              className="text-xs font-bold px-3 py-2 rounded-xl border-2 transition-all"
-              style={editMode ? {borderColor:"#f97316",background:"#fff7ed",color:"#f97316"} : {borderColor:"#ffedd5",background:"white",color:"#9ca3af"}}>
-              {editMode ? `✓ Done` : t("edit_trip")}
+            <button
+              onClick={() => setEditMode(e => !e)}
+              className="no-print text-xs font-bold px-3 py-2 rounded-xl border-2 transition-all"
+              style={editMode
+                ? { background: "linear-gradient(135deg,#f97316,#ec4899)", color: "white", borderColor: "transparent" }
+                : { borderColor: "#ffedd5", color: "#9ca3af", background: "transparent" }
+              }
+            >
+              {editMode ? "✓ Editing" : "✏️ Edit"}
             </button>
             <button onClick={() => window.print()} className="no-print text-xs font-bold px-3 py-2 rounded-xl border-2 border-orange-100 text-gray-500 hover:bg-orange-50 transition-all">
               🖨️
@@ -1090,7 +1095,7 @@ function TripContent() {
 
                 {daily_itinerary[activeDay] && (
                   <div className="bg-white rounded-3xl border border-orange-100 overflow-hidden shadow-sm">
-                    <div className="p-5 border-b border-orange-50" style={{background:"#FFF8F0"}}>
+                    <div className="p-5 border-b border-orange-50" style={{background:"var(--bg-page)"}}>
                       <div className="flex items-start justify-between gap-4 flex-wrap">
                         <div>
                           <div className="text-xs font-black uppercase tracking-widest mb-1" style={{color:theme.g[0]}}>
@@ -1104,7 +1109,7 @@ function TripContent() {
                           </p>
                         </div>
                         <div className="flex items-center gap-2">
-                          <div className="rounded-2xl px-4 py-2 text-center" style={{background:"white",border:"2px solid #ffedd5"}}>
+                          <div className="rounded-2xl px-4 py-2 text-center" style={{background:"var(--bg-card)",border:"2px solid #ffedd5"}}>
                             <div className="text-lg font-black" style={{color:theme.g[0]}}>{trip.currency} {daily_itinerary[activeDay].daily_cost?.toLocaleString()}</div>
                             <div className="text-xs text-gray-400">day total</div>
                           </div>
@@ -1165,7 +1170,7 @@ function TripContent() {
                         />
                       </div>
                     </div>
-                    <div className="px-5 py-4 flex justify-between" style={{background:"#FFF8F0"}}>
+                    <div className="px-5 py-4 flex justify-between" style={{background:"var(--bg-page)"}}>
                       <button onClick={()=>setActiveDay(p=>Math.max(0,p-1))} disabled={activeDay===0} className="text-sm font-bold text-gray-400 hover:text-orange-500 disabled:opacity-30 transition-colors">← Previous</button>
                       <button onClick={()=>setActiveDay(p=>Math.min(daily_itinerary.length-1,p+1))} disabled={activeDay===daily_itinerary.length-1} className="text-sm font-bold text-gray-400 hover:text-orange-500 disabled:opacity-30 transition-colors">Next →</button>
                     </div>
@@ -1286,7 +1291,7 @@ function TripContent() {
 export default function TripPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center" style={{background:"#FFF8F0"}}>
+      <div className="min-h-screen flex items-center justify-center" style={{background:"var(--bg-page)"}}>
         <div className="w-12 h-12 rounded-full border-4 border-orange-400 border-t-transparent animate-spin"/>
       </div>
     }>

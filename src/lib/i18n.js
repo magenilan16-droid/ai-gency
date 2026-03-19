@@ -293,6 +293,45 @@ export const translations = {
     no_dates_set: "לא הוגדרו תאריכים",
     untitled_trip: "טיול ללא שם",
 
+    // General actions
+    save: "שמור",
+    share: "שתף",
+    edit: "ערוך",
+    done: "סיום",
+    loading: "טוען...",
+    error_retry: "נסה שוב",
+
+    // Plan page extra
+    plan_where: "לאן תטוס?",
+    plan_travelers: "כמה נוסעים?",
+    plan_budget: "תקציב",
+    plan_style: "סגנון טיול",
+    plan_dates: "תאריכים",
+    plan_generate: "צור תוכנית",
+    plan_surprise: "הפתע אותי",
+
+    // Trips page extra
+    trips_title: "הטיולים שלי",
+    trips_empty: "עדיין אין טיולים",
+    trips_empty_sub: "צור את הטיול הראשון שלך",
+    trips_new: "טיול חדש",
+
+    // Countries page extra
+    countries_title: "מדינות",
+    countries_search: "חפש מדינה...",
+    countries_wishlist: "רשימת משאלות",
+    countries_no_results: "לא נמצאו תוצאות",
+
+    // Chat extra
+    chat_title: "עוזר נסיעות AI",
+    chat_placeholder: "שאל על הטיול שלך...",
+    chat_send: "שלח",
+    chat_clear: "נקה שיחה",
+
+    // Business extra
+    business_title: "כלי עסקים",
+    business_per_diem: "דיאטה יומית",
+
     // Countries page
     your_world_map: "מפת העולם שלך",
     countries_explored_single: "מדינה שנחקרה",

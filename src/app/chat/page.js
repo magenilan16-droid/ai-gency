@@ -358,7 +358,7 @@ function ChatContent() {
   );
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: "#FFF8F0" }}>
+    <div className="min-h-screen flex flex-col" style={{ background: "var(--bg-page)" }}>
 
       {/* Toast */}
       {toast && (
