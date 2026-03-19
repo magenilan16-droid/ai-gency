@@ -728,6 +728,8 @@ function TripContent() {
   const [daySuggestIndex, setDaySuggestIndex] = useState(null);
   const [expenses, setExpenses]       = useState([]);
   const [showSurprise, setShowSurprise] = useState(false);
+  const [packingData, setPackingData] = useState(null);
+  const [printLoading, setPrintLoading] = useState(false);
 
   const TABS = [
     { id: "itinerary", labelKey: "tab_itinerary", icon: "🗓️" },
@@ -825,6 +827,23 @@ function TripContent() {
     setExpenses(updated);
     setTripAndSave(p => ({ ...p, expenses: updated }));
   }
+  async function handlePrint() {
+    if (!packingData && trip) {
+      setPrintLoading(true);
+      try {
+        const r = await fetch("/api/suggest", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ type: "packing", trip }),
+        });
+        const data = await r.json();
+        if (data.ok) setPackingData(data.data);
+      } catch {}
+      setPrintLoading(false);
+    }
+    setTimeout(() => window.print(), 300);
+  }
+
   function copyLink() {
     try {
       // Encode trip data into URL hash for real sharing
@@ -939,8 +958,8 @@ function TripContent() {
             >
               {editMode ? "✓ Editing" : "✏️ Edit"}
             </button>
-            <button onClick={() => window.print()} className="no-print text-xs font-bold px-3 py-2 rounded-xl border-2 border-orange-100 text-gray-500 hover:bg-orange-50 transition-all">
-              🖨️
+            <button onClick={handlePrint} disabled={printLoading} className="no-print text-xs font-bold px-3 py-2 rounded-xl border-2 border-orange-100 text-gray-500 hover:bg-orange-50 transition-all disabled:opacity-50">
+              {printLoading ? "⏳" : "🖨️"}
             </button>
             <button onClick={downloadCalendar} className="no-print text-xs font-bold px-3 py-2 rounded-xl border-2 border-orange-100 text-gray-500 hover:bg-orange-50 transition-all">
               📅
@@ -1017,7 +1036,7 @@ function TripContent() {
       </div>
 
       {/* ── Tab Content ── */}
-      <div className="max-w-5xl mx-auto px-3 pb-32 space-y-4">
+      <div className="tab-content-area max-w-5xl mx-auto px-3 pb-32 space-y-4">
 
         {/* ITINERARY TAB */}
         {activeTab === "itinerary" && (
@@ -1280,10 +1299,151 @@ function TripContent() {
 
       {/* ── Floating AI Button ── */}
       <button onClick={()=>setShowAI(true)}
-        className="fixed bottom-28 right-4 z-30 w-14 h-14 rounded-2xl shadow-xl text-white text-2xl flex items-center justify-center hover:-translate-y-1 transition-all"
+        className="fixed bottom-28 right-4 z-30 w-14 h-14 rounded-2xl shadow-xl text-white text-2xl flex items-center justify-center hover:-translate-y-1 transition-all no-print"
         style={{background:G,boxShadow:"0 8px 24px rgba(249,115,22,0.4)"}}>
         🤖
       </button>
+
+      {/* ── PRINT ONLY SECTION ── */}
+      <div className="print-only px-6 pb-8" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+        {/* Header */}
+        <div style={{ borderBottom: "3px solid #f97316", paddingBottom: "12px", marginBottom: "20px" }}>
+          <h1 style={{ fontSize: "26px", fontWeight: "900", margin: "0 0 4px 0", color: "#111827" }}>
+            {trip?.destination} — {trip?.days}-Day Trip
+          </h1>
+          <p style={{ color: "#6b7280", margin: 0, fontSize: "13px" }}>
+            {trip?.travelers} travelers · {trip?.currency} {trip?.total_estimated_cost?.toLocaleString()} estimated · {form?.startDate} → {form?.endDate}
+            {trip?.style && ` · ${trip.style} style`}
+          </p>
+        </div>
+
+        {/* Summary */}
+        {trip?.summary && (
+          <p style={{ fontSize: "13px", color: "#374151", marginBottom: "20px", lineHeight: "1.6", padding: "10px 14px", background: "#fff7ed", borderRadius: "8px", borderLeft: "3px solid #f97316" }}>
+            {trip.summary}
+          </p>
+        )}
+
+        {/* Budget Breakdown */}
+        {totalBudget > 0 && (
+          <div style={{ marginBottom: "24px" }}>
+            <h2 style={{ fontSize: "15px", fontWeight: "900", marginBottom: "10px", color: "#111827" }}>💰 Budget Breakdown</h2>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
+              <tbody>
+                {Object.entries(budget_breakdown).map(([k, v]) => (
+                  <tr key={k} style={{ borderBottom: "1px solid #f3f4f6" }}>
+                    <td style={{ padding: "5px 8px", color: "#374151" }}>{BUDGET_CATS[k]?.label || k}</td>
+                    <td style={{ padding: "5px 8px", textAlign: "right", fontWeight: "bold", color: "#111827" }}>{trip.currency} {v?.toLocaleString()}</td>
+                  </tr>
+                ))}
+                <tr style={{ background: "#fff7ed", fontWeight: "bold" }}>
+                  <td style={{ padding: "6px 8px", color: "#111827" }}>Total</td>
+                  <td style={{ padding: "6px 8px", textAlign: "right", color: "#f97316" }}>{trip.currency} {totalBudget.toLocaleString()}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* All Itinerary Days */}
+        {daily_itinerary.length > 0 && (
+          <div style={{ marginBottom: "24px" }}>
+            <h2 style={{ fontSize: "15px", fontWeight: "900", marginBottom: "12px", color: "#111827" }}>🗓️ Day-by-Day Itinerary</h2>
+            {daily_itinerary.map((day, i) => (
+              <div key={i} style={{ marginBottom: "16px", pageBreakInside: "avoid" }}>
+                <div style={{ background: "#fff7ed", padding: "8px 12px", borderRadius: "8px", marginBottom: "6px", display: "flex", gap: "12px", alignItems: "baseline" }}>
+                  <strong style={{ color: "#111827" }}>Day {day.day} — {day.title}</strong>
+                  {day.date && <span style={{ color: "#9ca3af", fontSize: "12px" }}>{day.date}</span>}
+                  {day.accommodation && <span style={{ color: "#f97316", fontSize: "12px" }}>🏨 {day.accommodation}</span>}
+                  {day.daily_cost > 0 && <span style={{ marginLeft: "auto", color: "#f97316", fontSize: "12px", fontWeight: "bold" }}>{trip.currency} {day.daily_cost?.toLocaleString()}</span>}
+                </div>
+                {(day.activities || []).map((a, j) => (
+                  <div key={j} style={{ padding: "4px 12px", display: "flex", gap: "10px", fontSize: "13px", borderBottom: "1px solid #f9fafb" }}>
+                    <span style={{ color: "#9ca3af", width: "72px", flexShrink: 0, textTransform: "capitalize" }}>{a.time}</span>
+                    <span style={{ flex: 1, color: "#374151" }}><strong>{a.name}</strong>{a.description ? ` — ${a.description}` : ""}</span>
+                    {a.estimated_cost > 0 && <span style={{ color: "#f97316", flexShrink: 0, fontWeight: "bold" }}>{trip.currency} {a.estimated_cost}</span>}
+                  </div>
+                ))}
+                {day.notes && (
+                  <div style={{ margin: "6px 12px", padding: "6px 10px", background: "#f9fafb", borderRadius: "6px", fontSize: "12px", color: "#6b7280" }}>
+                    📝 {day.notes}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Tips */}
+        {tips.length > 0 && (
+          <div style={{ marginBottom: "24px" }}>
+            <h2 style={{ fontSize: "15px", fontWeight: "900", marginBottom: "10px", color: "#111827" }}>💡 Travel Tips</h2>
+            {tips.map((tip, i) => (
+              <div key={i} style={{ display: "flex", gap: "10px", fontSize: "13px", padding: "4px 0", color: "#374151" }}>
+                <strong style={{ color: "#f97316", flexShrink: 0 }}>{i + 1}.</strong>
+                <span>{tip}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Packing List */}
+        {packingData?.categories?.length > 0 && (
+          <div className="print-page-break" style={{ marginBottom: "24px" }}>
+            <h2 style={{ fontSize: "15px", fontWeight: "900", marginBottom: "12px", color: "#111827" }}>🧳 Packing List</h2>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+              {packingData.categories.map((cat, ci) => (
+                <div key={ci} style={{ border: "1px solid #ffedd5", borderRadius: "8px", padding: "10px" }}>
+                  <strong style={{ fontSize: "13px", display: "block", marginBottom: "6px", color: "#111827" }}>{cat.name}</strong>
+                  {(cat.items || []).map((item, ii) => (
+                    <div key={ii} style={{ fontSize: "12px", color: "#374151", padding: "2px 0", display: "flex", alignItems: "center", gap: "6px" }}>
+                      <span style={{ width: "11px", height: "11px", border: "1px solid #fed7aa", borderRadius: "3px", display: "inline-block", flexShrink: 0 }} />
+                      {item}
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Expenses */}
+        {expenses.length > 0 && (
+          <div style={{ marginBottom: "24px" }}>
+            <h2 style={{ fontSize: "15px", fontWeight: "900", marginBottom: "10px", color: "#111827" }}>💸 Expenses Log</h2>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
+              <thead>
+                <tr style={{ background: "#fff7ed" }}>
+                  <th style={{ textAlign: "left", padding: "6px 8px", borderBottom: "1px solid #ffedd5", fontWeight: "bold", color: "#374151" }}>Date</th>
+                  <th style={{ textAlign: "left", padding: "6px 8px", borderBottom: "1px solid #ffedd5", fontWeight: "bold", color: "#374151" }}>Description</th>
+                  <th style={{ textAlign: "left", padding: "6px 8px", borderBottom: "1px solid #ffedd5", fontWeight: "bold", color: "#374151" }}>Category</th>
+                  <th style={{ textAlign: "right", padding: "6px 8px", borderBottom: "1px solid #ffedd5", fontWeight: "bold", color: "#374151" }}>Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                {expenses.map((exp, i) => (
+                  <tr key={i} style={{ borderBottom: "1px solid #f3f4f6" }}>
+                    <td style={{ padding: "5px 8px", color: "#9ca3af" }}>{exp.date}</td>
+                    <td style={{ padding: "5px 8px", color: "#374151" }}>{exp.name}</td>
+                    <td style={{ padding: "5px 8px", color: "#6b7280" }}>{exp.category}</td>
+                    <td style={{ padding: "5px 8px", textAlign: "right", fontWeight: "bold", color: "#111827" }}>{trip.currency} {Number(exp.amount).toLocaleString()}</td>
+                  </tr>
+                ))}
+                <tr style={{ background: "#fff7ed", fontWeight: "bold" }}>
+                  <td colSpan={3} style={{ padding: "6px 8px", textAlign: "right", color: "#374151" }}>Total Spent:</td>
+                  <td style={{ padding: "6px 8px", textAlign: "right", color: "#f97316" }}>
+                    {trip.currency} {expenses.reduce((s, e) => s + (Number(e.amount) || 0), 0).toLocaleString()}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        <p style={{ fontSize: "11px", color: "#9ca3af", textAlign: "center", marginTop: "24px", borderTop: "1px solid #f3f4f6", paddingTop: "12px" }}>
+          Generated by AI-gency · Powered by Claude AI
+        </p>
+      </div>
     </main>
   );
 }

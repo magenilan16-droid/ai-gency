@@ -36,8 +36,12 @@ body {
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
 /* ── Print / PDF export ──────────────────────────────────────────── */
+.print-only { display: none; }
+
 @media print {
   .no-print, nav, [data-noprint] { display: none !important; }
+  .print-only { display: block !important; }
+  .tab-content-area { display: none !important; }
   body { background: white !important; font-size: 12px; }
   .print-page-break { page-break-before: always; }
   * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
