@@ -3,6 +3,46 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useLanguage } from "@/app/LanguageProvider";
 
+const WMO_EMOJI = {
+  0:"☀️",1:"🌤️",2:"⛅",3:"☁️",45:"🌫️",48:"🌫️",
+  51:"🌦️",53:"🌦️",55:"🌧️",61:"🌧️",63:"🌧️",65:"🌧️",
+  71:"❄️",73:"❄️",75:"❄️",77:"❄️",80:"🌦️",81:"🌧️",82:"⛈️",
+  85:"❄️",86:"❄️",95:"⛈️",96:"⛈️",99:"⛈️",
+};
+function wmoEmoji(code) { return WMO_EMOJI[code] ?? "🌡️"; }
+
+function WeatherBadge({ destination, dateStr }) {
+  const [weather, setWeather] = useState(null);
+  useEffect(() => {
+    if (!destination || !dateStr) return;
+    const d = new Date(dateStr);
+    if (d < new Date()) return; // only future trips
+    let cancelled = false;
+    async function load() {
+      try {
+        const geo = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(destination.split(",")[0])}&count=1&language=en&format=json`).then(r => r.json());
+        const loc = geo.results?.[0];
+        if (!loc || cancelled) return;
+        const dateOnly = dateStr.split("T")[0];
+        const wx = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${loc.latitude}&longitude=${loc.longitude}&daily=weathercode,temperature_2m_max&start_date=${dateOnly}&end_date=${dateOnly}&timezone=auto`).then(r => r.json());
+        if (cancelled) return;
+        const code = wx.daily?.weathercode?.[0];
+        const temp = wx.daily?.temperature_2m_max?.[0];
+        if (code != null && temp != null) setWeather({ emoji: wmoEmoji(code), temp: Math.round(temp) });
+      } catch {}
+    }
+    load();
+    return () => { cancelled = true; };
+  }, [destination, dateStr]);
+
+  if (!weather) return null;
+  return (
+    <span className="inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: "#fff7ed", color: "#f97316" }}>
+      {weather.emoji} {weather.temp}°
+    </span>
+  );
+}
+
 const G = "linear-gradient(135deg,#f97316,#ec4899)";
 const STYLE_E = { adventure:"🧗", relaxed:"🏖️", cultural:"🏛️", luxury:"✨", business:"💼" };
 const DEST_COLORS = {
@@ -130,16 +170,17 @@ export default function TripsPage() {
                               {tr.days ? ` · ${tr.days} ${t("days")}` : ""}
                             </div>
                           </div>
-                          <div className="text-right flex-shrink-0">
+                          <div className="text-right flex-shrink-0 flex flex-col items-end gap-1">
                             <div className="font-black text-sm" style={{ color }}>{tr.currency} {tr.total_estimated_cost?.toLocaleString()}</div>
                             {d !== null && d >= 0 && (
-                              <div className="text-xs text-orange-400 font-bold mt-0.5">
+                              <div className="text-xs text-orange-400 font-bold">
                                 {d === 0 ? t("today_badge") : t("x_d_away", { n: d })}
                               </div>
                             )}
                             {d !== null && d < 0 && (
-                              <div className="text-xs text-gray-300 font-medium mt-0.5">{t("completed")}</div>
+                              <div className="text-xs text-gray-300 font-medium">{t("completed")}</div>
                             )}
+                            <WeatherBadge destination={tr.destination} dateStr={tr.form?.startDate} />
                           </div>
                         </div>
 
