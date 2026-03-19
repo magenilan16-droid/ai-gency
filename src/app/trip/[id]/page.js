@@ -351,17 +351,24 @@ function WeatherWidget({ destination, startDate, endDate }) {
 function PackTab({ trip }) {
   const G = "linear-gradient(135deg,#f97316,#ec4899)";
   const { t } = useLanguage();
-  const [data, setData]       = useState(null);
+  const cacheKey = `aigency_pack_${trip.destination}_${trip.days}`;
+  const checkedKey = `aigency_pack_checked_${trip.destination}_${trip.days}`;
+  const [data, setData]       = useState(() => { try { const c = localStorage.getItem(cacheKey); return c ? JSON.parse(c) : null; } catch { return null; } });
   const [loading, setLoading] = useState(false);
-  const [checked, setChecked] = useState({});
+  const [checked, setChecked] = useState(() => { try { const c = localStorage.getItem(checkedKey); return c ? JSON.parse(c) : {}; } catch { return {}; } });
   const loaded = useRef(false);
 
+  function saveChecked(next) {
+    setChecked(next);
+    try { localStorage.setItem(checkedKey, JSON.stringify(next)); } catch {}
+  }
+
   useEffect(() => {
-    if (loaded.current) return;
+    if (loaded.current || data) return;
     loaded.current = true;
     setLoading(true);
     fetch("/api/suggest", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ type:"packing", trip }) })
-      .then(r=>r.json()).then(r=>{ if(r.ok) setData(r.data); }).catch(()=>{}).finally(()=>setLoading(false));
+      .then(r=>r.json()).then(r=>{ if(r.ok) { setData(r.data); try { localStorage.setItem(cacheKey, JSON.stringify(r.data)); } catch {} } }).catch(()=>{}).finally(()=>setLoading(false));
   }, []);
 
   const total  = data?.categories?.flatMap(c=>c.items||[]).length || 0;
@@ -406,7 +413,7 @@ function PackTab({ trip }) {
                   <label key={ii} className="flex items-center gap-3 cursor-pointer group py-0.5">
                     <div className="w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all"
                       style={checked[key] ? {borderColor:"#f97316",background:"#f97316"} : {borderColor:"#fed7aa"}}
-                      onClick={()=>setChecked(p=>({...p,[key]:!p[key]}))}>
+                      onClick={()=>saveChecked({...checked,[key]:!checked[key]})}>
                       {checked[key] && <span className="text-white text-xs font-black">✓</span>}
                     </div>
                     <span className={`text-sm font-medium transition-all ${checked[key]?"line-through text-gray-300":"text-gray-700"}`}>{item}</span>
@@ -582,18 +589,19 @@ function ExpensesTab({ trip, expenses, onAdd, onDelete }) {
 function LocalTab({ trip }) {
   const G = "linear-gradient(135deg,#f97316,#ec4899)";
   const { t } = useLanguage();
-  const [data, setData]       = useState(null);
+  const cacheKey = `aigency_phrases_${trip.destination}`;
+  const [data, setData]       = useState(() => { try { const c = localStorage.getItem(cacheKey); return c ? JSON.parse(c) : null; } catch { return null; } });
   const [loading, setLoading] = useState(false);
   const [copied, setCopied]   = useState(null);
   const loaded = useRef(false);
 
   useEffect(() => {
-    if (loaded.current) return;
+    if (loaded.current || data) return;
     loaded.current = true;
     setLoading(true);
     fetch("/api/phrases", { method:"POST", headers:{"Content-Type":"application/json"},
       body: JSON.stringify({ destination: trip.destination, style: trip.style, days: trip.days }) })
-      .then(r=>r.json()).then(r=>{ if(r.ok) setData(r.data); }).catch(()=>{}).finally(()=>setLoading(false));
+      .then(r=>r.json()).then(r=>{ if(r.ok) { setData(r.data); try { localStorage.setItem(cacheKey, JSON.stringify(r.data)); } catch {} } }).catch(()=>{}).finally(()=>setLoading(false));
   }, []);
 
   function copy(text, id) {
@@ -616,19 +624,19 @@ function LocalTab({ trip }) {
         <div className="rounded-2xl p-4 text-white text-center" style={{ background: G }}>
           <div className="text-3xl mb-1">{data.flag || "🌍"}</div>
           <div className="font-black text-lg">{data.language}</div>
-          <div className="text-white/70 text-sm">Speak like a local in {trip.destination}</div>
+          <div className="text-white/70 text-sm">{t("local_phrases")} · {trip.destination}</div>
         </div>
       )}
 
       {loading ? (
         <div className="flex flex-col items-center justify-center py-16 gap-3">
           <div className="w-12 h-12 rounded-full border-4 border-orange-300 border-t-transparent animate-spin"/>
-          <p className="text-sm text-gray-400 font-medium">Learning local phrases...</p>
+          <p className="text-sm text-gray-400 font-medium">{t("loading_phrases")}</p>
         </div>
       ) : !data ? (
         <div className="text-center py-12 text-gray-400">
           <div className="text-4xl mb-3">🌐</div>
-          <p className="font-medium">Could not load phrases. Please try again.</p>
+          <p className="font-medium">{t("could_not_load_packing")}</p>
         </div>
       ) : (
         Object.entries(grouped).map(([cat, phrases]) => (
