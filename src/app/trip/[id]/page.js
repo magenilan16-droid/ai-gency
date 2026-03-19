@@ -496,7 +496,7 @@ function ExpensesTab({ trip, expenses, onAdd, onDelete }) {
       </div>
 
       <div className="bg-white rounded-2xl border border-orange-100 p-4 shadow-sm">
-        <h3 className="font-black text-gray-900 mb-3 text-sm">By Category</h3>
+        <h3 className="font-black text-gray-900 mb-3 text-sm">{t("by_category_title")}</h3>
         <div className="space-y-3">
           {byCategory.map(cat => (
             <div key={cat.key}>
@@ -1061,8 +1061,8 @@ function TripContent() {
                 <button onClick={()=>setShowAI(true)}
                   className="rounded-2xl p-4 text-white text-left shadow-md hover:-translate-y-0.5 transition-all" style={{background:G}}>
                   <div className="text-2xl mb-2">🤖</div>
-                  <div className="font-black text-sm">Ask AI</div>
-                  <div className="text-white/70 text-xs mt-0.5">Tips, suggestions & more</div>
+                  <div className="font-black text-sm">{t("ask_ai_btn")}</div>
+                  <div className="text-white/70 text-xs mt-0.5">{t("ai_tips_subtitle")}</div>
                 </button>
                 <button onClick={()=>setActiveTab("pack")}
                   className="rounded-2xl p-4 text-white text-left shadow-md hover:-translate-y-0.5 transition-all" style={{background:"linear-gradient(135deg,#8b5cf6,#6366f1)"}}>
@@ -1074,7 +1074,7 @@ function TripContent() {
                   className="rounded-2xl p-4 text-white text-left shadow-md hover:-translate-y-0.5 transition-all" style={{background:"linear-gradient(135deg,#0d9488,#0ea5e9)"}}>
                   <div className="text-2xl mb-2">💸</div>
                   <div className="font-black text-sm">{t("tab_expenses")}</div>
-                  <div className="text-white/70 text-xs mt-0.5">{expenses.length} expenses logged</div>
+                  <div className="text-white/70 text-xs mt-0.5">{expenses.length}{t("expenses_count_suffix")}</div>
                 </button>
                 <button onClick={()=>setActiveTab("local")}
                   className="rounded-2xl p-4 text-white text-left shadow-md hover:-translate-y-0.5 transition-all" style={{background:"linear-gradient(135deg,#d97706,#f59e0b)"}}>
