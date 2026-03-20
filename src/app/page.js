@@ -351,6 +351,23 @@ function Dashboard({ trips }) {
           </div>
         </div>
 
+        {/* Smart Tools */}
+        <div>
+          <h2 className="text-lg font-black mb-3" style={{ color: "var(--text-main)" }}>🛠️ {t("smart_tools")}</h2>
+          <div className="grid grid-cols-2 gap-3">
+            <Link href="/budget" className="rounded-2xl p-4 text-white shadow-md hover:-translate-y-0.5 transition-all" style={{ background: "linear-gradient(135deg,#0d9488,#0ea5e9)" }}>
+              <div className="text-2xl mb-2">💰</div>
+              <div className="font-black text-sm">{t("feature_budget_title")}</div>
+              <div className="text-white/70 text-xs mt-0.5">{t("feature_budget_desc")}</div>
+            </Link>
+            <Link href="/compare" className="rounded-2xl p-4 text-white shadow-md hover:-translate-y-0.5 transition-all" style={{ background: "linear-gradient(135deg,#8b5cf6,#6366f1)" }}>
+              <div className="text-2xl mb-2">⚖️</div>
+              <div className="font-black text-sm">{t("compare_title")}</div>
+              <div className="text-white/70 text-xs mt-0.5">{t("compare_desc")}</div>
+            </Link>
+          </div>
+        </div>
+
         {/* Recent trips */}
         {recent.length > 0 && (
           <div>
@@ -410,6 +427,51 @@ function Dashboard({ trips }) {
   );
 }
 
+// ─── PWA Install Banner ─────────────────────────────────────────────────────
+function PWAInstallBanner() {
+  const { t } = useLanguage();
+  const [prompt, setPrompt] = useState(null);
+  const [dismissed, setDismissed] = useState(false);
+
+  useEffect(() => {
+    if (localStorage.getItem("pwa_dismissed")) { setDismissed(true); return; }
+    const handler = (e) => { e.preventDefault(); setPrompt(e); };
+    window.addEventListener("beforeinstallprompt", handler);
+    return () => window.removeEventListener("beforeinstallprompt", handler);
+  }, []);
+
+  if (!prompt || dismissed) return null;
+
+  function install() {
+    prompt.prompt();
+    prompt.userChoice.finally(() => { setPrompt(null); });
+  }
+
+  function dismiss() {
+    setDismissed(true);
+    localStorage.setItem("pwa_dismissed", "1");
+  }
+
+  return (
+    <div className="fixed bottom-24 left-3 right-3 z-50 max-w-lg mx-auto rounded-2xl p-4 shadow-2xl flex items-center gap-3"
+      style={{ background: "white", border: "2px solid #ffedd5" }}>
+      <div className="text-3xl flex-shrink-0">✈️</div>
+      <div className="flex-1 min-w-0">
+        <div className="font-black text-gray-900 text-sm">{t("pwa_install_title")}</div>
+        <div className="text-xs text-gray-400">{t("pwa_install_desc")}</div>
+      </div>
+      <div className="flex gap-2 flex-shrink-0">
+        <button onClick={dismiss} className="text-xs text-gray-400 font-bold px-3 py-2">{t("pwa_dismiss")}</button>
+        <button onClick={install}
+          className="text-xs font-black text-white px-4 py-2 rounded-xl shadow-md"
+          style={{ background: "linear-gradient(135deg,#f97316,#ec4899)" }}>
+          {t("pwa_install_btn")}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ─── ROOT ──────────────────────────────────────────────────────────────────
 export default function Home() {
   const [trips, setTrips] = useState([]);
@@ -431,5 +493,10 @@ export default function Home() {
     </div>
   );
 
-  return trips.length === 0 ? <WelcomePage /> : <Dashboard trips={trips} />;
+  return (
+    <>
+      {trips.length === 0 ? <WelcomePage /> : <Dashboard trips={trips} />}
+      <PWAInstallBanner />
+    </>
+  );
 }

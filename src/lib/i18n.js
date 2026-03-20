@@ -458,6 +458,56 @@ export const translations = {
     per_person_budget: "Budget / person",
     per_person_spent: "Spent / person",
     split_costs_note: "Split between {n} travelers",
+
+    // Settings
+    nav_settings: "Settings",
+    settings_title: "Settings",
+    settings_saved: "✓ Saved!",
+    settings_home_city: "Home City",
+    settings_home_city_hint: "AI will use this as your departure city",
+    settings_currency: "Preferred Currency",
+    settings_style: "Preferred Travel Style",
+    settings_language: "Language",
+    settings_budget_range: "Typical Trip Budget",
+    settings_local_note: "Settings are saved locally on your device",
+
+    // Search trips
+    search_trips_placeholder: "🔍 Search trips...",
+
+    // WhatsApp share
+    whatsapp_share: "WhatsApp",
+    whatsapp_copied: "✓ Link Copied!",
+
+    // Daily tip
+    daily_tip_title: "✨ Today's Travel Tip",
+    daily_tip_loading: "Getting your tip...",
+    days_until_trip: "{n} days until your trip",
+
+    // PWA install
+    pwa_install_title: "Install AI-gency",
+    pwa_install_desc: "Add to home screen for the best experience",
+    pwa_install_btn: "Install",
+    pwa_dismiss: "Not now",
+
+    // Photo diary
+    photo_diary_title: "📷 Photo Diary",
+    photo_add_btn: "Add Photo",
+    photo_no_photos: "No photos yet — capture your memories!",
+    photo_caption_placeholder: "Add a caption...",
+    photo_delete_confirm: "Remove this photo?",
+
+    // Compare & Budget tools
+    compare_title: "Compare Destinations",
+    compare_desc: "AI picks the winner for your trip",
+    smart_tools: "Smart Tools",
+
+    // Trip templates
+    trip_templates_title: "Quick Templates",
+    trip_template_weekend: "🌅 Weekend Getaway",
+    trip_template_honeymoon: "💑 Honeymoon",
+    trip_template_backpacker: "🎒 Backpacker",
+    trip_template_family: "👨‍👩‍👧 Family Trip",
+    trip_template_use: "Use Template →",
   },
 
   he: {
@@ -917,6 +967,56 @@ export const translations = {
     per_person_budget: "תקציב / אדם",
     per_person_spent: "הוצאה / אדם",
     split_costs_note: "מחולק בין {n} נוסעים",
+
+    // Settings
+    nav_settings: "הגדרות",
+    settings_title: "הגדרות",
+    settings_saved: "✓ נשמר!",
+    settings_home_city: "עיר הבית",
+    settings_home_city_hint: "ה-AI ישתמש בזה כעיר המוצא שלך",
+    settings_currency: "מטבע מועדף",
+    settings_style: "סגנון טיול מועדף",
+    settings_language: "שפה",
+    settings_budget_range: "תקציב טיול רגיל",
+    settings_local_note: "ההגדרות נשמרות מקומית על המכשיר שלך",
+
+    // Search trips
+    search_trips_placeholder: "🔍 חפש טיולים...",
+
+    // WhatsApp share
+    whatsapp_share: "WhatsApp",
+    whatsapp_copied: "✓ קישור הועתק!",
+
+    // Daily tip
+    daily_tip_title: "✨ טיפ נסיעה היומי",
+    daily_tip_loading: "מביא טיפ...",
+    days_until_trip: "עוד {n} ימים לטיול",
+
+    // PWA install
+    pwa_install_title: "התקן AI-gency",
+    pwa_install_desc: "הוסף למסך הבית לחוויה הטובה ביותר",
+    pwa_install_btn: "התקן",
+    pwa_dismiss: "לא עכשיו",
+
+    // Photo diary
+    photo_diary_title: "📷 יומן תמונות",
+    photo_add_btn: "הוסף תמונה",
+    photo_no_photos: "אין תמונות עדיין — תעד את הזיכרונות שלך!",
+    photo_caption_placeholder: "הוסף כיתוב...",
+    photo_delete_confirm: "הסר את התמונה הזו?",
+
+    // Compare & Budget tools
+    compare_title: "השווה יעדים",
+    compare_desc: "AI בוחר את המנצח לטיול שלך",
+    smart_tools: "כלים חכמים",
+
+    // Trip templates
+    trip_templates_title: "תבניות מהירות",
+    trip_template_weekend: "🌅 בריחה לסוף שבוע",
+    trip_template_honeymoon: "💑 ירח דבש",
+    trip_template_backpacker: "🎒 גב ותרמיל",
+    trip_template_family: "👨‍👩‍👧 טיול משפחתי",
+    trip_template_use: "השתמש בתבנית →",
   },
 };
 

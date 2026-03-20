@@ -26,11 +26,11 @@ export default function BottomNav() {
   }
 
   const TABS = [
-    { href: "/",         icon: "🏠", labelKey: "nav_home"     },
-    { href: "/trips",    icon: "🗺️", labelKey: "nav_trips"    },
-    { href: "/plan",     icon: null,  labelKey: "nav_new",  special: true },
-    { href: "/chat",     icon: "🤖", labelKey: "nav_ai",   chatTab: true },
-    { href: "/business", icon: "💼", labelKey: "nav_business" },
+    { href: "/",          icon: "🏠", labelKey: "nav_home"     },
+    { href: "/trips",     icon: "🗺️", labelKey: "nav_trips"    },
+    { href: "/plan",      icon: null,  labelKey: "nav_new",  special: true },
+    { href: "/chat",      icon: "🤖", labelKey: "nav_ai",   chatTab: true },
+    { href: "/settings",  icon: "⚙️", labelKey: "nav_settings" },
   ];
 
   useEffect(() => {

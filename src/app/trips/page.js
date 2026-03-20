@@ -73,6 +73,7 @@ function getAllTrips() {
 export default function TripsPage() {
   const [trips, setTrips] = useState([]);
   const [filter, setFilter] = useState("all");
+  const [search, setSearch] = useState("");
   const [mounted, setMounted] = useState(false);
   const [deleting, setDeleting] = useState(null);
   const { t } = useLanguage();
@@ -97,9 +98,13 @@ export default function TripsPage() {
 
   const now = new Date();
   const shown = trips.filter(tr => {
-    if (filter === "upcoming") return tr.form?.startDate && new Date(tr.form.startDate) >= now;
-    if (filter === "past")     return tr.form?.endDate && new Date(tr.form.endDate) < now;
-    if (filter === "business") return tr.style === "business";
+    if (filter === "upcoming") { if (!(tr.form?.startDate && new Date(tr.form.startDate) >= now)) return false; }
+    else if (filter === "past") { if (!(tr.form?.endDate && new Date(tr.form.endDate) < now)) return false; }
+    else if (filter === "business") { if (tr.style !== "business") return false; }
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      return (tr.destination || "").toLowerCase().includes(q) || (tr.style || "").toLowerCase().includes(q);
+    }
     return true;
   });
 
@@ -120,6 +125,17 @@ export default function TripsPage() {
           <Link href="/plan" className="font-black text-white text-sm px-5 py-3 rounded-2xl shadow-md shadow-orange-200" style={{ background: G }}>
             {t("new_trip_btn")}
           </Link>
+        </div>
+
+        {/* Search */}
+        <div className="mb-4">
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder={t("search_trips_placeholder")}
+            className="w-full text-sm font-bold rounded-2xl px-4 py-3 border-2 border-orange-100 focus:border-orange-300 outline-none"
+            style={{ background: "var(--bg-card)", color: "var(--text-main)" }}
+          />
         </div>
 
         {/* Filters */}

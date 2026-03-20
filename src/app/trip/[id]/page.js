@@ -1134,6 +1134,139 @@ function LocalTab({ trip }) {
   );
 }
 
+// ─── Daily Tip ────────────────────────────────────────────────────────────────
+function DailyTip({ trip }) {
+  const { t, lang } = useLanguage();
+  const G = "linear-gradient(135deg,#f97316,#ec4899)";
+  const cacheKey = `aigency_tip_${trip.destination}_${new Date().toDateString()}`;
+  const [tip, setTip] = useState(() => { try { return localStorage.getItem(cacheKey) || null; } catch { return null; } });
+  const [loading, setLoading] = useState(false);
+  const loaded = useRef(false);
+
+  const daysUntil = trip.form?.startDate
+    ? Math.ceil((new Date(trip.form.startDate) - new Date()) / 86400000)
+    : null;
+
+  useEffect(() => {
+    if (loaded.current || tip) return;
+    loaded.current = true;
+    setLoading(true);
+    fetch("/api/daily-tip", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ destination: trip.destination, days_until: daysUntil, style: trip.style, language: lang }),
+    })
+      .then(r => r.json())
+      .then(r => { if (r.ok && r.tip) { setTip(r.tip); try { localStorage.setItem(cacheKey, r.tip); } catch {} } })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (!tip && !loading) return null;
+
+  return (
+    <div className="rounded-2xl overflow-hidden" style={{ background: G }}>
+      <div className="px-4 py-3">
+        <div className="flex items-start gap-3">
+          <span className="text-2xl flex-shrink-0">✨</span>
+          <div className="flex-1 min-w-0">
+            <div className="text-white font-black text-xs uppercase tracking-widest mb-1">{t("daily_tip_title")}</div>
+            {loading ? (
+              <div className="h-4 bg-white/20 rounded-full w-3/4 animate-pulse" />
+            ) : (
+              <p className="text-white/90 text-sm leading-relaxed">{tip}</p>
+            )}
+            {daysUntil !== null && daysUntil > 0 && (
+              <div className="mt-2 inline-flex items-center gap-1 bg-white/20 rounded-xl px-3 py-1 text-white/80 text-xs font-bold">
+                🗓️ {t("days_until_trip", { n: daysUntil })}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Photo Diary ──────────────────────────────────────────────────────────────
+function PhotoDiary({ tripId, dayIndex }) {
+  const { t } = useLanguage();
+  const storeKey = `aigency_photos_${tripId}_day${dayIndex}`;
+  const [photos, setPhotos] = useState(() => { try { const c = localStorage.getItem(storeKey); return c ? JSON.parse(c) : []; } catch { return []; } });
+  const [lightbox, setLightbox] = useState(null);
+  const fileRef = useRef(null);
+
+  function savePhotos(next) {
+    setPhotos(next);
+    try { localStorage.setItem(storeKey, JSON.stringify(next)); } catch {}
+  }
+
+  function onFile(e) {
+    const files = Array.from(e.target.files || []);
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = ev => {
+        savePhotos(prev => [...prev, { id: Date.now() + Math.random(), src: ev.target.result, caption: "" }]);
+      };
+      reader.readAsDataURL(file);
+    });
+    e.target.value = "";
+  }
+
+  function updateCaption(id, caption) {
+    savePhotos(photos.map(p => p.id === id ? { ...p, caption } : p));
+  }
+
+  function deletePhoto(id) {
+    if (!window.confirm(t("photo_delete_confirm"))) return;
+    savePhotos(photos.filter(p => p.id !== id));
+  }
+
+  return (
+    <div className="border-t border-orange-50 p-4">
+      <div className="flex items-center justify-between mb-3">
+        <span className="font-black text-gray-900 text-sm">{t("photo_diary_title")}</span>
+        <button onClick={() => fileRef.current?.click()}
+          className="text-xs font-black px-3 py-1.5 rounded-xl text-white shadow-sm"
+          style={{ background: "linear-gradient(135deg,#f97316,#ec4899)" }}>
+          📷 {t("photo_add_btn")}
+        </button>
+        <input ref={fileRef} type="file" accept="image/*" multiple onChange={onFile} className="hidden" />
+      </div>
+
+      {photos.length === 0 ? (
+        <div className="text-center py-4 text-gray-300 text-xs">{t("photo_no_photos")}</div>
+      ) : (
+        <div className="grid grid-cols-3 gap-2">
+          {photos.map(p => (
+            <div key={p.id} className="relative group rounded-xl overflow-hidden aspect-square bg-gray-100">
+              <img src={p.src} alt={p.caption || "photo"} className="w-full h-full object-cover cursor-pointer" onClick={() => setLightbox(p)} />
+              <button onClick={() => deletePhoto(p.id)}
+                className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/50 text-white text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                ×
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {lightbox && (
+        <div className="fixed inset-0 z-50 bg-black/90 flex flex-col items-center justify-center p-4" onClick={() => setLightbox(null)}>
+          <img src={lightbox.src} alt={lightbox.caption} className="max-w-full max-h-[70vh] rounded-2xl object-contain" onClick={e => e.stopPropagation()} />
+          <input
+            value={lightbox.caption}
+            onChange={e => { const c = e.target.value; setLightbox(p => ({ ...p, caption: c })); updateCaption(lightbox.id, c); }}
+            placeholder={t("photo_caption_placeholder")}
+            className="mt-3 w-full max-w-sm text-sm text-center bg-white/10 text-white rounded-xl px-4 py-2 outline-none placeholder-white/40 border border-white/20"
+            onClick={e => e.stopPropagation()}
+          />
+          <button onClick={() => setLightbox(null)} className="mt-3 text-white/50 text-sm">✕ Close</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Surprise Reveal ─────────────────────────────────────────────────────────
 function SurpriseReveal({ destination, onDone }) {
   const { t } = useLanguage();
@@ -1194,6 +1327,7 @@ function TripContent() {
   const [packingData, setPackingData] = useState(null);
   const [printLoading, setPrintLoading] = useState(false);
   const [dayForecast, setDayForecast] = useState(null);
+  const touchStartX = useRef(null);
 
   const TABS = [
     { id: "itinerary", labelKey: "tab_itinerary", icon: "🗓️" },
@@ -1334,6 +1468,11 @@ function TripContent() {
     setTimeout(() => window.print(), 300);
   }
 
+  function shareWhatsApp() {
+    const text = encodeURIComponent(`✈️ Check out my ${trip.days}-day trip to ${trip.destination}!\n${window.location.href}`);
+    window.open(`https://wa.me/?text=${text}`, "_blank");
+  }
+
   function copyLink() {
     try {
       // Encode trip data into URL hash for real sharing
@@ -1407,10 +1546,22 @@ function TripContent() {
   }
 
   if (!trip) return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background:"var(--bg-page)" }}>
-      <div className="text-center">
-        <div className="w-12 h-12 rounded-full border-4 border-orange-400 border-t-transparent animate-spin mx-auto mb-4"/>
-        <p className="text-gray-400 font-medium">{t("loading")}</p>
+    <div className="min-h-screen" style={{ background: "var(--bg-page)" }}>
+      {/* Skeleton Nav */}
+      <div className="px-3 py-3">
+        <div className="h-12 rounded-2xl animate-pulse" style={{ background: "var(--bg-card)" }} />
+      </div>
+      {/* Skeleton Hero */}
+      <div className="mx-3 rounded-3xl overflow-hidden mb-0 h-48 animate-pulse" style={{ background: "linear-gradient(135deg,#fed7aa,#fecdd3)" }} />
+      {/* Skeleton Tabs */}
+      <div className="mx-3 mb-4 mt-0">
+        <div className="h-16 rounded-b-2xl animate-pulse" style={{ background: "var(--bg-card)" }} />
+      </div>
+      {/* Skeleton Cards */}
+      <div className="px-3 space-y-4">
+        {[1,2,3].map(i => (
+          <div key={i} className="h-32 rounded-2xl animate-pulse" style={{ background: "var(--bg-card)", animationDelay: `${i * 100}ms` }} />
+        ))}
       </div>
     </div>
   );
@@ -1453,6 +1604,9 @@ function TripContent() {
             </button>
             <button onClick={downloadCalendar} className="no-print text-xs font-bold px-3 py-2 rounded-xl border-2 border-orange-100 text-gray-500 hover:bg-orange-50 transition-all">
               📅
+            </button>
+            <button onClick={shareWhatsApp} className="no-print text-xs font-bold px-3 py-2 rounded-xl text-white shadow-sm" style={{background:"#25D366"}} title="WhatsApp">
+              💬
             </button>
             <button onClick={copyLink} className="text-xs font-bold px-3 py-2 rounded-xl text-white shadow-sm" style={{background:hero}}>
               {copied ? "✓ Copied!" : t("share_trip")}
@@ -1604,7 +1758,17 @@ function TripContent() {
                 </div>
 
                 {daily_itinerary[activeDay] && (
-                  <div className="bg-white rounded-3xl border border-orange-100 overflow-hidden shadow-sm">
+                  <div className="bg-white rounded-3xl border border-orange-100 overflow-hidden shadow-sm"
+                    onTouchStart={e => { touchStartX.current = e.touches[0].clientX; }}
+                    onTouchEnd={e => {
+                      if (touchStartX.current === null) return;
+                      const diff = touchStartX.current - e.changedTouches[0].clientX;
+                      touchStartX.current = null;
+                      if (Math.abs(diff) > 60) {
+                        if (diff > 0 && activeDay < daily_itinerary.length - 1) setActiveDay(p => p + 1);
+                        if (diff < 0 && activeDay > 0) setActiveDay(p => p - 1);
+                      }
+                    }}>
                     <div className="p-5 border-b border-orange-50" style={{background:"var(--bg-page)"}}>
                       <div className="flex items-start justify-between gap-4 flex-wrap">
                         <div>
@@ -1668,6 +1832,8 @@ function TripContent() {
                       })}
                     </div>
                     {editMode && <div className="p-4 border-t border-orange-50"><button onClick={()=>addActivity(activeDay)} className="w-full py-3 rounded-2xl border-2 border-dashed border-orange-200 text-orange-400 hover:border-orange-300 hover:bg-orange-50 transition-all text-sm font-bold">{t("add_activity")}</button></div>}
+                    {/* Photo Diary */}
+                    <PhotoDiary tripId={id} dayIndex={activeDay} />
                     {/* Diary Notes */}
                     <div className="p-4 border-t border-orange-50">
                       <div className="bg-white rounded-2xl border border-orange-100 p-4 shadow-sm">
@@ -1762,6 +1928,9 @@ function TripContent() {
               </section>
             )}
 
+            {/* Daily Tip */}
+            <DailyTip trip={trip} />
+
             {/* Share CTA */}
             <section>
               <div className="relative rounded-3xl overflow-hidden p-7 text-center text-white" style={{background:hero}}>
@@ -1770,7 +1939,10 @@ function TripContent() {
                 <p className="text-white/70 mb-6 text-sm">{t("share_with_friends")}</p>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
                   <button onClick={copyLink} className="bg-white font-bold px-8 py-3.5 rounded-2xl shadow-lg hover:-translate-y-0.5 transition-all text-sm" style={{color:theme.g[0]}}>
-                    {copied ? "✓ Copied!" : t("copy_link")}
+                    {copied ? t("whatsapp_copied") : t("copy_link")}
+                  </button>
+                  <button onClick={shareWhatsApp} className="font-bold px-8 py-3.5 rounded-2xl text-sm text-white border border-white/30 flex items-center justify-center gap-2" style={{background:"#25D366"}}>
+                    💬 {t("whatsapp_share")}
                   </button>
                   <Link href="/plan" className="font-bold px-8 py-3.5 rounded-2xl text-sm text-white border border-white/30" style={{background:"rgba(255,255,255,0.2)"}}>
                     {t("plan_another")}

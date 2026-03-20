@@ -647,6 +647,29 @@ export default function PlanPage() {
           <p className="text-gray-400 font-medium">{t("how_to_start")}</p>
         </div>
 
+        {/* Quick Templates */}
+        <div className="mb-6">
+          <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-3">{t("trip_templates_title")}</p>
+          <div className="grid grid-cols-2 gap-2">
+            {[
+              { labelKey: "trip_template_weekend", days: 3, style: "relaxed", budget: 500 },
+              { labelKey: "trip_template_honeymoon", days: 7, style: "luxury", budget: 5000 },
+              { labelKey: "trip_template_backpacker", days: 14, style: "adventure", budget: 1000 },
+              { labelKey: "trip_template_family", days: 7, style: "cultural", budget: 3000 },
+            ].map((tpl) => (
+              <button key={tpl.labelKey} onClick={() => {
+                setSf(p => ({ ...p, style: tpl.style, budget: tpl.budget }));
+                startAI();
+              }}
+                className="rounded-2xl p-3 text-left border-2 transition-all hover:border-orange-300 hover:bg-orange-50"
+                style={{ borderColor: "#ffedd5", background: "white" }}>
+                <div className="font-black text-xs text-gray-900">{t(tpl.labelKey)}</div>
+                <div className="text-xs text-gray-400 mt-0.5">{tpl.days} days · {currency} {tpl.budget.toLocaleString()}</div>
+              </button>
+            ))}
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 gap-4">
           <button onClick={startAI}
             className="relative overflow-hidden rounded-3xl p-7 text-white text-left shadow-xl shadow-orange-200 hover:-translate-y-1 transition-all"
