@@ -436,6 +436,7 @@ function PackTab({ trip }) {
 function ExpensesTab({ trip, expenses, onAdd, onDelete }) {
   const G = "linear-gradient(135deg,#f97316,#ec4899)";
   const { t } = useLanguage();
+  const travelers = trip.form?.travelers || trip.travelers || 1;
 
   const BUDGET_CATS = {
     accommodation:  { color: "#f97316", label: t("accommodation_label") },
@@ -483,6 +484,11 @@ function ExpensesTab({ trip, expenses, onAdd, onDelete }) {
           <div>
             <p className="text-white/70 text-xs font-bold uppercase tracking-wide">{t("total_spent")}</p>
             <p className="text-3xl font-black">{trip.currency} {totalSpent.toLocaleString()}</p>
+            {travelers > 1 && (
+              <p className="text-white/70 text-xs mt-1">
+                {t("per_person_label")}: {trip.currency} {Math.round(totalSpent / travelers).toLocaleString()}
+              </p>
+            )}
           </div>
           <div className="text-right">
             <p className="text-white/70 text-xs font-bold uppercase tracking-wide">{remaining >= 0 ? t("remaining") : "Over Budget"}</p>
@@ -514,6 +520,23 @@ function ExpensesTab({ trip, expenses, onAdd, onDelete }) {
           ))}
         </div>
       </div>
+
+      {travelers > 1 && trip.total_estimated_cost > 0 && (
+        <div className="rounded-2xl p-4 border border-orange-100 bg-orange-50">
+          <h3 className="font-black text-sm text-gray-900 mb-2">{t("split_costs_title")} 👥</h3>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="rounded-xl bg-white p-3 text-center">
+              <div className="text-xs text-gray-400 font-bold">{t("per_person_budget")}</div>
+              <div className="text-lg font-black text-orange-500">{trip.currency} {Math.round(trip.total_estimated_cost / travelers).toLocaleString()}</div>
+            </div>
+            <div className="rounded-xl bg-white p-3 text-center">
+              <div className="text-xs text-gray-400 font-bold">{t("per_person_spent")}</div>
+              <div className="text-lg font-black text-gray-900">{trip.currency} {Math.round(totalSpent / travelers).toLocaleString()}</div>
+            </div>
+          </div>
+          <p className="text-xs text-gray-400 text-center mt-2">{t("split_costs_note", { n: travelers })}</p>
+        </div>
+      )}
 
       <button onClick={()=>setShowForm(true)}
         className="w-full py-4 rounded-2xl text-white font-black text-sm shadow-lg shadow-orange-200/50 hover:-translate-y-0.5 transition-all"
@@ -767,6 +790,253 @@ function BookTab({ trip, onTripUpdate }) {
   );
 }
 
+// ─── Info Tab ─────────────────────────────────────────────────────────────────
+function InfoTab({ trip, tripId }) {
+  const { t, lang } = useLanguage();
+  const G = "linear-gradient(135deg,#f97316,#ec4899)";
+  const cacheKey = `aigency_info_${trip.destination}`;
+  const [data, setData] = useState(() => { try { const c = localStorage.getItem(cacheKey); return c ? JSON.parse(c) : null; } catch { return null; } });
+  const [loading, setLoading] = useState(false);
+  const loaded = useRef(false);
+
+  // Checklist persistence
+  const checkKey = `aigency_checklist_${tripId}`;
+  const [checked, setChecked] = useState(() => { try { const c = localStorage.getItem(checkKey); return c ? JSON.parse(c) : {}; } catch { return {}; } });
+
+  function toggleCheck(key) {
+    const next = { ...checked, [key]: !checked[key] };
+    setChecked(next);
+    try { localStorage.setItem(checkKey, JSON.stringify(next)); } catch {}
+  }
+
+  useEffect(() => {
+    if (loaded.current || data) return;
+    loaded.current = true;
+    setLoading(true);
+    fetch("/api/trip-info", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ destination: trip.destination, style: trip.style, days: trip.days, travelers: trip.travelers, language: lang }),
+    })
+      .then(r => r.json())
+      .then(r => { if (r.ok) { setData(r.data); try { localStorage.setItem(cacheKey, JSON.stringify(r.data)); } catch {} } })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return (
+    <div className="flex flex-col items-center justify-center py-16 gap-3">
+      <div className="w-10 h-10 rounded-full border-4 border-orange-200 border-t-orange-500 animate-spin" />
+      <p className="text-sm text-gray-400 font-medium">{t("loading_trip_info")}</p>
+    </div>
+  );
+
+  if (!data) return (
+    <div className="text-center py-12">
+      <div className="text-4xl mb-3">ℹ️</div>
+      <p className="text-gray-400 text-sm">{t("no_info_yet")}</p>
+    </div>
+  );
+
+  const SectionCard = ({ color, children, title }) => (
+    <div className="bg-white rounded-2xl border border-orange-100 shadow-sm overflow-hidden">
+      <div className="h-1" style={{ background: color }} />
+      <div className="p-4">
+        <h3 className="font-black text-gray-900 mb-3 text-sm">{title}</h3>
+        {children}
+      </div>
+    </div>
+  );
+
+  const InfoRow = ({ label, value }) => value ? (
+    <div className="flex gap-2 py-1.5 border-b border-gray-50 last:border-0">
+      <span className="text-xs font-bold text-gray-400 w-24 flex-shrink-0">{label}</span>
+      <span className="text-xs text-gray-700 font-medium flex-1">{value}</span>
+    </div>
+  ) : null;
+
+  return (
+    <div className="space-y-4">
+
+      {/* Visa */}
+      <SectionCard color="linear-gradient(90deg,#3b82f6,#8b5cf6)" title={t("visa_section_title")}>
+        <div className="mb-3">
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-black"
+            style={{
+              background: data.visa?.requirement?.toLowerCase().includes("free") || data.visa?.requirement?.toLowerCase().includes("חופשי") ? "#dcfce7" : "#fef3c7",
+              color: data.visa?.requirement?.toLowerCase().includes("free") || data.visa?.requirement?.toLowerCase().includes("חופשי") ? "#16a34a" : "#d97706"
+            }}>
+            {data.visa?.requirement}
+          </span>
+        </div>
+        <InfoRow label={t("visa_duration_label")} value={data.visa?.duration} />
+        <InfoRow label={t("visa_passport_label")} value={data.visa?.passport_validity} />
+        {data.visa?.details && <p className="text-xs text-gray-500 mt-2 leading-relaxed">{data.visa.details}</p>}
+      </SectionCard>
+
+      {/* Emergency */}
+      <SectionCard color="linear-gradient(90deg,#ef4444,#f97316)" title={t("emergency_section_title")}>
+        <div className="grid grid-cols-2 gap-2">
+          {[
+            { icon: "🚔", label: t("emergency_police"), val: data.emergency?.police },
+            { icon: "🚑", label: t("emergency_ambulance"), val: data.emergency?.ambulance },
+            { icon: "🔥", label: t("emergency_fire"), val: data.emergency?.fire },
+            { icon: "👮", label: t("emergency_tourist_police"), val: data.emergency?.tourist_police },
+          ].filter(e => e.val && e.val !== "N/A").map((e, i) => (
+            <a key={i} href={`tel:${e.val}`}
+              className="flex items-center gap-2 rounded-xl bg-red-50 px-3 py-2.5 hover:bg-red-100 transition-colors">
+              <span className="text-lg">{e.icon}</span>
+              <div>
+                <div className="text-xs text-gray-400 font-bold">{e.label}</div>
+                <div className="text-sm font-black text-gray-900">{e.val}</div>
+              </div>
+            </a>
+          ))}
+        </div>
+        {data.emergency?.nearest_hospital && (
+          <div className="mt-2 rounded-xl bg-orange-50 px-3 py-2 flex items-start gap-2">
+            <span className="text-lg">🏥</span>
+            <div>
+              <div className="text-xs text-gray-400 font-bold">{t("emergency_hospital")}</div>
+              <div className="text-xs font-bold text-gray-800">{data.emergency.nearest_hospital}</div>
+            </div>
+          </div>
+        )}
+        {data.emergency?.israeli_embassy && (
+          <div className="mt-2 rounded-xl bg-blue-50 px-3 py-2 flex items-start gap-2">
+            <span className="text-lg">🇮🇱</span>
+            <div>
+              <div className="text-xs text-gray-400 font-bold">{t("emergency_embassy")}</div>
+              <div className="text-xs font-bold text-gray-800">{data.emergency.israeli_embassy}</div>
+            </div>
+          </div>
+        )}
+      </SectionCard>
+
+      {/* Health */}
+      <SectionCard color="linear-gradient(90deg,#10b981,#0ea5e9)" title={t("health_section_title")}>
+        <InfoRow label={t("health_water_label")} value={data.health?.water} />
+        {data.health?.vaccines?.length > 0 && (
+          <div className="py-1.5">
+            <div className="text-xs font-bold text-gray-400 mb-1">{t("health_vaccines_label")}</div>
+            <div className="flex flex-wrap gap-1">
+              {data.health.vaccines.map((v, i) => (
+                <span key={i} className="text-xs px-2 py-0.5 rounded-full bg-green-50 text-green-700 font-bold">{v}</span>
+              ))}
+            </div>
+          </div>
+        )}
+        {data.health?.tips?.length > 0 && (
+          <div className="mt-2 space-y-1">
+            {data.health.tips.map((tip, i) => (
+              <div key={i} className="flex items-start gap-2 text-xs text-gray-600">
+                <span className="text-green-500 mt-0.5 flex-shrink-0">✓</span>
+                <span>{tip}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </SectionCard>
+
+      {/* Transport */}
+      <SectionCard color="linear-gradient(90deg,#8b5cf6,#6366f1)" title={t("transport_section_title")}>
+        {data.transport?.airport_to_city && (
+          <div className="rounded-xl bg-purple-50 px-3 py-2 mb-3">
+            <div className="text-xs text-purple-400 font-bold mb-0.5">{t("transport_airport_label")}</div>
+            <div className="text-xs text-gray-700 font-medium">{data.transport.airport_to_city}</div>
+          </div>
+        )}
+        {data.transport?.local_options?.length > 0 && (
+          <div className="mb-2">
+            <div className="text-xs font-bold text-gray-400 mb-1.5">{t("transport_local_label")}</div>
+            <div className="flex flex-wrap gap-1">
+              {data.transport.local_options.map((opt, i) => (
+                <span key={i} className="text-xs px-2 py-1 rounded-xl bg-purple-50 text-purple-700 font-bold">{opt}</span>
+              ))}
+            </div>
+          </div>
+        )}
+        {data.transport?.best_app && <InfoRow label={t("transport_app_label")} value={data.transport.best_app} />}
+        {data.transport?.driving && <InfoRow label={t("transport_driving_label")} value={data.transport.driving} />}
+      </SectionCard>
+
+      {/* Practical */}
+      <SectionCard color="linear-gradient(90deg,#f59e0b,#f97316)" title={t("practical_section_title")}>
+        <InfoRow label={t("practical_power_label")} value={data.practical?.power_socket} />
+        <InfoRow label={t("practical_tipping_label")} value={data.practical?.tipping} />
+        <InfoRow label={t("practical_currency_label")} value={data.practical?.currency_tips} />
+        <InfoRow label={t("practical_sim_label")} value={data.practical?.sim_card} />
+        {data.practical?.best_apps?.length > 0 && (
+          <div className="py-1.5">
+            <div className="text-xs font-bold text-gray-400 mb-1">{t("practical_apps_label")}</div>
+            <div className="flex flex-wrap gap-1">
+              {data.practical.best_apps.map((app, i) => (
+                <span key={i} className="text-xs px-2 py-0.5 rounded-full bg-orange-50 text-orange-600 font-bold">📱 {app}</span>
+              ))}
+            </div>
+          </div>
+        )}
+      </SectionCard>
+
+      {/* Pre-trip Checklist */}
+      {data.checklist && (
+        <SectionCard color={G} title={t("checklist_section_title")}>
+          {[
+            { key: "documents", icon: "📋", labelKey: "checklist_documents" },
+            { key: "health",    icon: "💊", labelKey: "checklist_health" },
+            { key: "money",     icon: "💰", labelKey: "checklist_money" },
+            { key: "tech",      icon: "📱", labelKey: "checklist_tech" },
+            { key: "extras",    icon: "🎒", labelKey: "checklist_extras" },
+          ].map(cat => {
+            const items = data.checklist[cat.key] || [];
+            if (!items.length) return null;
+            return (
+              <div key={cat.key} className="mb-3 last:mb-0">
+                <div className="text-xs font-black text-gray-500 mb-1.5">{cat.icon} {t(cat.labelKey)}</div>
+                <div className="space-y-1.5">
+                  {items.map((item, i) => {
+                    const ck = `${cat.key}_${i}`;
+                    return (
+                      <button key={i} onClick={() => toggleCheck(ck)}
+                        className="flex items-center gap-2.5 w-full text-left">
+                        <div className="w-5 h-5 rounded-lg border-2 flex items-center justify-center flex-shrink-0 transition-all"
+                          style={checked[ck]
+                            ? { background: "#f97316", borderColor: "#f97316" }
+                            : { borderColor: "#ffedd5" }}>
+                          {checked[ck] && <span className="text-white text-xs font-black">✓</span>}
+                        </div>
+                        <span className="text-xs font-medium flex-1" style={{ color: checked[ck] ? "#9ca3af" : "#374151", textDecoration: checked[ck] ? "line-through" : "none" }}>
+                          {item}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+          {(() => {
+            const total = Object.values(data.checklist).flat().length;
+            const done = Object.values(checked).filter(Boolean).length;
+            return total > 0 ? (
+              <div className="mt-3 pt-3 border-t border-orange-100">
+                <div className="flex justify-between text-xs font-bold text-gray-500 mb-1">
+                  <span>{t("checklist_progress")}</span>
+                  <span style={{ color: "#f97316" }}>{done}/{total}</span>
+                </div>
+                <div className="h-2 bg-orange-50 rounded-full overflow-hidden">
+                  <div className="h-full rounded-full transition-all" style={{ width: `${(done/total)*100}%`, background: G }} />
+                </div>
+              </div>
+            ) : null;
+          })()}
+        </SectionCard>
+      )}
+
+    </div>
+  );
+}
+
 // ─── Local Tab ────────────────────────────────────────────────────────────────
 function LocalTab({ trip }) {
   const G = "linear-gradient(135deg,#f97316,#ec4899)";
@@ -923,10 +1193,12 @@ function TripContent() {
   const [showSurprise, setShowSurprise] = useState(false);
   const [packingData, setPackingData] = useState(null);
   const [printLoading, setPrintLoading] = useState(false);
+  const [dayForecast, setDayForecast] = useState(null);
 
   const TABS = [
     { id: "itinerary", labelKey: "tab_itinerary", icon: "🗓️" },
     { id: "book",      labelKey: "tab_book",      icon: "✈️" },
+    { id: "info",      labelKey: "tab_info",      icon: "ℹ️" },
     { id: "pack",      labelKey: "tab_pack",      icon: "🧳" },
     { id: "expenses",  labelKey: "tab_expenses",  icon: "💸" },
     { id: "local",     labelKey: "tab_local",     icon: "🌐" },
@@ -948,6 +1220,30 @@ function TripContent() {
     if (searchParams.get("edit") === "true") setEditMode(true);
     if (searchParams.get("surprise") === "true") setShowSurprise(true);
   }, [id, router, searchParams]);
+
+  useEffect(() => {
+    if (!trip?.destination || !trip?.form?.startDate) return;
+    const dest = trip.destination.split(",")[0];
+    let cancelled = false;
+    async function loadForecast() {
+      try {
+        const geo = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(dest)}&count=1&language=en&format=json`).then(r => r.json());
+        const loc = geo.results?.[0];
+        if (!loc || cancelled) return;
+        const start = trip.form.startDate.split("T")[0];
+        const end = trip.form.endDate?.split("T")[0] || start;
+        const wx = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${loc.latitude}&longitude=${loc.longitude}&daily=weathercode,temperature_2m_max,temperature_2m_min&start_date=${start}&end_date=${end}&timezone=auto`).then(r => r.json());
+        if (cancelled) return;
+        const codes = wx.daily?.weathercode || [];
+        const maxes = wx.daily?.temperature_2m_max || [];
+        const mins = wx.daily?.temperature_2m_min || [];
+        const WMO = {0:"☀️",1:"🌤️",2:"⛅",3:"☁️",45:"🌫️",48:"🌫️",51:"🌦️",53:"🌦️",55:"🌧️",61:"🌧️",63:"🌧️",65:"🌧️",71:"❄️",73:"❄️",75:"❄️",80:"🌦️",81:"🌧️",82:"⛈️",95:"⛈️",99:"⛈️"};
+        if (!cancelled) setDayForecast(codes.map((code, i) => ({ emoji: WMO[code] ?? "🌡️", max: Math.round(maxes[i]), min: Math.round(mins[i]) })));
+      } catch {}
+    }
+    loadForecast();
+    return () => { cancelled = true; };
+  }, [trip]);
 
   const persist = useCallback((updated) => {
     updateTrip(id, updated);
@@ -1299,9 +1595,10 @@ function TripContent() {
                 <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2 mb-4">
                   {daily_itinerary.map((day,i)=>(
                     <button key={i} onClick={()=>setActiveDay(i)}
-                      className="flex-shrink-0 px-4 py-2 rounded-2xl text-sm font-bold transition-all"
+                      className="flex-shrink-0 px-4 py-2 rounded-2xl text-sm font-bold transition-all flex items-center gap-1"
                       style={activeDay===i ? {background:hero,color:"white",boxShadow:`0 4px 12px ${theme.g[0]}40`} : {background:"white",color:"#6b7280",border:"2px solid #ffedd5"}}>
                       {t("day_label")} {day.day}
+                      {dayForecast?.[i] && <span className="text-xs">{dayForecast[i].emoji}</span>}
                     </button>
                   ))}
                 </div>
@@ -1314,8 +1611,13 @@ function TripContent() {
                           <div className="text-xs font-black uppercase tracking-widest mb-1" style={{color:theme.g[0]}}>
                             {t("day_label")} {daily_itinerary[activeDay].day} · {daily_itinerary[activeDay].date}
                           </div>
-                          <h3 className="text-xl font-black text-gray-900">
+                          <h3 className="text-xl font-black text-gray-900 flex items-center flex-wrap gap-2">
                             {editMode ? <Editable value={daily_itinerary[activeDay].title} onChange={v=>updateDayField(activeDay,"title",v)}/> : daily_itinerary[activeDay].title}
+                            {dayForecast?.[activeDay] && (
+                              <span className="inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: "#fff7ed", color: "#f97316" }}>
+                                {dayForecast[activeDay].emoji} {dayForecast[activeDay].max}°/{dayForecast[activeDay].min}°
+                              </span>
+                            )}
                           </h3>
                           <p className="text-sm text-gray-400 mt-1">
                             🏨 {editMode ? <Editable value={daily_itinerary[activeDay].accommodation} onChange={v=>updateDayField(activeDay,"accommodation",v)} placeholder="Add hotel..."/> : daily_itinerary[activeDay].accommodation}
@@ -1481,6 +1783,9 @@ function TripContent() {
 
         {/* BOOK TAB */}
         {activeTab === "book" && <BookTab trip={{ ...trip, id }} onTripUpdate={setTrip} />}
+
+        {/* INFO TAB */}
+        {activeTab === "info" && <InfoTab trip={trip} tripId={id} />}
 
         {/* PACK TAB */}
         {activeTab === "pack" && <PackTab trip={trip}/>}
