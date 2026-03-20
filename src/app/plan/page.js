@@ -583,10 +583,6 @@ export default function PlanPage() {
       const id = generateId();
       saveTrip(id, { ...tripData, form: data });
       clearPlanChat();
-      if ("Notification" in window && Notification.permission === "granted") {
-        new Notification("✈️ Trip Ready!", { body: `Your ${tripData.destination} itinerary is ready!`, icon: "/icons/icon-192.png" });
-      }
-      // Navigate immediately — use window.location for guaranteed redirect
       window.location.href = `/trip/${id}`;
     } catch (err) {
       setError(err.message);
