@@ -589,6 +589,184 @@ function ExpensesTab({ trip, expenses, onAdd, onDelete }) {
   );
 }
 
+// ─── Book Tab ─────────────────────────────────────────────────────────────────
+function BookTab({ trip, onTripUpdate }) {
+  const G = "linear-gradient(135deg,#f97316,#ec4899)";
+  const { t } = useLanguage();
+  const [flightOrigin, setFlightOrigin] = useState(trip.flight_origin || "");
+  const [chosenHotel, setChosenHotel] = useState(trip.chosen_hotel ?? null);
+
+  function saveOrigin(val) {
+    setFlightOrigin(val);
+    const stored = JSON.parse(localStorage.getItem(`aigency_trip_${trip.id}`) || "{}");
+    stored.flight_origin = val;
+    localStorage.setItem(`aigency_trip_${trip.id}`, JSON.stringify(stored));
+  }
+
+  function chooseHotel(idx) {
+    const next = chosenHotel === idx ? null : idx;
+    setChosenHotel(next);
+    const stored = JSON.parse(localStorage.getItem(`aigency_trip_${trip.id}`) || "{}");
+    stored.chosen_hotel = next;
+    localStorage.setItem(`aigency_trip_${trip.id}`, JSON.stringify(stored));
+  }
+
+  const hotels = trip.recommended_hotels || [];
+  const restaurants = trip.recommended_restaurants || [];
+  const flightBudget = trip.budget_breakdown?.flights || trip.budget_breakdown?.transportation || null;
+  const dest = trip.destination || "";
+  const startDate = trip.form?.startDate || "";
+  const endDate = trip.form?.endDate || "";
+  const travelers = trip.form?.travelers || trip.travelers || 1;
+
+  // Build a Google Flights search URL
+  function flightSearchUrl() {
+    const base = "https://www.google.com/travel/flights";
+    return base;
+  }
+
+  // Build a Booking.com search URL
+  function hotelSearchUrl(hotelName) {
+    const q = encodeURIComponent(`${hotelName} ${dest}`);
+    return `https://www.booking.com/search.html?ss=${q}`;
+  }
+
+  return (
+    <div className="space-y-4">
+
+      {/* ── Flights ── */}
+      <div className="bg-white rounded-2xl border border-orange-100 shadow-sm overflow-hidden">
+        <div className="h-1" style={{ background: G }} />
+        <div className="p-4">
+          <h3 className="font-black text-gray-900 mb-3 flex items-center gap-2">
+            {t("book_flights_title")}
+          </h3>
+          <div className="space-y-2 mb-3">
+            <div className="flex gap-2 items-center">
+              <span className="text-xs font-bold text-gray-400 w-6 text-right">{t("flight_origin_label")}</span>
+              <input
+                value={flightOrigin}
+                onChange={e => saveOrigin(e.target.value)}
+                placeholder={t("flight_origin_placeholder")}
+                className="flex-1 text-sm font-bold rounded-xl px-3 py-2.5 border-2 border-orange-100 focus:border-orange-300 focus:outline-none"
+              />
+            </div>
+            <div className="flex gap-2 items-center">
+              <span className="text-xs font-bold text-gray-400 w-6 text-right">{t("flight_to_label")}</span>
+              <div className="flex-1 text-sm font-bold rounded-xl px-3 py-2.5 bg-orange-50 text-gray-700">{dest}</div>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-2 mb-3">
+            <div className="rounded-xl bg-gray-50 px-3 py-2">
+              <div className="text-xs text-gray-400 font-bold">{t("flight_dates_label")}</div>
+              <div className="text-xs font-black text-gray-800 mt-0.5">{startDate} → {endDate}</div>
+            </div>
+            <div className="rounded-xl bg-gray-50 px-3 py-2">
+              <div className="text-xs text-gray-400 font-bold">{t("flight_travelers_label")}</div>
+              <div className="text-xs font-black text-gray-800 mt-0.5">{travelers} 👤</div>
+            </div>
+          </div>
+          {flightBudget && (
+            <div className="rounded-xl bg-orange-50 px-3 py-2 mb-3">
+              <div className="text-xs text-orange-400 font-bold">{t("flight_budget_label")}</div>
+              <div className="text-sm font-black text-orange-600">{trip.currency} {flightBudget.toLocaleString()}</div>
+            </div>
+          )}
+          <a href={flightSearchUrl()} target="_blank" rel="noopener noreferrer"
+            className="flex items-center justify-center gap-2 w-full py-3 rounded-2xl text-white font-black text-sm shadow-md"
+            style={{ background: G }}>
+            {t("search_flights_btn")}
+          </a>
+        </div>
+      </div>
+
+      {/* ── Hotels ── */}
+      <div className="bg-white rounded-2xl border border-orange-100 shadow-sm overflow-hidden">
+        <div className="h-1" style={{ background: "linear-gradient(90deg,#f97316,#f59e0b)" }} />
+        <div className="p-4">
+          <h3 className="font-black text-gray-900 mb-3">{t("book_hotels_title")}</h3>
+          {hotels.length === 0 ? (
+            <p className="text-sm text-gray-400 text-center py-4">{t("no_hotels")}</p>
+          ) : (
+            <div className="space-y-3">
+              {hotels.map((h, i) => {
+                const isChosen = chosenHotel === i;
+                const stars = Math.min(5, Math.max(1, Number(h.stars) || 3));
+                return (
+                  <div key={i} className="rounded-2xl border-2 p-3 transition-all"
+                    style={{ borderColor: isChosen ? "#f97316" : "#ffedd5", background: isChosen ? "#fff7ed" : "white" }}>
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <div className="font-black text-gray-900 text-sm leading-tight">{h.name}</div>
+                        <div className="text-orange-400 text-xs mt-0.5">{"⭐".repeat(stars)} · {h.area}</div>
+                        {h.why && <div className="text-xs text-gray-500 mt-1 leading-relaxed">"{h.why}"</div>}
+                        {h.price_per_night > 0 && (
+                          <div className="text-sm font-black text-orange-500 mt-1">
+                            {trip.currency} {h.price_per_night}{t("price_per_night_short")}
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex flex-col gap-1.5 flex-shrink-0">
+                        <button onClick={() => chooseHotel(i)}
+                          className="text-xs font-black px-3 py-1.5 rounded-xl transition-all"
+                          style={isChosen
+                            ? { background: "#f97316", color: "white" }
+                            : { background: "#ffedd5", color: "#f97316" }}>
+                          {isChosen ? "✓" : t("mark_as_chosen")}
+                        </button>
+                        <a href={hotelSearchUrl(h.name)} target="_blank" rel="noopener noreferrer"
+                          className="text-xs font-black px-3 py-1.5 rounded-xl text-center border-2 border-orange-100 text-orange-400 hover:bg-orange-50">
+                          {t("book_hotel_btn")}
+                        </a>
+                      </div>
+                    </div>
+                    {isChosen && (
+                      <div className="mt-2 text-xs font-bold text-orange-500 flex items-center gap-1">
+                        <span>✓</span> {t("my_chosen_hotel")}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ── Restaurants ── */}
+      {restaurants.length > 0 && (
+        <div className="bg-white rounded-2xl border border-orange-100 shadow-sm overflow-hidden">
+          <div className="h-1" style={{ background: "linear-gradient(90deg,#ec4899,#8b5cf6)" }} />
+          <div className="p-4">
+            <h3 className="font-black text-gray-900 mb-3">{t("book_restaurants_title")}</h3>
+            <div className="space-y-2">
+              {restaurants.map((r, i) => (
+                <div key={i} className="flex items-start gap-3 rounded-2xl bg-gray-50 p-3">
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg flex-shrink-0 bg-pink-100">🍽️</div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-black text-gray-900 text-sm">{r.name}</div>
+                    <div className="text-xs text-gray-500 mt-0.5">
+                      {r.type && <span>{t("cuisine_label")} {r.type} · </span>}
+                      {r.price_range && <span>{t("price_range_label")} {r.price_range}</span>}
+                    </div>
+                    {r.must_try && <div className="text-xs text-orange-500 font-bold mt-0.5">{t("must_try_label")} {r.must_try}</div>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Note ── */}
+      <div className="rounded-2xl bg-orange-50 border border-orange-100 p-4 text-center">
+        <p className="text-xs text-orange-400 font-medium leading-relaxed">{t("booking_note")}</p>
+      </div>
+
+    </div>
+  );
+}
+
 // ─── Local Tab ────────────────────────────────────────────────────────────────
 function LocalTab({ trip }) {
   const G = "linear-gradient(135deg,#f97316,#ec4899)";
@@ -748,6 +926,7 @@ function TripContent() {
 
   const TABS = [
     { id: "itinerary", labelKey: "tab_itinerary", icon: "🗓️" },
+    { id: "book",      labelKey: "tab_book",      icon: "✈️" },
     { id: "pack",      labelKey: "tab_pack",      icon: "🧳" },
     { id: "expenses",  labelKey: "tab_expenses",  icon: "💸" },
     { id: "local",     labelKey: "tab_local",     icon: "🌐" },
@@ -1299,6 +1478,9 @@ function TripContent() {
             </section>
           </>
         )}
+
+        {/* BOOK TAB */}
+        {activeTab === "book" && <BookTab trip={{ ...trip, id }} onTripUpdate={setTrip} />}
 
         {/* PACK TAB */}
         {activeTab === "pack" && <PackTab trip={trip}/>}
