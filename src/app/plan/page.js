@@ -457,7 +457,7 @@ export default function PlanPage() {
     setMode("ai");
     setChatMsgs([{
       role: "assistant",
-      content: "Hey! I'm Claude, your personal AI travel planner 🌍\n\nWhere in the world are you dreaming of going?\nPick a country below or just type any destination:",
+      content: t("claude_greeting_initial"),
       cities: null, options: null, multiOptions: null, datePicker: false, budgetPicker: false, countryPicker: true, streaming: false, initial: true,
     }]);
     setCollectedData(null);
@@ -491,9 +491,14 @@ export default function PlanPage() {
               const parsed = JSON.parse(line.slice(6));
               if (parsed.text) {
                 fullText += parsed.text;
+                // Hide [READY] block during streaming — show a friendly message instead
+                const hasReady = fullText.includes("[READY]");
+                const displayText = hasReady
+                  ? fullText.split("[READY]")[0].trim() || t("building_itinerary_msg", { destination: "..." })
+                  : fullText;
                 setChatMsgs(prev => {
                   const updated = [...prev];
-                  updated[updated.length - 1] = { role: "assistant", content: fullText, streaming: true };
+                  updated[updated.length - 1] = { role: "assistant", content: displayText, streaming: true };
                   return updated;
                 });
                 scrollBottom();
@@ -509,7 +514,7 @@ export default function PlanPage() {
         const updated = [...prev];
         updated[updated.length - 1] = {
           role: "assistant",
-          content: cleanText || fullText,
+          content: cleanText.trim() !== "" ? cleanText : (ready ? "" : fullText),
           cities, options, multiOptions, datePicker, budgetPicker,
           streaming: false,
         };
@@ -578,16 +583,11 @@ export default function PlanPage() {
       const id = generateId();
       saveTrip(id, { ...tripData, form: data });
       clearPlanChat();
-      // Request notification permission & send trip-ready notification
-      if ("Notification" in window && Notification.permission === "default") {
-        Notification.requestPermission().then(perm => {
-          if (perm === "granted") new Notification("✈️ Trip Ready!", { body: `Your ${tripData.destination} itinerary is ready!`, icon: "/icons/icon-192.png" });
-        });
-      } else if (Notification.permission === "granted") {
+      if ("Notification" in window && Notification.permission === "granted") {
         new Notification("✈️ Trip Ready!", { body: `Your ${tripData.destination} itinerary is ready!`, icon: "/icons/icon-192.png" });
       }
-      await new Promise(r => setTimeout(r, 100));
-      router.push(`/trip/${id}`);
+      // Navigate immediately — use window.location for guaranteed redirect
+      window.location.href = `/trip/${id}`;
     } catch (err) {
       setError(err.message);
       setChatMsgs(prev => [...prev, {
@@ -625,8 +625,7 @@ export default function PlanPage() {
       if (!res.ok) throw new Error(tripData.error || "Generation failed.");
       const id = generateId();
       saveTrip(id, { ...tripData, isSurprise: true, form: data });
-      await new Promise(r => setTimeout(r, 100));
-      router.push(`/trip/${id}?surprise=true`);
+      window.location.href = `/trip/${id}?surprise=true`;
     } catch (err) {
       setError(err.message);
     } finally {
