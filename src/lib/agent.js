@@ -22,10 +22,10 @@ export function buildAffiliateUrl(baseUrl, agentCode) {
 
 // Affiliate IDs - to be filled in when available
 export const AFFILIATE_IDS = {
-  booking: "",      // e.g. "1234567"  → aid=1234567
-  getyourguide: "", // e.g. "ABCD1234" → partner_id=ABCD1234
-  skyscanner: "",   // token
-  rentalcars: "",   // id
+  booking: "",           // e.g. "1234567"  → aid=1234567 (pending CJ approval)
+  getyourguide: "HSDEI5O", // referral code — update with numeric partner_id from dashboard
+  skyscanner: "",        // token
+  rentalcars: "",        // id
 };
 
 export function bookingUrl(destination, checkin, checkout, guests) {
@@ -47,9 +47,12 @@ export function skyscannerUrl(origin, destination, date, guests) {
 export function getYourGuideUrl(destination) {
   const dest = destination.split(",")[0].toLowerCase().replace(/\s+/g, "-");
   const base = `https://www.getyourguide.com/${dest}-l/`;
-  return AFFILIATE_IDS.getyourguide
+  if (!AFFILIATE_IDS.getyourguide) return base;
+  // If numeric → partner_id param. If alphanumeric → referral format
+  const isNumeric = /^\d+$/.test(AFFILIATE_IDS.getyourguide);
+  return isNumeric
     ? `${base}?partner_id=${AFFILIATE_IDS.getyourguide}`
-    : base;
+    : `${base}?cmp=referral_${AFFILIATE_IDS.getyourguide}`;
 }
 
 export function rentalcarsUrl(destination, pickup, dropoff) {
