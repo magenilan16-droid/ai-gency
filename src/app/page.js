@@ -262,6 +262,14 @@ function WelcomePage() {
           </div>
         </div>
       </div>
+
+      {/* For Agents Footer Link */}
+      <div className="text-center py-6 pb-28">
+        <Link href="/for-agents"
+          className="text-xs font-bold text-gray-400 hover:text-orange-400 transition-colors">
+          ✈️ Are you a travel agent? Get your free referral link →
+        </Link>
+      </div>
     </div>
   );
 }
@@ -421,6 +429,14 @@ function Dashboard({ trips }) {
               {t("new_trip_link")}
             </Link>
           </div>
+        </div>
+
+        {/* For Agents */}
+        <div className="text-center pt-2 pb-4">
+          <Link href="/for-agents"
+            className="text-xs font-bold text-gray-400 hover:text-orange-400 transition-colors">
+            ✈️ Are you a travel agent? Get your free referral link →
+          </Link>
         </div>
       </div>
     </div>
