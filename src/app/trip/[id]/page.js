@@ -359,6 +359,7 @@ function PackTab({ trip }) {
   const checkedKey = `aigency_pack_checked_${trip.destination}_${trip.days}`;
   const [data, setData]       = useState(() => { try { const c = localStorage.getItem(cacheKey); return c ? JSON.parse(c) : null; } catch { return null; } });
   const [loading, setLoading] = useState(false);
+  const [error, setError]     = useState(false);
   const [checked, setChecked] = useState(() => { try { const c = localStorage.getItem(checkedKey); return c ? JSON.parse(c) : {}; } catch { return {}; } });
   const loaded = useRef(false);
 
@@ -367,12 +368,20 @@ function PackTab({ trip }) {
     try { localStorage.setItem(checkedKey, JSON.stringify(next)); } catch {}
   }
 
-  useEffect(() => {
-    if (loaded.current || data) return;
+  function loadPack() {
     loaded.current = true;
     setLoading(true);
+    setError(false);
     fetch("/api/suggest", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ type:"packing", trip, language: lang }) })
-      .then(r=>r.json()).then(r=>{ if(r.ok) { setData(r.data); try { localStorage.setItem(cacheKey, JSON.stringify(r.data)); } catch {} } }).catch(()=>{}).finally(()=>setLoading(false));
+      .then(r=>r.json())
+      .then(r=>{ if(r.ok && r.data) { setData(r.data); try { localStorage.setItem(cacheKey, JSON.stringify(r.data)); } catch {} } else { setError(true); } })
+      .catch(()=>{ setError(true); })
+      .finally(()=>setLoading(false));
+  }
+
+  useEffect(() => {
+    if (loaded.current || data) return;
+    loadPack();
   }, []);
 
   const total  = data?.categories?.flatMap(c=>c.items||[]).length || 0;
@@ -398,10 +407,16 @@ function PackTab({ trip }) {
           <div className="w-12 h-12 rounded-full border-4 border-orange-300 border-t-transparent animate-spin"/>
           <p className="text-sm text-gray-400 font-medium">{t("ai_packing_list")}</p>
         </div>
-      ) : !data ? (
+      ) : error || !data ? (
         <div className="text-center py-12 text-gray-400">
           <div className="text-4xl mb-3">🧳</div>
-          <p className="font-medium">{t("could_not_load_packing")}</p>
+          <p className="font-medium mb-4">{t("could_not_load_packing")}</p>
+          <button
+            onClick={() => { loaded.current = false; try { localStorage.removeItem(cacheKey); } catch {} loadPack(); }}
+            className="px-5 py-2.5 rounded-xl text-sm font-black text-white"
+            style={{ background: "linear-gradient(135deg,#f97316,#ec4899)" }}>
+            {t("retry")}
+          </button>
         </div>
       ) : (
         (data.categories || []).map((cat, ci) => (
