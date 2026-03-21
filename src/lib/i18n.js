@@ -508,6 +508,55 @@ export const translations = {
     trip_template_backpacker: "🎒 Backpacker",
     trip_template_family: "👨‍👩‍👧 Family Trip",
     trip_template_use: "Use Template →",
+
+    // New tabs
+    tab_map: "Map",
+    tab_currency: "Currency",
+    tab_docs: "Docs",
+    tab_visa: "Visa",
+
+    // Currency tab
+    currency_tab_title: "Live Exchange Rates",
+    currency_converter: "Converter",
+    currency_last_updated: "Updated",
+    currency_amount: "Amount",
+
+    // Map tab
+    map_title: "Map & Navigation",
+    map_open_google: "Google Maps",
+    map_open_apple: "Apple Maps",
+    map_open_waze: "Waze",
+    map_attractions: "Attractions",
+
+    // Visa tab
+    visa_title: "Visa Requirements",
+    visa_free: "Visa Free ✓",
+    visa_required: "Visa Required",
+    visa_your_nationality: "Your passport",
+    visa_duration: "Stay allowed",
+    visa_cost: "Visa cost",
+    visa_processing: "Processing",
+    visa_requirements: "What you need",
+    visa_apply: "Apply online",
+
+    // Documents tab
+    docs_title: "Documents",
+    docs_add: "Add Document",
+    docs_empty: "No documents yet",
+    docs_passport: "Passport",
+    docs_tickets: "Tickets",
+    docs_hotel: "Hotel",
+    docs_insurance: "Insurance",
+    docs_other: "Other",
+    docs_all: "All",
+    docs_download: "Download",
+    docs_delete: "Delete",
+
+    // Group split
+    split_title: "Split Equally",
+    split_per_person: "per person",
+    split_travelers: "travelers",
+    split_total: "Total spent",
   },
 
   he: {
@@ -1017,6 +1066,55 @@ export const translations = {
     trip_template_backpacker: "🎒 גב ותרמיל",
     trip_template_family: "👨‍👩‍👧 טיול משפחתי",
     trip_template_use: "השתמש בתבנית →",
+
+    // New tabs
+    tab_map: "מפה",
+    tab_currency: "מטבע",
+    tab_docs: "מסמכים",
+    tab_visa: "ויזה",
+
+    // Currency tab
+    currency_tab_title: "שערי חליפין",
+    currency_converter: "מחשבון",
+    currency_last_updated: "עודכן",
+    currency_amount: "סכום",
+
+    // Map tab
+    map_title: "מפה וניווט",
+    map_open_google: "Google Maps",
+    map_open_apple: "Apple Maps",
+    map_open_waze: "Waze",
+    map_attractions: "אטרקציות",
+
+    // Visa tab
+    visa_title: "דרישות ויזה",
+    visa_free: "ללא ויזה ✓",
+    visa_required: "נדרשת ויזה",
+    visa_your_nationality: "הדרכון שלך",
+    visa_duration: "משך השהייה",
+    visa_cost: "עלות ויזה",
+    visa_processing: "זמן עיבוד",
+    visa_requirements: "מה צריך",
+    visa_apply: "הגש בקשה",
+
+    // Documents tab
+    docs_title: "מסמכים",
+    docs_add: "הוסף מסמך",
+    docs_empty: "אין מסמכים עדיין",
+    docs_passport: "דרכון",
+    docs_tickets: "כרטיסים",
+    docs_hotel: "מלון",
+    docs_insurance: "ביטוח",
+    docs_other: "אחר",
+    docs_all: "הכל",
+    docs_download: "הורדה",
+    docs_delete: "מחק",
+
+    // Group split
+    split_title: "חלוקה שווה",
+    split_per_person: "לאדם",
+    split_travelers: "נוסעים",
+    split_total: "סה\"כ הוצאות",
   },
 };
 

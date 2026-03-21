@@ -5,6 +5,10 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { getTrip, updateTrip, generateId } from "@/lib/trips";
 import { useLanguage } from "@/app/LanguageProvider";
+import CurrencyTab from "./CurrencyTab";
+import MapTab from "./MapTab";
+import DocsTab from "./DocsTab";
+import VisaTab from "./VisaTab";
 
 // ─── Themes ───────────────────────────────────────────────────────────────────
 const DEST_THEMES = {
@@ -470,6 +474,7 @@ function ExpensesTab({ trip, expenses, onAdd, onDelete }) {
 
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ name: "", amount: "", category: "food", date: new Date().toISOString().split("T")[0] });
+  const [splitN, setSplitN] = useState(trip.form?.travelers || trip.travelers || 2);
   const set = (k,v) => setForm(p=>({...p,[k]:v}));
 
   const totalSpent    = expenses.reduce((s,e)=>s+(Number(e.amount)||0),0);
@@ -550,6 +555,28 @@ function ExpensesTab({ trip, expenses, onAdd, onDelete }) {
             </div>
           </div>
           <p className="text-xs text-gray-400 text-center mt-2">{t("split_costs_note", { n: travelers })}</p>
+        </div>
+      )}
+
+      {/* ── Group Split ── */}
+      {expenses.length > 0 && (
+        <div className="rounded-2xl p-4 shadow-sm" style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}>
+          <h3 className="text-sm font-black mb-3" style={{ color: "var(--text-main)" }}>🤝 {t("split_title")}</h3>
+          <div className="flex items-center gap-3 mb-3">
+            <span className="text-xs font-bold" style={{ color: "var(--text-sub)" }}>{t("split_travelers")}</span>
+            <div className="flex items-center gap-2">
+              <button onClick={() => setSplitN(n => Math.max(1, n-1))} className="w-8 h-8 rounded-full bg-orange-100 text-orange-600 font-black text-lg flex items-center justify-center">-</button>
+              <span className="w-8 text-center font-black text-lg" style={{ color: "var(--text-main)" }}>{splitN}</span>
+              <button onClick={() => setSplitN(n => n+1)} className="w-8 h-8 rounded-full bg-orange-100 text-orange-600 font-black text-lg flex items-center justify-center">+</button>
+            </div>
+          </div>
+          <div className="rounded-xl p-3 text-center" style={{ background: "linear-gradient(135deg,#f97316,#ec4899)" }}>
+            <div className="text-white/70 text-xs font-bold mb-1">{t("split_per_person")}</div>
+            <div className="text-white text-2xl font-black">
+              {trip.currency || "$"}{(expenses.reduce((s,e)=>s+(parseFloat(e.amount)||0),0) / splitN).toFixed(2)}
+            </div>
+            <div className="text-white/60 text-xs mt-1">{t("split_total")}: {trip.currency || "$"}{expenses.reduce((s,e)=>s+(parseFloat(e.amount)||0),0).toFixed(2)}</div>
+          </div>
         </div>
       )}
 
@@ -1347,10 +1374,14 @@ function TripContent() {
   const TABS = [
     { id: "itinerary", labelKey: "tab_itinerary", icon: "🗓️" },
     { id: "book",      labelKey: "tab_book",      icon: "✈️" },
+    { id: "map",       labelKey: "tab_map",       icon: "🗺️" },
+    { id: "currency",  labelKey: "tab_currency",  icon: "💱" },
     { id: "info",      labelKey: "tab_info",      icon: "ℹ️" },
     { id: "pack",      labelKey: "tab_pack",      icon: "🧳" },
     { id: "expenses",  labelKey: "tab_expenses",  icon: "💸" },
     { id: "local",     labelKey: "tab_local",     icon: "🌐" },
+    { id: "visa",      labelKey: "tab_visa",      icon: "🛂" },
+    { id: "docs",      labelKey: "tab_docs",      icon: "📄" },
   ];
 
   const BUDGET_CATS = {
@@ -1368,6 +1399,24 @@ function TripContent() {
     setExpenses(tr.expenses || []);
     if (searchParams.get("edit") === "true") setEditMode(true);
     if (searchParams.get("surprise") === "true") setShowSurprise(true);
+    // Ask for notification permission and schedule reminder
+    if (tr.form?.startDate && "Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission().then(perm => {
+        if (perm === "granted" && tr.form?.startDate) {
+          const tripDate = new Date(tr.form.startDate);
+          const now = new Date();
+          const daysUntil = Math.ceil((tripDate - now) / (1000*60*60*24));
+          if (daysUntil > 0 && daysUntil <= 3) {
+            setTimeout(() => {
+              new Notification(`✈️ Trip to ${tr.destination} in ${daysUntil} day${daysUntil > 1 ? "s" : ""}!`, {
+                body: "Check your packing list and documents.",
+                icon: "/icon-192.png",
+              });
+            }, 3000);
+          }
+        }
+      });
+    }
   }, [id, router, searchParams]);
 
   useEffect(() => {
@@ -1984,6 +2033,10 @@ function TripContent() {
 
         {/* LOCAL TAB */}
         {activeTab === "local" && <LocalTab trip={trip}/>}
+        {activeTab === "map" && <MapTab trip={trip}/>}
+        {activeTab === "currency" && <CurrencyTab trip={trip}/>}
+        {activeTab === "visa" && <VisaTab trip={trip}/>}
+        {activeTab === "docs" && <DocsTab trip={trip}/>}
       </div>
 
       {/* ── Floating AI Button ── */}
