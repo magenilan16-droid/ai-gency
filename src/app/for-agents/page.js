@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { motion } from "framer-motion";
 
 const G = "linear-gradient(135deg,#f97316,#ec4899)";
 
@@ -60,10 +61,11 @@ export default function ForAgentsPage() {
       {/* ── Hero ── */}
       <section style={{ background: G, color: "white", padding: "64px 24px 80px" }}>
         <div style={{ maxWidth: 640, margin: "0 auto", textAlign: "center" }}>
-          <div style={{ fontSize: 14, fontWeight: 700, letterSpacing: 2, opacity: 0.85, marginBottom: 16, textTransform: "uppercase" }}>
-            For Travel Agents
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <span className="dot-live" />
+            <span className="label-micro" style={{ color: "rgba(255,255,255,0.85)" }}>FOR TRAVEL PROFESSIONALS</span>
           </div>
-          <h1 style={{ fontSize: "clamp(28px, 6vw, 48px)", fontWeight: 900, lineHeight: 1.15, marginBottom: 20 }}>
+          <h1 className="tracking-tighter font-black" style={{ fontSize: "clamp(32px, 6vw, 56px)", lineHeight: 1.1, marginBottom: 20 }}>
             Give Your Clients a 5-Star Planning Experience — For Free
           </h1>
           <p style={{ fontSize: "clamp(15px, 2.5vw, 20px)", opacity: 0.9, lineHeight: 1.6, marginBottom: 36, maxWidth: 520, margin: "0 auto 36px" }}>
@@ -88,17 +90,30 @@ export default function ForAgentsPage() {
         </div>
       </section>
 
+      {/* ── Stats bar ── */}
+      <div className="grid grid-cols-3 gap-4 max-w-lg mx-auto px-4 mb-8" style={{ marginTop: "-2rem", position: "relative", zIndex: 10 }}>
+        {[
+          { value: "8%", label: "Commission on activities" },
+          { value: "Free", label: "Forever for agents" },
+          { value: "30s", label: "Setup time" },
+        ].map((s, i) => (
+          <div key={i} className="rounded-[1.5rem] p-4 text-center shadow-sm" style={{ background: "white", border: "1px solid #ffedd5" }}>
+            <div className="text-2xl font-black tracking-tighter text-orange-500">{s.value}</div>
+            <div className="text-[9px] font-black uppercase tracking-[0.15em] text-gray-400 mt-1">{s.label}</div>
+          </div>
+        ))}
+      </div>
+
       {/* ── How it works ── */}
-      <section style={{ padding: "64px 24px", maxWidth: 720, margin: "0 auto" }}>
-        <h2 style={{ textAlign: "center", fontSize: 26, fontWeight: 900, color: "#111", marginBottom: 12 }}>How it works</h2>
+      <section style={{ padding: "48px 24px 64px", maxWidth: 720, margin: "0 auto" }}>
+        <h2 className="tracking-tighter font-black" style={{ textAlign: "center", fontSize: 28, color: "#111", marginBottom: 12 }}>How it works</h2>
         <p style={{ textAlign: "center", color: "#6b7280", marginBottom: 40, fontSize: 15 }}>Three simple steps to start earning</p>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))", gap: 24 }}>
           {steps.map(s => (
-            <div key={s.num} style={{
+            <div key={s.num} className="card-hover rounded-[1.75rem]" style={{
               background: "white",
               border: "1px solid #ffedd5",
-              borderRadius: 20,
-              padding: "28px 20px",
+              padding: "32px 24px",
               textAlign: "center",
               boxShadow: "0 2px 12px rgba(249,115,22,0.07)",
             }}>
@@ -108,7 +123,7 @@ export default function ForAgentsPage() {
                 margin: "0 auto 16px"
               }}>{s.num}</div>
               <div style={{ fontSize: 28, marginBottom: 8 }}>{s.icon}</div>
-              <h3 style={{ fontWeight: 900, fontSize: 16, color: "#111", marginBottom: 6 }}>{s.title}</h3>
+              <h3 className="tracking-tighter font-black" style={{ fontSize: 16, color: "#111", marginBottom: 6 }}>{s.title}</h3>
               <p style={{ fontSize: 13, color: "#6b7280", lineHeight: 1.5 }}>{s.desc}</p>
             </div>
           ))}
@@ -118,26 +133,26 @@ export default function ForAgentsPage() {
       {/* ── What clients get ── */}
       <section style={{ background: "#fff7ed", padding: "64px 24px" }}>
         <div style={{ maxWidth: 720, margin: "0 auto" }}>
-          <h2 style={{ textAlign: "center", fontSize: 26, fontWeight: 900, color: "#111", marginBottom: 12 }}>What your clients get</h2>
+          <h2 className="tracking-tighter font-black" style={{ textAlign: "center", fontSize: 28, color: "#111", marginBottom: 12 }}>What your clients get</h2>
           <p style={{ textAlign: "center", color: "#6b7280", marginBottom: 40, fontSize: 15 }}>Everything they need for a perfect trip</p>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))", gap: 16 }}>
             {features.map(f => (
-              <div key={f.title} style={{
+              <motion.div key={f.title} whileHover={{ y: -4 }} className="rounded-[1.5rem]" style={{
                 background: "white",
                 border: "1px solid #ffedd5",
-                borderRadius: 16,
-                padding: "20px 16px",
+                padding: "24px 20px",
                 display: "flex",
                 gap: 12,
                 alignItems: "flex-start",
                 boxShadow: "0 1px 6px rgba(0,0,0,0.04)",
+                cursor: "default",
               }}>
                 <span style={{ fontSize: 24, flexShrink: 0 }}>{f.icon}</span>
                 <div>
-                  <div style={{ fontWeight: 800, fontSize: 14, color: "#111", marginBottom: 4 }}>{f.title}</div>
+                  <div className="tracking-tighter font-black" style={{ fontSize: 14, color: "#111", marginBottom: 4 }}>{f.title}</div>
                   <div style={{ fontSize: 12, color: "#6b7280", lineHeight: 1.4 }}>{f.desc}</div>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
@@ -145,7 +160,7 @@ export default function ForAgentsPage() {
 
       {/* ── Signup form ── */}
       <section id="signup" style={{ padding: "64px 24px", maxWidth: 520, margin: "0 auto" }}>
-        <h2 style={{ textAlign: "center", fontSize: 26, fontWeight: 900, color: "#111", marginBottom: 8 }}>
+        <h2 className="tracking-tighter font-black" style={{ textAlign: "center", fontSize: 28, color: "#111", marginBottom: 8 }}>
           {submitted ? "You're in! 🎉" : "Get your free agent link"}
         </h2>
         <p style={{ textAlign: "center", color: "#6b7280", marginBottom: 32, fontSize: 15 }}>
@@ -153,9 +168,9 @@ export default function ForAgentsPage() {
         </p>
 
         {submitted ? (
-          <div style={{
-            background: "white", border: "2px solid #f97316", borderRadius: 24,
-            padding: 28, boxShadow: "0 4px 24px rgba(249,115,22,0.12)"
+          <div className="rounded-[2rem]" style={{
+            background: "white", border: "2px solid #f97316",
+            padding: 32, boxShadow: "0 8px 32px rgba(249,115,22,0.12)"
           }}>
             <div style={{ marginBottom: 16 }}>
               <div style={{ fontSize: 12, fontWeight: 700, color: "#f97316", marginBottom: 6, textTransform: "uppercase", letterSpacing: 1 }}>Your Agent Code</div>
@@ -188,9 +203,9 @@ export default function ForAgentsPage() {
             </div>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} style={{
-            background: "white", border: "1px solid #ffedd5", borderRadius: 24,
-            padding: 28, boxShadow: "0 4px 24px rgba(249,115,22,0.08)"
+          <form onSubmit={handleSubmit} className="rounded-[2rem]" style={{
+            background: "white", border: "1px solid #ffedd5",
+            padding: 32, boxShadow: "0 8px 32px rgba(249,115,22,0.12)"
           }}>
             {[
               { name: "name", label: "Your Name", type: "text", placeholder: "John Smith" },

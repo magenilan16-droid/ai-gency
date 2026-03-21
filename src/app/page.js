@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { useLanguage } from "@/app/LanguageProvider";
 
 const G = "linear-gradient(135deg,#f97316,#ec4899)";
@@ -109,7 +110,7 @@ function WelcomePage() {
 
         {/* Badge */}
         <div
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-full border text-xs font-black mb-6 transition-all duration-700"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-full border font-black mb-6 transition-all duration-700"
           style={{
             borderColor: "#ffedd5",
             background: "rgba(255,237,213,0.6)",
@@ -118,13 +119,14 @@ function WelcomePage() {
             transform: visible ? "translateY(0)" : "translateY(12px)",
           }}
         >
-          <span className="w-2 h-2 rounded-full bg-orange-400 animate-pulse" />
+          <span className="dot-live" />
+          <span className="label-micro" style={{ color: "#f97316" }}>AI-POWERED</span>
           {t("hero_badge_text")}
         </div>
 
         {/* Headline */}
         <h1
-          className="text-5xl sm:text-6xl font-black leading-none mb-4 transition-all duration-700 delay-100"
+          className="text-5xl sm:text-7xl font-black leading-none tracking-tighter mb-4 transition-all duration-700 delay-100"
           style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(16px)" }}
         >
           <span style={{ color: "var(--text-main)" }}>{t("hero_headline_1")}</span>
@@ -179,17 +181,19 @@ function WelcomePage() {
           className="mt-12 w-full max-w-sm mx-auto transition-all duration-700 delay-300"
           style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(20px)" }}
         >
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-3">
             {EXAMPLES.map((ex, i) => (
-              <Link key={i} href="/plan"
-                className="rounded-2xl p-3 text-left hover:-translate-y-1 transition-all cursor-pointer"
-                style={{ background: "var(--bg-card)", border: "1px solid var(--border)", boxShadow: "0 2px 12px rgba(0,0,0,0.05)" }}
-              >
-                <div className="text-2xl mb-1">{ex.emoji}</div>
-                <div className="font-black text-xs" style={{ color: "var(--text-main)" }}>{ex.dest}</div>
-                <div className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>{ex.days} days · {ex.budget}</div>
-                <div className="text-xs font-bold mt-1" style={{ color: "#f97316" }}>{ex.style}</div>
-              </Link>
+              <motion.div key={i} whileHover={{ y: -5, transition: { duration: 0.2 } }}>
+                <Link href="/plan"
+                  className="block rounded-[1.5rem] p-4 text-left cursor-pointer card-hover"
+                  style={{ background: "var(--bg-card)", border: "1px solid var(--border)", boxShadow: "0 4px 20px rgba(249,115,22,0.08)" }}
+                >
+                  <div className="text-2xl mb-2">{ex.emoji}</div>
+                  <div className="font-black text-sm tracking-tight" style={{ color: "var(--text-main)" }}>{ex.dest}</div>
+                  <div className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>{ex.days} days · {ex.budget}</div>
+                  <div className="badge-premium mt-2">{ex.style}</div>
+                </Link>
+              </motion.div>
             ))}
           </div>
           <p className="text-center text-xs mt-3" style={{ color: "var(--text-muted)" }}>
@@ -200,7 +204,10 @@ function WelcomePage() {
 
       {/* ── How it works ── */}
       <div className="px-5 pb-16 max-w-lg mx-auto">
-        <h2 className="text-2xl font-black text-center mb-2" style={{ color: "var(--text-main)" }}>
+        <div className="text-center mb-3">
+          <span className="label-micro">HOW IT WORKS</span>
+        </div>
+        <h2 className="text-3xl font-black tracking-tighter text-center mb-2" style={{ color: "var(--text-main)" }}>
           {t("how_it_works_title")}
         </h2>
         <p className="text-center text-sm mb-8" style={{ color: "var(--text-sub)" }}>
@@ -212,45 +219,50 @@ function WelcomePage() {
             { n: "2", icon: "⚡", title: t("step2_title"), desc: t("step2_desc") },
             { n: "3", icon: "✈️", title: t("step3_title"), desc: t("step3_desc") },
           ].map(step => (
-            <div key={step.n} className="flex gap-4 items-start rounded-2xl p-4"
-              style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}>
-              <div className="w-10 h-10 rounded-2xl flex items-center justify-center text-white font-black text-sm flex-shrink-0"
+            <motion.div key={step.n} whileHover={{ y: -3, transition: { duration: 0.2 } }}
+              className="flex gap-4 items-start rounded-[1.75rem] p-5 card-hover"
+              style={{ background: "var(--bg-card)", border: "1px solid var(--border)", boxShadow: "0 4px 16px rgba(249,115,22,0.06)" }}>
+              <div className="w-11 h-11 rounded-2xl flex items-center justify-center text-white font-black text-sm flex-shrink-0"
                 style={{ background: G }}>
                 {step.n}
               </div>
               <div>
-                <div className="font-black text-sm mb-0.5" style={{ color: "var(--text-main)" }}>{step.icon} {step.title}</div>
+                <div className="font-black text-sm mb-1" style={{ color: "var(--text-main)" }}>{step.icon} {step.title}</div>
                 <div className="text-xs leading-relaxed" style={{ color: "var(--text-sub)" }}>{step.desc}</div>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>
 
       {/* ── Features grid ── */}
       <div className="px-5 pb-16 max-w-lg mx-auto">
-        <h2 className="text-2xl font-black text-center mb-8" style={{ color: "var(--text-main)" }}>
+        <div className="text-center mb-3">
+          <span className="label-micro">WHAT YOU GET</span>
+        </div>
+        <h2 className="text-3xl font-black tracking-tighter text-center mb-8" style={{ color: "var(--text-main)" }}>
           {t("features_title")}
         </h2>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-4">
           {FEATURES.map((f, i) => (
-            <div key={i} className="rounded-2xl p-4"
-              style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}>
-              <div className="text-2xl mb-2">{f.icon}</div>
-              <div className="font-black text-sm mb-1" style={{ color: "var(--text-main)" }}>{f.title}</div>
+            <motion.div key={i} whileHover={{ y: -6, transition: { duration: 0.2 } }}
+              className="rounded-[2rem] p-7 card-hover"
+              style={{ background: "var(--bg-card)", border: "1px solid var(--border)", boxShadow: "0 8px 32px rgba(249,115,22,0.08)" }}>
+              <div className="text-3xl mb-3">{f.icon}</div>
+              <div className="font-black text-sm mb-1 tracking-tight" style={{ color: "var(--text-main)" }}>{f.title}</div>
               <div className="text-xs leading-relaxed" style={{ color: "var(--text-sub)" }}>{f.desc}</div>
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>
 
       {/* ── Final CTA ── */}
       <div className="px-5 pb-32 max-w-lg mx-auto">
-        <div className="rounded-3xl p-8 text-white text-center relative overflow-hidden" style={{ background: G }}>
+        <div className="rounded-[2.5rem] p-10 text-white text-center relative overflow-hidden" style={{ background: G, boxShadow: "0 8px 32px rgba(249,115,22,0.30)" }}>
           <div className="absolute top-0 right-0 text-8xl opacity-10 leading-none font-black -mt-2 -mr-2">✈️</div>
           <div className="relative">
-            <div className="text-4xl mb-3">🌍</div>
-            <h2 className="text-2xl font-black mb-2">{t("final_cta_title")}</h2>
+            <div className="text-5xl mb-3">🌍</div>
+            <h2 className="text-3xl font-black tracking-tighter mb-2">{t("final_cta_title")}</h2>
             <p className="text-white/70 text-sm mb-6">
               {t("final_cta_subtitle")}
             </p>
@@ -289,8 +301,11 @@ function Dashboard({ trips }) {
       <div className="px-4 sm:px-6 pt-8 pb-4">
         <div className="max-w-2xl mx-auto flex items-center justify-between">
           <div>
-            <p className="text-xs font-black text-orange-400 uppercase tracking-widest mb-1">✦ {t("travel_os")}</p>
-            <h1 className="text-3xl font-black" style={{ color: "var(--text-main)" }}>{t("your_dashboard")}</h1>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="dot-live" />
+              <span className="label-micro">{t("travel_os")}</span>
+            </div>
+            <h1 className="text-4xl font-black tracking-tighter" style={{ color: "var(--text-main)" }}>{t("your_dashboard")}</h1>
           </div>
           <span className="text-2xl font-black">✈️ <span style={{ background: G, WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent" }}>AI-gency</span></span>
         </div>
@@ -301,8 +316,8 @@ function Dashboard({ trips }) {
         {/* Upcoming trip hero */}
         {upcoming && (
           <Link href={`/trip/${upcoming.id}`}>
-            <div className="rounded-3xl p-6 text-white relative overflow-hidden cursor-pointer hover:-translate-y-0.5 transition-all"
-              style={{ background: `linear-gradient(135deg,${destColor(upcoming.destination)},${destColor(upcoming.destination)}99)` }}>
+            <div className="rounded-[2rem] p-7 text-white relative overflow-hidden cursor-pointer card-hover"
+              style={{ background: `linear-gradient(135deg,${destColor(upcoming.destination)},${destColor(upcoming.destination)}99)`, boxShadow: "0 8px 32px rgba(0,0,0,0.15)" }}>
               <div className="absolute top-0 right-0 text-8xl opacity-10 font-black -mt-2 -mr-2">{STYLE_E[upcoming.style] || "✈️"}</div>
               <div className="relative">
                 <p className="text-white/70 text-xs font-black uppercase tracking-widest mb-1">
@@ -328,13 +343,15 @@ function Dashboard({ trips }) {
             { icon: "🌍", value: countries.length, labelKey: "stat_countries", href: "/countries" },
             { icon: "💰", value: `$${Math.round(totalBudget/1000)}k`, labelKey: "stat_planned", href: "/trips" },
           ].map(s => (
-            <Link key={s.labelKey} href={s.href}
-              className="rounded-2xl border p-4 text-center shadow-sm hover:-translate-y-0.5 transition-all active:scale-95"
-              style={{ background: "var(--bg-card)", borderColor: "var(--border)" }}>
-              <div className="text-2xl mb-1">{s.icon}</div>
-              <div className="text-xl font-black" style={{ color: "var(--text-main)" }}>{s.value}</div>
-              <div className="text-xs font-medium" style={{ color: "var(--text-muted)" }}>{t(s.labelKey)}</div>
-            </Link>
+            <motion.div key={s.labelKey} whileHover={{ y: -4, transition: { duration: 0.2 } }}>
+              <Link href={s.href}
+                className="block rounded-[1.5rem] border p-4 text-center shadow-sm active:scale-95 card-hover"
+                style={{ background: "var(--bg-card)", borderColor: "var(--border)", boxShadow: "0 4px 16px rgba(249,115,22,0.07)" }}>
+                <div className="text-2xl mb-1">{s.icon}</div>
+                <div className="text-4xl font-black tracking-tighter" style={{ color: "var(--text-main)" }}>{s.value}</div>
+                <div className="label-micro mt-1">{t(s.labelKey)}</div>
+              </Link>
+            </motion.div>
           ))}
         </div>
 
@@ -361,18 +378,25 @@ function Dashboard({ trips }) {
 
         {/* Smart Tools */}
         <div>
-          <h2 className="text-lg font-black mb-3" style={{ color: "var(--text-main)" }}>🛠️ {t("smart_tools")}</h2>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg font-black" style={{ color: "var(--text-main)" }}>🛠️ {t("smart_tools")}</h2>
+            <span className="label-micro">PREMIUM</span>
+          </div>
           <div className="grid grid-cols-2 gap-3">
-            <Link href="/budget" className="rounded-2xl p-4 text-white shadow-md hover:-translate-y-0.5 transition-all" style={{ background: "linear-gradient(135deg,#0d9488,#0ea5e9)" }}>
-              <div className="text-2xl mb-2">💰</div>
-              <div className="font-black text-sm">{t("feature_budget_title")}</div>
-              <div className="text-white/70 text-xs mt-0.5">{t("feature_budget_desc")}</div>
-            </Link>
-            <Link href="/compare" className="rounded-2xl p-4 text-white shadow-md hover:-translate-y-0.5 transition-all" style={{ background: "linear-gradient(135deg,#8b5cf6,#6366f1)" }}>
-              <div className="text-2xl mb-2">⚖️</div>
-              <div className="font-black text-sm">{t("compare_title")}</div>
-              <div className="text-white/70 text-xs mt-0.5">{t("compare_desc")}</div>
-            </Link>
+            <motion.div whileHover={{ y: -4, transition: { duration: 0.2 } }}>
+              <Link href="/budget" className="block rounded-[1.75rem] p-5 text-white shadow-md card-hover" style={{ background: "linear-gradient(135deg,#0d9488,#0ea5e9)" }}>
+                <div className="text-3xl mb-3">💰</div>
+                <div className="font-black text-sm">{t("feature_budget_title")}</div>
+                <div className="text-white/70 text-xs mt-1">{t("feature_budget_desc")}</div>
+              </Link>
+            </motion.div>
+            <motion.div whileHover={{ y: -4, transition: { duration: 0.2 } }}>
+              <Link href="/compare" className="block rounded-[1.75rem] p-5 text-white shadow-md card-hover" style={{ background: "linear-gradient(135deg,#8b5cf6,#6366f1)" }}>
+                <div className="text-3xl mb-3">⚖️</div>
+                <div className="font-black text-sm">{t("compare_title")}</div>
+                <div className="text-white/70 text-xs mt-1">{t("compare_desc")}</div>
+              </Link>
+            </motion.div>
           </div>
         </div>
 
@@ -380,7 +404,10 @@ function Dashboard({ trips }) {
         {recent.length > 0 && (
           <div>
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-lg font-black" style={{ color: "var(--text-main)" }}>{t("recent_trips")}</h2>
+              <div>
+                <span className="label-micro block mb-0.5">RECENT</span>
+                <h2 className="text-lg font-black tracking-tight" style={{ color: "var(--text-main)" }}>{t("recent_trips")}</h2>
+              </div>
               <Link href="/trips" className="text-xs font-black text-orange-400 hover:text-orange-600 transition-colors">{t("see_all")} →</Link>
             </div>
             <div className="space-y-3">
@@ -388,9 +415,10 @@ function Dashboard({ trips }) {
                 const color = destColor(tr.destination);
                 const d = daysUntil(tr.form?.startDate);
                 return (
-                  <Link key={tr.id} href={`/trip/${tr.id}`}
-                    className="flex items-center gap-4 rounded-2xl border p-4 shadow-sm hover:-translate-y-0.5 transition-all"
-                    style={{ background: "var(--bg-card)", borderColor: "var(--border)" }}>
+                  <motion.div key={tr.id} whileHover={{ y: -4, transition: { duration: 0.2 } }}>
+                  <Link href={`/trip/${tr.id}`}
+                    className="flex items-center gap-4 rounded-[1.5rem] border p-4 shadow-sm card-hover block"
+                    style={{ background: "var(--bg-card)", borderColor: "var(--border)", boxShadow: "0 4px 16px rgba(249,115,22,0.07)" }}>
                     <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0"
                       style={{ background: `${color}20` }}>
                       {STYLE_E[tr.style] || "🌍"}
@@ -409,6 +437,7 @@ function Dashboard({ trips }) {
                       <WeatherBadge destination={tr.destination} dateStr={tr.form?.startDate} />
                     </div>
                   </Link>
+                  </motion.div>
                 );
               })}
             </div>
@@ -416,7 +445,7 @@ function Dashboard({ trips }) {
         )}
 
         {/* New trip CTA */}
-        <div className="rounded-2xl p-5 text-white relative overflow-hidden" style={{ background: G }}>
+        <div className="rounded-[2rem] p-6 text-white relative overflow-hidden" style={{ background: G, boxShadow: "0 8px 32px rgba(249,115,22,0.25)" }}>
           <div className="absolute top-0 right-0 text-6xl opacity-10 leading-none font-black -mt-1 -mr-2">✈️</div>
           <div className="relative flex items-center justify-between gap-4">
             <div>

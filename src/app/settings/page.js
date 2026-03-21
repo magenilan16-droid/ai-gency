@@ -40,34 +40,37 @@ export default function SettingsPage() {
       {/* Header */}
       <div className="px-4 pt-8 pb-4 max-w-lg mx-auto">
         <Link href="/" className="text-sm text-gray-400 font-bold mb-4 inline-block">← {t("back")}</Link>
-        <p className="text-xs font-black text-orange-400 uppercase tracking-widest mb-1">✦ Personalize</p>
-        <h1 className="text-3xl font-black" style={{ color: "var(--text-main)" }}>⚙️ {t("settings_title")}</h1>
+        <div className="flex items-center gap-2 mb-3">
+          <span className="dot-live" />
+          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-400">PERSONALIZE</span>
+        </div>
+        <h1 className="text-3xl font-black tracking-tighter" style={{ color: "var(--text-main)" }}>⚙️ {t("settings_title")}</h1>
       </div>
 
       <div className="px-4 max-w-lg mx-auto space-y-4">
 
         {/* Home City */}
-        <div className="rounded-2xl p-4 shadow-sm" style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}>
-          <label className="text-xs font-black text-orange-400 uppercase tracking-widest mb-2 block">🏠 {t("settings_home_city")}</label>
+        <div className="rounded-[1.75rem] p-6 shadow-sm" style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}>
+          <label className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-400 mb-2 block">🏠 {t("settings_home_city")}</label>
           <input
             value={prefs.homeCity || ""}
             onChange={e => update("homeCity", e.target.value)}
             placeholder="Tel Aviv, Israel"
-            className="w-full text-sm font-bold rounded-xl px-3 py-2.5 border-2 border-orange-100 focus:border-orange-300 focus:outline-none"
+            className="w-full text-sm font-bold rounded-2xl px-4 py-3 border-2 border-orange-100 focus:border-orange-300 focus:outline-none"
             style={{ background: "var(--bg-page)", color: "var(--text-main)" }}
           />
           <p className="text-xs text-gray-400 mt-1">{t("settings_home_city_hint")}</p>
         </div>
 
         {/* Preferred Currency */}
-        <div className="rounded-2xl p-4 shadow-sm" style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}>
-          <label className="text-xs font-black text-orange-400 uppercase tracking-widest mb-2 block">💰 {t("settings_currency")}</label>
+        <div className="rounded-[1.75rem] p-6 shadow-sm" style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}>
+          <label className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-400 mb-2 block">💰 {t("settings_currency")}</label>
           <div className="grid grid-cols-5 gap-2">
             {CURRENCIES.map(c => (
               <button key={c} onClick={() => update("currency", c)}
-                className="py-2 rounded-xl text-xs font-black transition-all"
+                className="py-2 rounded-xl text-xs font-black transition-all duration-200"
                 style={prefs.currency === c
-                  ? { background: G, color: "white" }
+                  ? { background: G, color: "white", boxShadow: "0 4px 16px rgba(249,115,22,0.25)" }
                   : { background: "var(--bg-page)", color: "var(--text-sub)", border: "2px solid var(--border)" }}>
                 {c}
               </button>
@@ -76,12 +79,12 @@ export default function SettingsPage() {
         </div>
 
         {/* Travel Style */}
-        <div className="rounded-2xl p-4 shadow-sm" style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}>
-          <label className="text-xs font-black text-orange-400 uppercase tracking-widest mb-2 block">🎯 {t("settings_style")}</label>
+        <div className="rounded-[1.75rem] p-6 shadow-sm" style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}>
+          <label className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-400 mb-2 block">🎯 {t("settings_style")}</label>
           <div className="grid grid-cols-2 gap-2">
             {STYLES.map(s => (
               <button key={s} onClick={() => update("style", s)}
-                className="py-2.5 px-3 rounded-xl text-sm font-black capitalize transition-all text-left"
+                className="py-2.5 px-3 rounded-xl text-sm font-black capitalize transition-all duration-200 text-left"
                 style={prefs.style === s
                   ? { background: G, color: "white" }
                   : { background: "var(--bg-page)", color: "var(--text-sub)", border: "2px solid var(--border)" }}>
@@ -92,12 +95,12 @@ export default function SettingsPage() {
         </div>
 
         {/* Language */}
-        <div className="rounded-2xl p-4 shadow-sm" style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}>
-          <label className="text-xs font-black text-orange-400 uppercase tracking-widest mb-2 block">🌐 {t("settings_language")}</label>
+        <div className="rounded-[1.75rem] p-6 shadow-sm" style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}>
+          <label className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-400 mb-2 block">🌐 {t("settings_language")}</label>
           <div className="grid grid-cols-2 gap-2">
             {[{ code: "en", label: "🇺🇸 English" }, { code: "he", label: "🇮🇱 עברית" }].map(l => (
               <button key={l.code} onClick={() => setLang(l.code)}
-                className="py-2.5 rounded-xl text-sm font-black transition-all"
+                className="py-2.5 rounded-xl text-sm font-black transition-all duration-200"
                 style={lang === l.code
                   ? { background: G, color: "white" }
                   : { background: "var(--bg-page)", color: "var(--text-sub)", border: "2px solid var(--border)" }}>
@@ -108,12 +111,12 @@ export default function SettingsPage() {
         </div>
 
         {/* Budget Range */}
-        <div className="rounded-2xl p-4 shadow-sm" style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}>
-          <label className="text-xs font-black text-orange-400 uppercase tracking-widest mb-2 block">📊 {t("settings_budget_range")}</label>
+        <div className="rounded-[1.75rem] p-6 shadow-sm" style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}>
+          <label className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-400 mb-2 block">📊 {t("settings_budget_range")}</label>
           <div className="grid grid-cols-3 gap-2">
             {[{ key: "budget", label: "Budget", sub: "Under $1k", emoji: "🎒" }, { key: "mid", label: "Mid-range", sub: "$1k-3k", emoji: "✈️" }, { key: "luxury", label: "Luxury", sub: "$3k+", emoji: "👑" }].map(b => (
               <button key={b.key} onClick={() => update("budgetRange", b.key)}
-                className="py-3 rounded-xl text-xs font-black transition-all"
+                className="py-3 rounded-xl text-xs font-black transition-all duration-200"
                 style={prefs.budgetRange === b.key
                   ? { background: G, color: "white" }
                   : { background: "var(--bg-page)", color: "var(--text-sub)", border: "2px solid var(--border)" }}>
@@ -126,12 +129,12 @@ export default function SettingsPage() {
         </div>
 
         {saved && (
-          <div className="fixed bottom-24 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-sm font-bold px-6 py-3 rounded-2xl shadow-xl z-50 animate-fade-in">
+          <div className="fixed bottom-24 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-sm font-bold px-6 py-3 rounded-[1.5rem] shadow-[0_8px_32px_rgba(0,0,0,0.15)] z-50 animate-fade-in">
             {t("settings_saved")}
           </div>
         )}
 
-        <div className="rounded-2xl p-4 text-center" style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}>
+        <div className="rounded-[1.75rem] p-6 text-center" style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}>
           <p className="text-xs text-gray-400">{t("settings_local_note")}</p>
         </div>
       </div>

@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { saveTrip, generateId, createEmptyTrip } from "@/lib/trips";
 import { useLanguage } from "@/app/LanguageProvider";
 
@@ -78,16 +79,16 @@ function DatePickerWidget({ onConfirm, t }) {
     <div className="mt-3 bg-white rounded-2xl border-2 border-orange-100 p-4 space-y-3">
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <p className="text-xs font-black text-orange-400 uppercase tracking-wide mb-1.5">{t("depart_label")}</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-400 mb-1.5">{t("depart_label")}</p>
           <input type="date" value={start} min={today}
             onChange={e => { setStart(e.target.value); if (end && e.target.value >= end) setEnd(""); }}
-            className="w-full px-3 py-2.5 rounded-xl border-2 border-orange-100 focus:border-orange-300 outline-none text-sm font-medium text-gray-800" />
+            className="w-full px-3 py-3 rounded-2xl border-2 border-orange-100 focus:border-orange-300 outline-none text-sm font-medium text-gray-800" />
         </div>
         <div>
-          <p className="text-xs font-black text-orange-400 uppercase tracking-wide mb-1.5">{t("return_label")}</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-400 mb-1.5">{t("return_label")}</p>
           <input type="date" value={end} min={start || today}
             onChange={e => setEnd(e.target.value)}
-            className="w-full px-3 py-2.5 rounded-xl border-2 border-orange-100 focus:border-orange-300 outline-none text-sm font-medium text-gray-800" />
+            className="w-full px-3 py-3 rounded-2xl border-2 border-orange-100 focus:border-orange-300 outline-none text-sm font-medium text-gray-800" />
         </div>
       </div>
       {days > 0 && (
@@ -96,7 +97,7 @@ function DatePickerWidget({ onConfirm, t }) {
       <button
         disabled={!start || !end || days <= 0}
         onClick={() => onConfirm(`Departing ${start}, returning ${end} (${days} days)`)}
-        className="w-full py-3.5 rounded-xl text-white text-sm font-black disabled:opacity-40 transition-opacity"
+        className="w-full py-4 rounded-2xl text-white text-base font-black tracking-tight disabled:opacity-40 transition-opacity"
         style={{ background: G }}>
         {t("confirm_dates")}
       </button>
@@ -141,7 +142,7 @@ function BudgetPickerWidget({ currency, onConfirm, t }) {
       <button
         disabled={!value || value <= 0}
         onClick={() => onConfirm(`My total budget is ${currency} ${Number(value).toLocaleString()}`)}
-        className="w-full py-3.5 rounded-xl text-white text-sm font-black disabled:opacity-40 transition-opacity"
+        className="w-full py-4 rounded-2xl text-white text-base font-black tracking-tight disabled:opacity-40 transition-opacity"
         style={{ background: G }}>
         {t("set_budget")}
       </button>
@@ -177,7 +178,7 @@ function MultiOptionsWidget({ options, onConfirm }) {
       <button
         disabled={selected.size === 0}
         onClick={() => onConfirm(Array.from(selected).join(", "))}
-        className="w-full py-3.5 rounded-xl text-white text-sm font-black disabled:opacity-40 transition-opacity"
+        className="w-full py-4 rounded-2xl text-white text-base font-black tracking-tight disabled:opacity-40 transition-opacity"
         style={{ background: G }}>
         {selected.size > 0 ? t("confirm_selection", { n: selected.size }) : t("select_at_least_one")}
       </button>
@@ -242,7 +243,7 @@ function CitiesMultiWidget({ cities, onConfirm, t }) {
             : `I'd like to visit ${arr.slice(0, -1).join(", ")} and ${arr[arr.length - 1]}`;
           onConfirm(text);
         }}
-        className="w-full py-3.5 rounded-xl text-white text-sm font-black disabled:opacity-40 transition-opacity"
+        className="w-full py-4 rounded-2xl text-white text-base font-black tracking-tight disabled:opacity-40 transition-opacity"
         style={{ background: G }}>
         {label}
       </button>
@@ -338,48 +339,48 @@ function ManualForm({ onSubmit, t }) {
 
   return (
     <div className="space-y-4">
-      <div className="bg-white rounded-2xl border-2 border-orange-100 p-4">
-        <label className="text-xs font-black text-orange-400 uppercase tracking-widest block mb-2">{t("destination_label")}</label>
+      <div className="bg-white rounded-2xl border-2 border-orange-100 p-5">
+        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-400 block mb-2">{t("destination_label")}</label>
         <input value={f.destination} onChange={e => set("destination", e.target.value)} placeholder={t("destination_placeholder")}
-          className="w-full px-4 py-3 rounded-xl border-2 border-orange-100 focus:border-orange-300 outline-none text-gray-900 placeholder-gray-300 text-sm font-medium" />
+          className="w-full px-4 py-3 rounded-2xl border-2 border-orange-100 focus:border-orange-300 outline-none text-gray-900 placeholder-gray-300 text-sm font-medium" />
       </div>
-      <div className="bg-white rounded-2xl border-2 border-orange-100 p-4">
-        <label className="text-xs font-black text-orange-400 uppercase tracking-widest block mb-2">{t("dates_label")}</label>
+      <div className="bg-white rounded-2xl border-2 border-orange-100 p-5">
+        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-400 block mb-2">{t("dates_label")}</label>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <p className="text-xs text-gray-400 mb-1">{t("from_label")}</p>
-            <input type="date" value={f.startDate} min={new Date().toISOString().split("T")[0]} onChange={e => set("startDate", e.target.value)} className="w-full px-3 py-2.5 rounded-xl border-2 border-orange-100 focus:border-orange-300 outline-none text-sm" />
+            <input type="date" value={f.startDate} min={new Date().toISOString().split("T")[0]} onChange={e => set("startDate", e.target.value)} className="w-full px-3 py-3 rounded-2xl border-2 border-orange-100 focus:border-orange-300 outline-none text-sm" />
           </div>
           <div>
             <p className="text-xs text-gray-400 mb-1">{t("to_label")}</p>
-            <input type="date" value={f.endDate} min={f.startDate} onChange={e => set("endDate", e.target.value)} className="w-full px-3 py-2.5 rounded-xl border-2 border-orange-100 focus:border-orange-300 outline-none text-sm" />
+            <input type="date" value={f.endDate} min={f.startDate} onChange={e => set("endDate", e.target.value)} className="w-full px-3 py-3 rounded-2xl border-2 border-orange-100 focus:border-orange-300 outline-none text-sm" />
           </div>
         </div>
         {days > 0 && <p className="text-xs text-orange-500 font-bold mt-2">{t("x_day_trip", { n: days })}</p>}
       </div>
       <div className="grid grid-cols-2 gap-3">
-        <div className="bg-white rounded-2xl border-2 border-orange-100 p-4">
-          <label className="text-xs font-black text-orange-400 uppercase tracking-widest block mb-2">{t("travelers_label")}</label>
+        <div className="bg-white rounded-2xl border-2 border-orange-100 p-5">
+          <label className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-400 block mb-2">{t("travelers_label")}</label>
           <div className="flex items-center gap-3 justify-center">
             <button onClick={() => set("travelers", Math.max(1, f.travelers - 1))} className="w-8 h-8 rounded-xl border-2 border-orange-100 text-orange-400 font-bold hover:bg-orange-50 flex items-center justify-center">−</button>
             <span className="text-2xl font-black text-gray-900">{f.travelers}</span>
             <button onClick={() => set("travelers", Math.min(20, f.travelers + 1))} className="w-8 h-8 rounded-xl border-2 border-orange-100 text-orange-400 font-bold hover:bg-orange-50 flex items-center justify-center">+</button>
           </div>
         </div>
-        <div className="bg-white rounded-2xl border-2 border-orange-100 p-4">
-          <label className="text-xs font-black text-orange-400 uppercase tracking-widest block mb-2">{t("budget_label")}</label>
+        <div className="bg-white rounded-2xl border-2 border-orange-100 p-5">
+          <label className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-400 block mb-2">{t("budget_label")}</label>
           <div className="flex gap-2">
-            <select value={f.currency} onChange={e => set("currency", e.target.value)} className="px-2 py-2 rounded-xl border-2 border-orange-100 outline-none bg-white text-xs font-bold">{CURRENCIES.map(c => <option key={c}>{c}</option>)}</select>
-            <input type="number" min="1" value={f.budget} onChange={e => set("budget", e.target.value)} placeholder="3000" className="flex-1 min-w-0 px-3 py-2 rounded-xl border-2 border-orange-100 focus:border-orange-300 outline-none text-sm font-medium" />
+            <select value={f.currency} onChange={e => set("currency", e.target.value)} className="px-2 py-2 rounded-2xl border-2 border-orange-100 outline-none bg-white text-xs font-bold">{CURRENCIES.map(c => <option key={c}>{c}</option>)}</select>
+            <input type="number" min="1" value={f.budget} onChange={e => set("budget", e.target.value)} placeholder="3000" className="flex-1 min-w-0 px-3 py-2 rounded-2xl border-2 border-orange-100 focus:border-orange-300 outline-none text-sm font-medium" />
           </div>
         </div>
       </div>
-      <div className="bg-white rounded-2xl border-2 border-orange-100 p-4">
-        <label className="text-xs font-black text-orange-400 uppercase tracking-widest block mb-3">{t("trip_style_label")}</label>
+      <div className="bg-white rounded-2xl border-2 border-orange-100 p-5">
+        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-400 block mb-3">{t("trip_style_label")}</label>
         <div className="grid grid-cols-2 gap-2">
           {STYLES.map(s => (
             <button key={s.value} onClick={() => set("style", s.value)}
-              className="flex items-center gap-2 p-3 rounded-xl border-2 text-left transition-all"
+              className="flex items-center gap-2 p-3 rounded-2xl border-2 text-left transition-all duration-200"
               style={f.style === s.value ? { borderColor: "#f97316", background: "#fff7ed" } : { borderColor: "#ffe4cc", background: "white" }}>
               <span className="text-xl">{s.icon}</span>
               <span className="text-xs font-bold text-gray-900">{t(s.labelKey)}</span>
@@ -388,7 +389,7 @@ function ManualForm({ onSubmit, t }) {
         </div>
       </div>
       <button onClick={() => valid && onSubmit(f)} disabled={!valid}
-        className="w-full font-black text-white py-4 rounded-2xl shadow-lg shadow-orange-200 transition-all hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+        className="w-full font-black text-base tracking-tight text-white py-4 rounded-2xl shadow-lg shadow-orange-200 transition-all hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
         style={{ background: G }}>
         {t("build_template")}
       </button>
@@ -643,13 +644,13 @@ export default function PlanPage() {
       <div className="max-w-lg w-full mt-16">
         <div className="text-center mb-10">
           <div className="text-5xl mb-4">🗺️</div>
-          <h1 className="text-4xl font-black text-gray-900 mb-2">{t("plan_your_trip")}</h1>
+          <h1 className="text-4xl font-black tracking-tighter text-gray-900 mb-2">{t("plan_your_trip")}</h1>
           <p className="text-gray-400 font-medium">{t("how_to_start")}</p>
         </div>
 
         {/* Quick Templates */}
         <div className="mb-6">
-          <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-3">{t("trip_templates_title")}</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-3">{t("trip_templates_title")}</p>
           <div className="grid grid-cols-2 gap-2">
             {[
               { labelKey: "trip_template_weekend", days: 3, style: "relaxed", budget: 500 },
@@ -657,51 +658,55 @@ export default function PlanPage() {
               { labelKey: "trip_template_backpacker", days: 14, style: "adventure", budget: 1000 },
               { labelKey: "trip_template_family", days: 7, style: "cultural", budget: 3000 },
             ].map((tpl) => (
-              <button key={tpl.labelKey} onClick={() => {
+              <motion.button key={tpl.labelKey} onClick={() => {
                 setSf(p => ({ ...p, style: tpl.style, budget: tpl.budget }));
                 startAI();
               }}
-                className="rounded-2xl p-3 text-left border-2 transition-all hover:border-orange-300 hover:bg-orange-50"
+                whileHover={{ y: -4 }}
+                className="card-hover rounded-[1.75rem] p-5 text-left border-2 transition-all hover:border-orange-300 hover:bg-orange-50"
                 style={{ borderColor: "#ffedd5", background: "white" }}>
                 <div className="font-black text-xs text-gray-900">{t(tpl.labelKey)}</div>
                 <div className="text-xs text-gray-400 mt-0.5">{tpl.days} days · {currency} {tpl.budget.toLocaleString()}</div>
-              </button>
+              </motion.button>
             ))}
           </div>
         </div>
 
         <div className="grid grid-cols-1 gap-4">
-          <button onClick={startAI}
-            className="relative overflow-hidden rounded-3xl p-7 text-white text-left shadow-xl shadow-orange-200 hover:-translate-y-1 transition-all"
+          <motion.button onClick={startAI}
+            whileHover={{ y: -6 }}
+            className="card-hover relative overflow-hidden rounded-[2rem] p-8 text-white text-left shadow-xl shadow-orange-200 transition-all"
             style={{ background: G }}>
             <div className="absolute top-0 right-0 text-[120px] opacity-10 font-black leading-none -mt-6 -mr-4">AI</div>
             <div className="relative">
-              <div className="text-3xl mb-3">🤖</div>
-              <div className="text-xl font-black mb-1">{t("chat_with_claude")}</div>
+              <div className="text-4xl mb-3">🤖</div>
+              <div className="text-xl font-black tracking-tighter mb-1">{t("chat_with_claude")}</div>
               <div className="text-white/75 text-sm leading-relaxed">{t("chat_desc")}</div>
               <div className="mt-5 inline-flex items-center gap-2 bg-white/20 rounded-xl px-4 py-2.5 text-sm font-bold">{t("start_chatting")} →</div>
             </div>
-          </button>
+          </motion.button>
 
           <div className="grid grid-cols-2 gap-4">
-            <button onClick={() => setMode("manual")}
-              className="relative overflow-hidden rounded-3xl p-6 text-left border-2 bg-white hover:-translate-y-1 transition-all shadow-sm"
+            <motion.button onClick={() => setMode("manual")}
+              whileHover={{ y: -6 }}
+              className="card-hover relative overflow-hidden rounded-[2rem] p-8 text-left border-2 bg-white transition-all shadow-sm"
               style={{ borderColor: "#ffe4cc" }}>
-              <div className="text-3xl mb-3">✏️</div>
-              <div className="text-lg font-black text-gray-900 mb-1">{t("build_yourself")}</div>
+              <div className="text-4xl mb-3">✏️</div>
+              <div className="text-lg font-black tracking-tighter text-gray-900 mb-1">{t("build_yourself")}</div>
               <div className="text-gray-400 text-xs leading-relaxed">{t("build_yourself_desc")}</div>
-            </button>
+            </motion.button>
 
-            <button onClick={() => setMode("surprise")}
-              className="relative overflow-hidden rounded-3xl p-6 text-white text-left hover:-translate-y-1 transition-all shadow-xl"
+            <motion.button onClick={() => setMode("surprise")}
+              whileHover={{ y: -6 }}
+              className="card-hover relative overflow-hidden rounded-[2rem] p-8 text-white text-left transition-all shadow-xl"
               style={{ background: "linear-gradient(135deg,#7c3aed,#a21caf)" }}>
               <div className="absolute top-0 right-0 text-7xl opacity-10 font-black leading-none -mt-2 -mr-2">🎲</div>
               <div className="relative">
-                <div className="text-3xl mb-3">🎲</div>
-                <div className="text-lg font-black mb-1">{t("surprise_me")}</div>
+                <div className="text-4xl mb-3">🎲</div>
+                <div className="text-lg font-black tracking-tighter mb-1">{t("surprise_me")}</div>
                 <div className="text-white/70 text-xs leading-relaxed">{t("surprise_me_desc")}</div>
               </div>
-            </button>
+            </motion.button>
           </div>
         </div>
       </div>
@@ -740,18 +745,18 @@ export default function PlanPage() {
           </div>
 
           {/* Dates */}
-          <div className="bg-white rounded-2xl border-2 border-orange-100 p-4">
-            <label className="text-xs font-black text-orange-400 uppercase tracking-widest block mb-3">{t("when_going")}</label>
+          <div className="bg-white rounded-2xl border-2 border-orange-100 p-5">
+            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-400 block mb-3">{t("when_going")}</label>
             <div className="grid grid-cols-2 gap-3">
-              <div><p className="text-xs text-gray-400 mb-1">{t("depart_label")}</p><input type="date" value={sf.startDate} min={today} onChange={e=>setS("startDate",e.target.value)} className="w-full px-3 py-2.5 rounded-xl border-2 border-orange-100 focus:border-orange-300 outline-none text-sm"/></div>
-              <div><p className="text-xs text-gray-400 mb-1">{t("return_label")}</p><input type="date" value={sf.endDate} min={sf.startDate||today} onChange={e=>setS("endDate",e.target.value)} className="w-full px-3 py-2.5 rounded-xl border-2 border-orange-100 focus:border-orange-300 outline-none text-sm"/></div>
+              <div><p className="text-xs text-gray-400 mb-1">{t("depart_label")}</p><input type="date" value={sf.startDate} min={today} onChange={e=>setS("startDate",e.target.value)} className="w-full px-3 py-3 rounded-2xl border-2 border-orange-100 focus:border-orange-300 outline-none text-sm"/></div>
+              <div><p className="text-xs text-gray-400 mb-1">{t("return_label")}</p><input type="date" value={sf.endDate} min={sf.startDate||today} onChange={e=>setS("endDate",e.target.value)} className="w-full px-3 py-3 rounded-2xl border-2 border-orange-100 focus:border-orange-300 outline-none text-sm"/></div>
             </div>
             {days > 0 && <p className="text-xs font-black text-orange-500 mt-2">{t("x_day_trip", { n: days })}</p>}
           </div>
 
           {/* Travelers */}
-          <div className="bg-white rounded-2xl border-2 border-orange-100 p-4">
-            <label className="text-xs font-black text-orange-400 uppercase tracking-widest block mb-3">{t("how_many")}</label>
+          <div className="bg-white rounded-2xl border-2 border-orange-100 p-5">
+            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-400 block mb-3">{t("how_many")}</label>
             <div className="flex items-center gap-4 justify-center">
               <button type="button" onClick={()=>setS("travelers",Math.max(1,sf.travelers-1))} className="w-10 h-10 rounded-xl border-2 border-orange-100 text-orange-400 font-black text-xl hover:bg-orange-50 flex items-center justify-center">−</button>
               <span className="text-3xl font-black text-gray-900">{sf.travelers}</span>
@@ -760,12 +765,12 @@ export default function PlanPage() {
           </div>
 
           {/* Budget */}
-          <div className="bg-white rounded-2xl border-2 border-orange-100 p-4">
-            <label className="text-xs font-black text-orange-400 uppercase tracking-widest block mb-3">{t("total_budget_c", { c: currency })}</label>
+          <div className="bg-white rounded-2xl border-2 border-orange-100 p-5">
+            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-400 block mb-3">{t("total_budget_c", { c: currency })}</label>
             <div className="flex flex-wrap gap-2">
               {BUDGETS.map(b=>(
                 <button key={b} type="button" onClick={()=>setS("budget",b)}
-                  className="px-4 py-2 rounded-xl text-sm font-black border-2 transition-all"
+                  className="px-4 py-2 rounded-2xl text-sm font-black border-2 transition-all duration-200"
                   style={sf.budget===b ? {borderColor:"#7c3aed",background:"#f5f3ff",color:"#7c3aed"} : {borderColor:"#ffe4cc",color:"#6b7280"}}>
                   {currency} {b.toLocaleString()}
                 </button>
@@ -774,12 +779,12 @@ export default function PlanPage() {
           </div>
 
           {/* Style */}
-          <div className="bg-white rounded-2xl border-2 border-orange-100 p-4">
-            <label className="text-xs font-black text-orange-400 uppercase tracking-widest block mb-3">{t("trip_style_label")}</label>
+          <div className="bg-white rounded-2xl border-2 border-orange-100 p-5">
+            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-400 block mb-3">{t("trip_style_label")}</label>
             <div className="grid grid-cols-2 gap-2">
               {STYLES_S.map(s=>(
                 <button key={s.value} type="button" onClick={()=>setS("style",s.value)}
-                  className="flex items-center gap-2 p-3 rounded-xl border-2 text-left transition-all"
+                  className="flex items-center gap-2 p-3 rounded-2xl border-2 text-left transition-all duration-200"
                   style={sf.style===s.value ? {borderColor:"#7c3aed",background:"#f5f3ff"} : {borderColor:"#ffe4cc",background:"white"}}>
                   <span className="text-xl">{s.icon}</span>
                   <span className="text-xs font-bold text-gray-900">{t(s.labelKey)}</span>
@@ -805,7 +810,7 @@ export default function PlanPage() {
           )}
 
           <button onClick={()=>valid&&generateSurprise(sf)} disabled={!valid||generating}
-            className="w-full py-4 rounded-2xl text-white font-black text-lg shadow-xl disabled:opacity-40 hover:-translate-y-0.5 transition-all"
+            className="w-full py-4 rounded-2xl text-white font-black text-base tracking-tight shadow-xl disabled:opacity-40 hover:-translate-y-0.5 transition-all"
             style={{background:"linear-gradient(135deg,#7c3aed,#a21caf)"}}>
             {generating ? (
               <span className="flex items-center justify-center gap-3">

@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { useLanguage } from "@/app/LanguageProvider";
 
 const WMO_EMOJI = {
@@ -119,8 +120,11 @@ export default function TripsPage() {
       <div className="px-4 sm:px-6 pt-8 pb-4 max-w-2xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <p className="text-xs font-black text-orange-400 uppercase tracking-widest mb-1">✦ {t("all_trips")}</p>
-            <h1 className="text-3xl font-black text-gray-900">{t("my_trips")}</h1>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="dot-live" />
+              <span className="label-micro">YOUR TRIPS</span>
+            </div>
+            <h1 className="text-3xl font-black tracking-tighter text-gray-900">{t("my_trips")}</h1>
           </div>
           <Link href="/plan" className="font-black text-white text-sm px-5 py-3 rounded-2xl shadow-md shadow-orange-200" style={{ background: G }}>
             {t("new_trip_btn")}
@@ -142,7 +146,7 @@ export default function TripsPage() {
         <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 mb-5">
           {FILTERS.map(f => (
             <button key={f.id} onClick={() => setFilter(f.id)}
-              className="flex-shrink-0 px-4 py-2 rounded-2xl text-sm font-bold transition-all"
+              className="flex-shrink-0 px-5 py-2 rounded-[99px] text-sm font-bold transition-all"
               style={filter === f.id
                 ? { background: G, color: "white", boxShadow: "0 4px 14px rgba(249,115,22,0.3)" }
                 : { background: "white", color: "#9ca3af", border: "2px solid #ffedd5" }}>
@@ -153,9 +157,9 @@ export default function TripsPage() {
 
         {/* Trips grid */}
         {shown.length === 0 ? (
-          <div className="text-center py-20 bg-white rounded-3xl border border-orange-100">
-            <div className="text-5xl mb-3">🗺️</div>
-            <p className="font-black text-gray-900 mb-1">{t("no_trips_here")}</p>
+          <div className="text-center py-20 bg-white rounded-[1.75rem] border border-orange-100">
+            <div className="text-7xl mb-4">🗺️</div>
+            <p className="font-black tracking-tighter text-gray-900 text-lg mb-1">{t("no_trips_here")}</p>
             <p className="text-sm text-gray-400 mb-6">{t("start_planning_trips")}</p>
             <Link href="/plan" className="inline-block font-black text-white text-sm px-8 py-3 rounded-2xl" style={{ background: G }}>
               {t("plan_a_trip_btn")}
@@ -169,7 +173,7 @@ export default function TripsPage() {
               const isDel = deleting === tr.id;
 
               return (
-                <div key={tr.id} className="bg-white rounded-2xl border border-orange-100 overflow-hidden shadow-sm">
+                <motion.div key={tr.id} whileHover={{ y: -4 }} className="card-hover bg-white rounded-[1.75rem] border border-orange-100 overflow-hidden shadow-sm">
                   <div className="h-1.5" style={{ background: `linear-gradient(90deg,${color},${color}66)` }} />
                   <div className="p-4">
                     <div className="flex items-start gap-3">
@@ -180,7 +184,7 @@ export default function TripsPage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2">
                           <div>
-                            <div className="font-black text-gray-900">{tr.destination || t("untitled_trip")}</div>
+                            <div className="font-black tracking-tighter text-lg text-gray-900">{tr.destination || t("untitled_trip")}</div>
                             <div className="text-xs text-gray-400 mt-0.5">
                               {tr.form?.startDate ? `${tr.form.startDate} → ${tr.form.endDate}` : t("no_dates_set")}
                               {tr.days ? ` · ${tr.days} ${t("days")}` : ""}
@@ -230,7 +234,7 @@ export default function TripsPage() {
                       </div>
                     </div>
                   </div>
-                </div>
+                </motion.div>
               );
             })}
           </div>

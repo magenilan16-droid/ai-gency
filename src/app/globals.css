@@ -24,11 +24,92 @@ body {
 }
 
 .card-hover {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 .card-hover:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 20px 40px rgba(249, 115, 22, 0.15);
+  transform: translateY(-5px);
+  box-shadow: 0 24px 48px rgba(249, 115, 22, 0.18);
+}
+
+/* ── Premium design system ───────────────────────────────────────── */
+.premium-card {
+  background: var(--bg-card);
+  border-radius: 1.75rem;
+  border: 1px solid var(--border);
+  padding: 1.75rem;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.premium-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 24px 48px rgba(249, 115, 22, 0.12);
+}
+
+.label-micro {
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.heading-tight {
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+/* Live pulse dot */
+.dot-live {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #f97316;
+  position: relative;
+  display: inline-block;
+}
+.dot-live::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  background: rgba(249, 115, 22, 0.3);
+  animation: pulse-ring 1.5s ease-out infinite;
+}
+@keyframes pulse-ring {
+  0%   { transform: scale(0.8); opacity: 1; }
+  100% { transform: scale(2);   opacity: 0; }
+}
+
+/* Progress bar animated */
+.progress-bar {
+  height: 10px;
+  background: #ffedd5;
+  border-radius: 99px;
+  overflow: hidden;
+  border: 1px solid #fed7aa;
+  padding: 2px;
+}
+.progress-bar-fill {
+  height: 100%;
+  border-radius: 99px;
+  background: linear-gradient(135deg, #f97316, #ec4899);
+  transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Badge */
+.badge-premium {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 99px;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #f97316;
 }
 
 /* Hide scrollbar for day tabs */
