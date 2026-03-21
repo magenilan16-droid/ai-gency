@@ -5,6 +5,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { getTrip, updateTrip, generateId } from "@/lib/trips";
 import { useLanguage } from "@/app/LanguageProvider";
+import { bookingUrl, skyscannerUrl, getYourGuideUrl, rentalcarsUrl } from "@/lib/agent";
 import CurrencyTab from "./CurrencyTab";
 import MapTab from "./MapTab";
 import DocsTab from "./DocsTab";
@@ -686,17 +687,7 @@ function BookTab({ trip, onTripUpdate }) {
   const endDate = trip.form?.endDate || "";
   const travelers = trip.form?.travelers || trip.travelers || 1;
 
-  // Build a Google Flights search URL
-  function flightSearchUrl() {
-    const base = "https://www.google.com/travel/flights";
-    return base;
-  }
-
-  // Build a Booking.com search URL
-  function hotelSearchUrl(hotelName) {
-    const q = encodeURIComponent(`${hotelName} ${dest}`);
-    return `https://www.booking.com/search.html?ss=${q}`;
-  }
+  // Flight and hotel URL helpers now use affiliate utilities from @/lib/agent
 
   return (
     <div className="space-y-4">
@@ -739,7 +730,7 @@ function BookTab({ trip, onTripUpdate }) {
               <div className="text-sm font-black text-orange-600">{trip.currency} {flightBudget.toLocaleString()}</div>
             </div>
           )}
-          <a href={flightSearchUrl()} target="_blank" rel="noopener noreferrer"
+          <a href={skyscannerUrl(flightOrigin, dest, startDate, travelers)} target="_blank" rel="noopener noreferrer"
             className="flex items-center justify-center gap-2 w-full py-3 rounded-2xl text-white font-black text-sm shadow-md"
             style={{ background: G }}>
             {t("search_flights_btn")}
@@ -781,7 +772,7 @@ function BookTab({ trip, onTripUpdate }) {
                             : { background: "#ffedd5", color: "#f97316" }}>
                           {isChosen ? "✓" : t("mark_as_chosen")}
                         </button>
-                        <a href={hotelSearchUrl(h.name)} target="_blank" rel="noopener noreferrer"
+                        <a href={bookingUrl(h.name ? h.name + " " + dest : dest, startDate, endDate, travelers)} target="_blank" rel="noopener noreferrer"
                           className="text-xs font-black px-3 py-1.5 rounded-xl text-center border-2 border-orange-100 text-orange-400 hover:bg-orange-50">
                           {t("book_hotel_btn")}
                         </a>
@@ -824,6 +815,34 @@ function BookTab({ trip, onTripUpdate }) {
           </div>
         </div>
       )}
+
+      {/* ── Activities ── */}
+      <div className="bg-white rounded-2xl border border-orange-100 shadow-sm overflow-hidden">
+        <div className="h-1" style={{ background: G }} />
+        <div className="p-4">
+          <h3 className="font-black text-gray-900 mb-3 flex items-center gap-2">🎭 Activities &amp; Tours</h3>
+          <p className="text-sm text-gray-500 mb-3">Book tours, activities and experiences in {dest}</p>
+          <a href={getYourGuideUrl(dest)} target="_blank" rel="noopener noreferrer"
+            className="block w-full py-3 rounded-xl text-sm font-black text-white text-center"
+            style={{ background: G }}>
+            Browse Activities on GetYourGuide →
+          </a>
+        </div>
+      </div>
+
+      {/* ── Car Rental ── */}
+      <div className="bg-white rounded-2xl border border-orange-100 shadow-sm overflow-hidden">
+        <div className="h-1" style={{ background: "linear-gradient(135deg,#3b82f6,#8b5cf6)" }} />
+        <div className="p-4">
+          <h3 className="font-black text-gray-900 mb-3 flex items-center gap-2">🚗 Car Rental</h3>
+          <p className="text-sm text-gray-500 mb-3">Compare rental cars in {dest}</p>
+          <a href={rentalcarsUrl(dest, startDate, endDate)} target="_blank" rel="noopener noreferrer"
+            className="block w-full py-3 rounded-xl text-sm font-black text-white text-center"
+            style={{ background: "linear-gradient(135deg,#3b82f6,#8b5cf6)" }}>
+            Compare Cars on Rentalcars →
+          </a>
+        </div>
+      </div>
 
       {/* ── Note ── */}
       <div className="rounded-2xl bg-orange-50 border border-orange-100 p-4 text-center">
