@@ -514,6 +514,16 @@ export const translations = {
     tab_currency: "Currency",
     tab_docs: "Docs",
     tab_visa: "Visa",
+    tab_reviews: "Reviews",
+    tab_chat: "AI Chat",
+    chat_placeholder: "Ask anything about your trip...",
+    chat_send: "Send",
+    chat_clear: "Clear",
+    chat_suggestions: "Quick questions:",
+    reviews_title: "Traveler Reviews",
+    reviews_highlights: "Highlights",
+    reviews_watch_out: "Watch Out",
+    reviews_disclaimer: "AI-generated for planning purposes",
 
     // Currency tab
     currency_tab_title: "Live Exchange Rates",
@@ -1072,6 +1082,16 @@ export const translations = {
     tab_currency: "מטבע",
     tab_docs: "מסמכים",
     tab_visa: "ויזה",
+    tab_reviews: "ביקורות",
+    tab_chat: "AI צ'אט",
+    chat_placeholder: "שאל כל שאלה על הטיול...",
+    chat_send: "שלח",
+    chat_clear: "נקה",
+    chat_suggestions: "שאלות מהירות:",
+    reviews_title: "ביקורות מטיילים",
+    reviews_highlights: "הדגשות",
+    reviews_watch_out: "שימו לב",
+    reviews_disclaimer: "ביקורות נוצרו ע\"י AI למטרות תכנון",
 
     // Currency tab
     currency_tab_title: "שערי חליפין",

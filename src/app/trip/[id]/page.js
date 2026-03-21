@@ -9,6 +9,8 @@ import CurrencyTab from "./CurrencyTab";
 import MapTab from "./MapTab";
 import DocsTab from "./DocsTab";
 import VisaTab from "./VisaTab";
+import ChatTab from "./ChatTab";
+import ReviewsTab from "./ReviewsTab";
 
 // ─── Themes ───────────────────────────────────────────────────────────────────
 const DEST_THEMES = {
@@ -1369,6 +1371,8 @@ function TripContent() {
   const [packingData, setPackingData] = useState(null);
   const [printLoading, setPrintLoading] = useState(false);
   const [dayForecast, setDayForecast] = useState(null);
+  const [offlineCached, setOfflineCached] = useState(false);
+  const [cachingOffline, setCachingOffline] = useState(false);
   const touchStartX = useRef(null);
 
   const TABS = [
@@ -1382,6 +1386,8 @@ function TripContent() {
     { id: "local",     labelKey: "tab_local",     icon: "🌐" },
     { id: "visa",      labelKey: "tab_visa",      icon: "🛂" },
     { id: "docs",      labelKey: "tab_docs",      icon: "📄" },
+    { id: "reviews",   labelKey: "tab_reviews",   icon: "⭐" },
+    { id: "chat",      labelKey: "tab_chat",      icon: "🤖" },
   ];
 
   const BUDGET_CATS = {
@@ -1727,6 +1733,50 @@ function TripContent() {
         </div>
       </div>
 
+      {/* Offline Cache Button */}
+      <div className="px-4 mb-2 flex justify-end">
+        <button
+          onClick={async () => {
+            const dest = trip.destination;
+            const lang_val = lang;
+            setCachingOffline(true);
+            try {
+              // Fetch packing list
+              const packKey = `aigency_pack_${dest}_${trip.days}`;
+              if (!localStorage.getItem(packKey)) {
+                const r = await fetch("/api/suggest", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ type:"packing", trip, language: lang_val }) });
+                const d = await r.json();
+                if (d.ok) localStorage.setItem(packKey, JSON.stringify(d.data));
+              }
+              // Fetch phrases
+              const phrasesKey = `aigency_phrases_${dest}`;
+              if (!localStorage.getItem(phrasesKey)) {
+                const r = await fetch("/api/phrases", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ destination: dest, language: lang_val }) });
+                const d = await r.json();
+                if (d.ok) localStorage.setItem(phrasesKey, JSON.stringify(d.data));
+              }
+              // Fetch currency
+              const base = trip.currency || "USD";
+              const today = new Date().toISOString().split("T")[0];
+              const currKey = `aigency_currency_${base}_${today}`;
+              if (!localStorage.getItem(currKey)) {
+                const r = await fetch(`/api/currency?from=${base}`);
+                const d = await r.json();
+                if (d.ok) localStorage.setItem(currKey, JSON.stringify(d));
+              }
+              setOfflineCached(true);
+            } catch(e) {}
+            setCachingOffline(false);
+          }}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all"
+          style={offlineCached
+            ? { background:"#d1fae5", color:"#065f46", border:"1px solid #6ee7b7" }
+            : { background:"var(--bg-card)", color:"var(--text-sub)", border:"1px solid var(--border)" }}
+        >
+          {cachingOffline ? "⏳" : offlineCached ? "✅" : "📥"} {offlineCached ? "Saved offline" : "Save for offline"}
+        </button>
+      </div>
+
       {/* ── Tab Bar ── */}
       <div className="sticky top-16 z-30 mx-3 mb-4">
         <div className="bg-white/95 backdrop-blur-xl rounded-b-2xl border border-orange-100 border-t-0 shadow-sm overflow-hidden">
@@ -2037,6 +2087,8 @@ function TripContent() {
         {activeTab === "currency" && <CurrencyTab trip={trip}/>}
         {activeTab === "visa" && <VisaTab trip={trip}/>}
         {activeTab === "docs" && <DocsTab trip={trip}/>}
+        {activeTab === "reviews" && <ReviewsTab trip={trip}/>}
+        {activeTab === "chat" && <ChatTab trip={trip}/>}
       </div>
 
       {/* ── Floating AI Button ── */}

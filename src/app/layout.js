@@ -2,6 +2,7 @@ import "./globals.css";
 import BottomNav from "./components/BottomNav";
 import { LanguageProvider } from "./LanguageProvider";
 import Link from "next/link";
+import OfflineBanner from "./components/OfflineBanner";
 
 export const metadata = {
   title: "AI-gency — Travel OS",
@@ -48,6 +49,7 @@ export default function RootLayout({ children }) {
         <meta name="theme-color" content="#f97316" />
       </head>
       <body className="font-sans antialiased pb-24" style={{ background: "#FFF8F0" }}>
+        <OfflineBanner />
         <LanguageProvider>
           {children}
           <BottomNav />
