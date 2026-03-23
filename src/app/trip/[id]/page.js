@@ -1732,7 +1732,7 @@ function TripContent() {
       <div className="mx-3 rounded-3xl overflow-hidden mb-0 relative" style={{background:hero}}>
         {/* Destination photo background */}
         <div className="absolute inset-0 opacity-20" style={{
-          backgroundImage: `url(https://source.unsplash.com/800x400/?${encodeURIComponent(trip.destination.split(",")[0])},travel,city)`,
+          backgroundImage: `url(https://source.unsplash.com/800x400/?${encodeURIComponent((trip.destination||"travel").split(",")[0])},travel,city)`,
           backgroundSize: "cover",
           backgroundPosition: "center",
           filter: "blur(0px)",
@@ -1743,7 +1743,7 @@ function TripContent() {
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="flex-1 min-w-0">
               <div className="flex flex-wrap gap-2 mb-3">
-                {[`${STYLE_ICONS[trip.style]||"🌍"} ${trip.style?.charAt(0).toUpperCase()+trip.style?.slice(1)||"Trip"}`,
+                {[`${STYLE_ICONS[trip.style]||"🌍"} ${trip.style ? trip.style.charAt(0).toUpperCase()+trip.style.slice(1) : "Trip"}`,
                   `👥 ${trip.travelers} ${t("travelers_word")}`,
                   `🗓️ ${trip.days} ${t("days")}`].map(tag=>(
                   <span key={tag} className="text-xs font-bold px-3 py-1.5 rounded-full" style={{background:"rgba(255,255,255,0.2)",color:"white"}}>{tag}</span>
