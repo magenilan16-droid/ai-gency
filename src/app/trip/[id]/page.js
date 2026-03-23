@@ -1797,15 +1797,17 @@ function TripContent() {
       </div>
 
       {/* ── Tab Bar ── */}
-      <div className="sticky top-16 z-30 mx-3 mb-4">
-        <div className="bg-white/95 backdrop-blur-xl rounded-b-2xl border border-orange-100 border-t-0 shadow-sm overflow-hidden">
-          <div className="flex">
+      <div className="sticky top-16 z-30 px-3 mb-4">
+        <div className="bg-white/95 backdrop-blur-xl rounded-2xl border border-orange-100 shadow-sm px-3 py-2">
+          <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
             {TABS.map(tab => (
               <button key={tab.id} onClick={()=>setActiveTab(tab.id)}
-                className="flex-1 flex flex-col items-center gap-0.5 py-3 transition-all"
-                style={activeTab===tab.id ? {background:hero,color:"white"} : {color:"#9ca3af"}}>
-                <span className="text-base leading-none">{tab.icon}</span>
-                <span className="text-xs font-black">{t(tab.labelKey)}</span>
+                className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl transition-all duration-200 font-black text-xs whitespace-nowrap"
+                style={activeTab===tab.id
+                  ? { background: hero, color: "white", boxShadow: "0 4px 12px rgba(249,115,22,0.3)" }
+                  : { color: "#9ca3af", background: "transparent" }}>
+                <span className="text-sm leading-none">{tab.icon}</span>
+                <span>{t(tab.labelKey)}</span>
               </button>
             ))}
           </div>
@@ -1820,31 +1822,25 @@ function TripContent() {
           <>
             {/* AI Quick Actions */}
             <section>
+              <div className="flex items-center gap-2 mb-3">
+                <span className="dot-live" />
+                <span className="label-micro">QUICK ACCESS</span>
+              </div>
               <div className="grid grid-cols-2 gap-3">
-                <button onClick={()=>setShowAI(true)}
-                  className="rounded-2xl p-4 text-white text-left shadow-md hover:-translate-y-0.5 transition-all" style={{background:G}}>
-                  <div className="text-2xl mb-2">🤖</div>
-                  <div className="font-black text-sm">{t("ask_ai_btn")}</div>
-                  <div className="text-white/70 text-xs mt-0.5">{t("ai_tips_subtitle")}</div>
-                </button>
-                <button onClick={()=>setActiveTab("pack")}
-                  className="rounded-2xl p-4 text-white text-left shadow-md hover:-translate-y-0.5 transition-all" style={{background:"linear-gradient(135deg,#8b5cf6,#6366f1)"}}>
-                  <div className="text-2xl mb-2">🧳</div>
-                  <div className="font-black text-sm">{t("tab_pack")}</div>
-                  <div className="text-white/70 text-xs mt-0.5">{t("ai_packing_list")}</div>
-                </button>
-                <button onClick={()=>setActiveTab("expenses")}
-                  className="rounded-2xl p-4 text-white text-left shadow-md hover:-translate-y-0.5 transition-all" style={{background:"linear-gradient(135deg,#0d9488,#0ea5e9)"}}>
-                  <div className="text-2xl mb-2">💸</div>
-                  <div className="font-black text-sm">{t("tab_expenses")}</div>
-                  <div className="text-white/70 text-xs mt-0.5">{expenses.length}{t("expenses_count_suffix")}</div>
-                </button>
-                <button onClick={()=>setActiveTab("local")}
-                  className="rounded-2xl p-4 text-white text-left shadow-md hover:-translate-y-0.5 transition-all" style={{background:"linear-gradient(135deg,#d97706,#f59e0b)"}}>
-                  <div className="text-2xl mb-2">🗣️</div>
-                  <div className="font-black text-sm">{t("tab_local")}</div>
-                  <div className="text-white/70 text-xs mt-0.5">{t("local_phrases")}</div>
-                </button>
+                {[
+                  { onClick: ()=>setShowAI(true), bg: G, icon: "🤖", title: t("ask_ai_btn"), sub: t("ai_tips_subtitle") },
+                  { onClick: ()=>setActiveTab("pack"), bg: "linear-gradient(135deg,#8b5cf6,#6366f1)", icon: "🧳", title: t("tab_pack"), sub: t("ai_packing_list") },
+                  { onClick: ()=>setActiveTab("expenses"), bg: "linear-gradient(135deg,#0d9488,#0ea5e9)", icon: "💸", title: t("tab_expenses"), sub: `${expenses.length}${t("expenses_count_suffix")}` },
+                  { onClick: ()=>setActiveTab("local"), bg: "linear-gradient(135deg,#d97706,#f59e0b)", icon: "🗣️", title: t("tab_local"), sub: t("local_phrases") },
+                ].map((card, i) => (
+                  <button key={i} onClick={card.onClick}
+                    className="rounded-[1.5rem] p-5 text-white text-left transition-all duration-200 hover:-translate-y-1"
+                    style={{ background: card.bg, boxShadow: "0 8px 24px rgba(0,0,0,0.12)" }}>
+                    <div className="text-3xl mb-3">{card.icon}</div>
+                    <div className="font-black text-sm tracking-tight leading-snug">{card.title}</div>
+                    <div className="text-white/65 text-xs mt-1 font-medium">{card.sub}</div>
+                  </button>
+                ))}
               </div>
             </section>
 
