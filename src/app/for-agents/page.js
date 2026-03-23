@@ -13,6 +13,11 @@ export default function ForAgentsPage() {
   const [agentLink, setAgentLink] = useState("");
   const [copied, setCopied] = useState(false);
 
+  const COLOR_OPTIONS = ["#f97316", "#3b82f6", "#8b5cf6", "#10b981", "#ec4899", "#f59e0b"];
+  const EMOJI_OPTIONS = ["✈️", "🌍", "🏖️", "🗺️", "🌟", "💼"];
+  const [selectedColor, setSelectedColor] = useState(COLOR_OPTIONS[0]);
+  const [selectedEmoji, setSelectedEmoji] = useState(EMOJI_OPTIONS[0]);
+
   function handleChange(e) {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
   }
@@ -21,8 +26,9 @@ export default function ForAgentsPage() {
     e.preventDefault();
     const code = `AGT-${form.name.slice(0, 3).toUpperCase()}${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
     const link = `https://${window.location.host}/plan?agent=${code}`;
-    const profile = { ...form, code, link, createdAt: new Date().toISOString() };
-    try { localStorage.setItem("aigency_agent_profile", JSON.stringify(profile)); } catch {}
+    const profile = { code, name: form.name, agency: form.agency, phone: form.whatsapp, email: form.email, color: selectedColor, emoji: selectedEmoji, link, createdAt: new Date().toISOString() };
+    localStorage.setItem("aigency_agent_profile", JSON.stringify(profile));
+    localStorage.setItem(`aigency_agent_${code}`, JSON.stringify(profile));
     setAgentCode(code);
     setAgentLink(link);
     setSubmitted(true);
@@ -169,14 +175,25 @@ export default function ForAgentsPage() {
 
         {submitted ? (
           <div className="rounded-[2rem]" style={{
-            background: "white", border: "2px solid #f97316",
+            background: "white", border: `2px solid ${selectedColor}`,
             padding: 32, boxShadow: "0 8px 32px rgba(249,115,22,0.12)"
           }}>
+            {/* Emoji Avatar */}
+            <div className="flex justify-center mb-4">
+              <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl"
+                style={{ background: selectedColor }}>
+                {selectedEmoji}
+              </div>
+            </div>
+
+            <div className="text-center font-black text-gray-900 text-lg mb-1">Your Agent Brand</div>
+            <div className="text-center text-gray-500 text-sm mb-6">{form.name} · {form.agency}</div>
+
             <div style={{ marginBottom: 16 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: "#f97316", marginBottom: 6, textTransform: "uppercase", letterSpacing: 1 }}>Your Agent Code</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: selectedColor, marginBottom: 6, textTransform: "uppercase", letterSpacing: 1 }}>Your Agent Code</div>
               <div style={{
-                background: "#fff7ed", border: "1px solid #ffedd5", borderRadius: 12,
-                padding: "12px 16px", fontWeight: 900, fontSize: 18, color: "#ea580c", letterSpacing: 2
+                background: selectedColor + "15", border: `1px solid ${selectedColor}30`, borderRadius: 12,
+                padding: "12px 16px", fontWeight: 900, fontSize: 18, color: selectedColor, letterSpacing: 2
               }}>{agentCode}</div>
             </div>
             <div style={{ marginBottom: 20 }}>
@@ -188,7 +205,7 @@ export default function ForAgentsPage() {
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               <button onClick={copyLink} style={{
-                background: copied ? "#22c55e" : G,
+                background: copied ? "#22c55e" : selectedColor,
                 color: "white", border: "none", borderRadius: 14, padding: "14px 20px",
                 fontWeight: 900, fontSize: 15, cursor: "pointer", transition: "all 0.2s"
               }}>
@@ -201,6 +218,23 @@ export default function ForAgentsPage() {
                 📲 Share on WhatsApp
               </button>
             </div>
+
+            {/* Branding Preview */}
+            <div className="rounded-2xl p-4 mt-4" style={{ background: selectedColor + "15", border: `2px solid ${selectedColor}30` }}>
+              <div className="text-[10px] font-black uppercase tracking-[0.2em] mb-2" style={{ color: selectedColor }}>TRIP PLANNED BY</div>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl flex items-center justify-center text-xl" style={{ background: selectedColor }}>
+                  {selectedEmoji}
+                </div>
+                <div>
+                  <div className="font-black text-gray-900 text-sm">{form.name}</div>
+                  <div className="text-xs text-gray-500">{form.agency}</div>
+                </div>
+                <a href={`https://wa.me/${form.whatsapp}`} className="ml-auto px-3 py-1.5 rounded-xl text-xs font-black text-white" style={{ background: selectedColor }}>
+                  Contact
+                </a>
+              </div>
+            </div>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="rounded-[2rem]" style={{
@@ -210,7 +244,7 @@ export default function ForAgentsPage() {
             {[
               { name: "name", label: "Your Name", type: "text", placeholder: "John Smith" },
               { name: "agency", label: "Agency Name", type: "text", placeholder: "Smith Travel Agency" },
-              { name: "whatsapp", label: "WhatsApp Number", type: "tel", placeholder: "+1 555 000 0000" },
+              { name: "whatsapp", label: "Phone / WhatsApp", type: "tel", placeholder: "+1 555 000 0000" },
               { name: "email", label: "Email Address", type: "email", placeholder: "john@agency.com" },
             ].map(field => (
               <div key={field.name} style={{ marginBottom: 16 }}>
@@ -234,10 +268,57 @@ export default function ForAgentsPage() {
                 />
               </div>
             ))}
+
+            {/* Accent Color Picker */}
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "#374151", marginBottom: 8 }}>
+                Accent Color
+              </label>
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                {COLOR_OPTIONS.map(color => (
+                  <button
+                    key={color}
+                    type="button"
+                    onClick={() => setSelectedColor(color)}
+                    style={{
+                      width: 36, height: 36, borderRadius: "50%", background: color, border: "none",
+                      cursor: "pointer", outline: selectedColor === color ? `3px solid ${color}` : "none",
+                      outlineOffset: 2, transform: selectedColor === color ? "scale(1.15)" : "scale(1)",
+                      transition: "all 0.15s",
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Emoji Avatar Picker */}
+            <div style={{ marginBottom: 20 }}>
+              <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "#374151", marginBottom: 8 }}>
+                Emoji Avatar
+              </label>
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                {EMOJI_OPTIONS.map(emoji => (
+                  <button
+                    key={emoji}
+                    type="button"
+                    onClick={() => setSelectedEmoji(emoji)}
+                    style={{
+                      width: 44, height: 44, borderRadius: 12, fontSize: 22,
+                      background: selectedEmoji === emoji ? selectedColor + "20" : "#f9fafb",
+                      border: selectedEmoji === emoji ? `2px solid ${selectedColor}` : "2px solid #e5e7eb",
+                      cursor: "pointer", transition: "all 0.15s",
+                    }}
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <button type="submit" style={{
               width: "100%", padding: "16px", borderRadius: 14, border: "none",
-              background: G, color: "white", fontWeight: 900, fontSize: 16, cursor: "pointer",
-              marginTop: 8, boxShadow: "0 4px 16px rgba(249,115,22,0.3)"
+              background: selectedColor, color: "white", fontWeight: 900, fontSize: 16, cursor: "pointer",
+              marginTop: 8, boxShadow: `0 4px 16px ${selectedColor}50`
             }}>
               Get My Agent Link →
             </button>

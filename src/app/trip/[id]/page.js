@@ -1392,6 +1392,7 @@ function TripContent() {
   const [dayForecast, setDayForecast] = useState(null);
   const [offlineCached, setOfflineCached] = useState(false);
   const [cachingOffline, setCachingOffline] = useState(false);
+  const [referringAgent, setReferringAgent] = useState(null);
   const touchStartX = useRef(null);
 
   const TABS = [
@@ -1424,6 +1425,13 @@ function TripContent() {
     setExpenses(tr.expenses || []);
     if (searchParams.get("edit") === "true") setEditMode(true);
     if (searchParams.get("surprise") === "true") setShowSurprise(true);
+    // Load referring agent profile if exists
+    const agentCode = new URLSearchParams(window.location.search).get("agent")
+      || localStorage.getItem("aigency_referral_agent");
+    if (agentCode) {
+      const agentProfile = JSON.parse(localStorage.getItem(`aigency_agent_${agentCode}`) || "null");
+      if (agentProfile) setReferringAgent(agentProfile);
+    }
     // Ask for notification permission and schedule reminder
     if (tr.form?.startDate && "Notification" in window && Notification.permission === "default") {
       Notification.requestPermission().then(perm => {
@@ -1675,12 +1683,19 @@ function TripContent() {
 
       {/* ── Nav ── */}
       <nav className="sticky top-0 z-40 px-3 py-3">
-        <div className="max-w-5xl mx-auto flex items-center justify-between bg-white/90 backdrop-blur-xl rounded-2xl px-4 py-3 shadow-sm border border-orange-100">
-          <Link href="/trips" className="text-gray-400 hover:text-gray-600 text-sm font-medium transition-colors">← {t("nav_trips")}</Link>
+        <div className="max-w-5xl mx-auto flex items-center justify-between px-4 py-3 rounded-[1.5rem]"
+          style={{
+            background: "rgba(255,255,255,0.9)",
+            backdropFilter: "blur(20px)",
+            WebkitBackdropFilter: "blur(20px)",
+            boxShadow: "0 4px 24px rgba(0,0,0,0.08), 0 0 0 1px rgba(249,115,22,0.06)",
+            border: "1px solid rgba(255,237,213,0.8)"
+          }}>
+          <Link href="/trips" className="text-xs font-black text-gray-400 hover:text-gray-500 transition-colors">← {t("nav_trips")}</Link>
           <div className="flex items-center gap-2">
             <button
               onClick={() => setEditMode(e => !e)}
-              className="no-print text-xs font-bold px-3 py-2 rounded-xl border-2 transition-all"
+              className="no-print text-xs font-bold px-3 py-2 rounded-[0.875rem] border-2 transition-all"
               style={editMode
                 ? { background: "linear-gradient(135deg,#f97316,#ec4899)", color: "white", borderColor: "transparent" }
                 : { borderColor: "#ffedd5", color: "#9ca3af", background: "transparent" }
@@ -1688,16 +1703,17 @@ function TripContent() {
             >
               {editMode ? t("editing_active") : t("edit_btn_label")}
             </button>
-            <button onClick={handlePrint} disabled={printLoading} className="no-print text-xs font-bold px-3 py-2 rounded-xl border-2 border-orange-100 text-gray-500 hover:bg-orange-50 transition-all disabled:opacity-50">
+            <button onClick={handlePrint} disabled={printLoading} className="no-print text-xs font-bold px-3 py-2 rounded-[0.875rem] border-2 border-orange-100 text-gray-500 hover:bg-orange-50 transition-all disabled:opacity-50">
               {printLoading ? "⏳" : "🖨️"}
             </button>
-            <button onClick={downloadCalendar} className="no-print text-xs font-bold px-3 py-2 rounded-xl border-2 border-orange-100 text-gray-500 hover:bg-orange-50 transition-all">
+            <button onClick={downloadCalendar} className="no-print text-xs font-bold px-3 py-2 rounded-[0.875rem] border-2 border-orange-100 text-gray-500 hover:bg-orange-50 transition-all">
               📅
             </button>
-            <button onClick={shareWhatsApp} className="no-print text-xs font-bold px-3 py-2 rounded-xl text-white shadow-sm" style={{background:"#25D366"}} title="WhatsApp">
+            <button onClick={shareWhatsApp} className="no-print text-xs font-bold px-3 py-2 rounded-[0.875rem] text-white shadow-sm" style={{background:"#25D366"}} title="WhatsApp">
               💬
             </button>
-            <button onClick={copyLink} className="text-xs font-bold px-3 py-2 rounded-xl text-white shadow-sm" style={{background:hero}}>
+            <button onClick={copyLink} className="text-xs font-bold px-4 py-2 rounded-[1rem] text-white shadow-md transition-all hover:opacity-90"
+              style={{ background: "linear-gradient(135deg,#f97316,#ec4899)", boxShadow: "0 4px 16px rgba(249,115,22,0.35)" }}>
               {copied ? "✓ Copied!" : t("share_trip")}
             </button>
           </div>
@@ -1713,8 +1729,16 @@ function TripContent() {
       )}
 
       {/* ── Hero ── */}
-      <div className="mx-3 rounded-3xl overflow-hidden mb-0" style={{background:hero}}>
-        <div className="max-w-5xl mx-auto px-5 py-8">
+      <div className="mx-3 rounded-3xl overflow-hidden mb-0 relative" style={{background:hero}}>
+        {/* Destination photo background */}
+        <div className="absolute inset-0 opacity-20" style={{
+          backgroundImage: `url(https://source.unsplash.com/800x400/?${encodeURIComponent(trip.destination.split(",")[0])},travel,city)`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          filter: "blur(0px)",
+          mixBlendMode: "overlay",
+        }} />
+        <div className="max-w-5xl mx-auto px-5 pb-12 pt-8 min-h-[280px] relative">
           <p className="text-white/70 text-xs font-black uppercase tracking-widest mb-1">✦ {theme.hi}</p>
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="flex-1 min-w-0">
@@ -1725,14 +1749,18 @@ function TripContent() {
                   <span key={tag} className="text-xs font-bold px-3 py-1.5 rounded-full" style={{background:"rgba(255,255,255,0.2)",color:"white"}}>{tag}</span>
                 ))}
               </div>
-              <h1 className="text-3xl sm:text-4xl font-black text-white leading-tight mb-1">
+              <h1 className="text-4xl sm:text-5xl font-black tracking-tighter leading-none text-white mb-1">
                 {theme.e} {editMode
                   ? <Editable value={trip.destination} onChange={v=>setTripAndSave(p=>({...p,destination:v}))} className="text-white"/>
                   : trip.destination}
               </h1>
-              <p className="text-white/60 text-sm font-medium">{form?.startDate} → {form?.endDate}</p>
+              <div className="flex items-center gap-2 mt-3">
+                <span className="dot-live" style={{ background: "white" }} />
+                <span className="text-white/70 text-[10px] font-black uppercase tracking-[0.2em]">AI-PLANNED TRIP</span>
+              </div>
+              <p className="text-white/60 text-sm font-medium mt-2">{form?.startDate} → {form?.endDate}</p>
             </div>
-            <div className="rounded-2xl p-4 text-center flex-shrink-0" style={{background:"rgba(255,255,255,0.15)",border:"1px solid rgba(255,255,255,0.25)"}}>
+            <div className="rounded-[1.25rem] p-4 text-center flex-shrink-0" style={{background:"rgba(255,255,255,0.2)",backdropFilter:"blur(20px)",border:"1px solid rgba(255,255,255,0.35)"}}>
               <div className="text-2xl font-black text-white">{trip.currency} {trip.total_estimated_cost?.toLocaleString()}</div>
               <div className="text-white/60 text-xs mt-1">{t("budget_label")}</div>
               {trip.travelers>1 && <div className="text-white/50 text-xs mt-0.5">≈ {trip.currency} {Math.round(trip.total_estimated_cost/trip.travelers).toLocaleString()}/person</div>}
@@ -2055,6 +2083,37 @@ function TripContent() {
                   ))}
                 </div>
               </section>
+            )}
+
+            {/* Agent Branding Card */}
+            {referringAgent && (
+              <div className="rounded-[1.75rem] p-5 shadow-sm" style={{
+                background: `${referringAgent.color}10`,
+                border: `2px solid ${referringAgent.color}25`
+              }}>
+                <div className="text-[10px] font-black uppercase tracking-[0.2em] mb-3" style={{ color: referringAgent.color }}>
+                  ✨ TRIP PLANNED BY YOUR AGENT
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0"
+                    style={{ background: referringAgent.color }}>
+                    {referringAgent.emoji || "✈️"}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-black text-gray-900">{referringAgent.name}</div>
+                    <div className="text-xs text-gray-500 font-medium">{referringAgent.agency}</div>
+                    {referringAgent.email && <div className="text-xs text-gray-400">{referringAgent.email}</div>}
+                  </div>
+                  {referringAgent.phone && (
+                    <a href={`https://wa.me/${referringAgent.phone.replace(/\D/g,"")}`}
+                      target="_blank" rel="noopener noreferrer"
+                      className="flex-shrink-0 px-4 py-2 rounded-xl text-xs font-black text-white transition-all hover:-translate-y-0.5"
+                      style={{ background: referringAgent.color }}>
+                      💬 Contact
+                    </a>
+                  )}
+                </div>
+              </div>
             )}
 
             {/* Daily Tip */}

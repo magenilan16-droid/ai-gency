@@ -1,5 +1,27 @@
 // Agent referral tracking
 
+export function saveAgentProfile(profile) {
+  // profile: { code, name, agency, phone, email, color, emoji }
+  try { localStorage.setItem("aigency_agent_profile", JSON.stringify(profile)); } catch {}
+}
+
+export function getAgentProfile() {
+  try { return JSON.parse(localStorage.getItem("aigency_agent_profile") || "null"); } catch { return null; }
+}
+
+export function getReferralAgentProfile(agentCode) {
+  // Look up a visiting client's referring agent
+  // For now, store referred agent info when client visits via ?agent=CODE
+  try {
+    const stored = localStorage.getItem(`aigency_agent_${agentCode}`);
+    return stored ? JSON.parse(stored) : null;
+  } catch { return null; }
+}
+
+export function storeReferralAgent(agentCode, profile) {
+  try { localStorage.setItem(`aigency_agent_${agentCode}`, JSON.stringify(profile)); } catch {}
+}
+
 export function getAgentCode() {
   if (typeof window === "undefined") return null;
   // Check URL first

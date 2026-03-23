@@ -100,13 +100,17 @@ function WelcomePage() {
     <div className="min-h-screen" style={{ background: "var(--bg-page)", overflowX: "hidden" }}>
 
       {/* ── Hero ── */}
-      <div className="relative min-h-screen flex flex-col items-center justify-center px-5 pt-16 pb-24 text-center overflow-hidden">
+      <div className="relative min-h-screen flex flex-col items-center justify-center px-6 text-center overflow-hidden">
 
-        {/* Background orbs */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full opacity-10 blur-3xl pointer-events-none"
-          style={{ background: "linear-gradient(135deg,#f97316,#ec4899)", marginTop: "-100px" }} />
-        <div className="absolute bottom-0 right-0 w-[300px] h-[300px] rounded-full opacity-8 blur-3xl pointer-events-none"
-          style={{ background: "#667eea" }} />
+        {/* Animated gradient orbs */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full opacity-20 blur-3xl animate-pulse"
+            style={{ background: "linear-gradient(135deg,#f97316,#ec4899)" }} />
+          <div className="absolute bottom-1/4 right-1/4 w-64 h-64 rounded-full opacity-15 blur-3xl"
+            style={{ background: "#667eea", animation: "pulse 3s ease-in-out infinite 1s" }} />
+          <div className="absolute top-1/2 right-1/3 w-48 h-48 rounded-full opacity-10 blur-2xl"
+            style={{ background: "#f59e0b", animation: "pulse 4s ease-in-out infinite 0.5s" }} />
+        </div>
 
         {/* Badge */}
         <div
@@ -126,27 +130,24 @@ function WelcomePage() {
 
         {/* Headline */}
         <h1
-          className="text-5xl sm:text-7xl font-black leading-none tracking-tighter mb-4 transition-all duration-700 delay-100"
-          style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(16px)" }}
+          className="text-6xl sm:text-7xl font-black tracking-tighter leading-none mb-6 transition-all duration-700 delay-100"
+          style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(20px)", transition: "all 0.8s ease" }}
         >
-          <span style={{ color: "var(--text-main)" }}>{t("hero_headline_1")}</span>
-          <br />
           <span style={{
             background: G,
             WebkitBackgroundClip: "text",
             WebkitTextFillColor: "transparent",
             backgroundClip: "text",
-          }}>
-            {t("hero_headline_2")}
-          </span>
-          <span style={{ color: "var(--text-main)" }}> ✈️</span>
+          }}>AI Plans.</span><br />
+          <span style={{ color: "var(--text-main)" }}>You Explore.</span>
         </h1>
 
         {/* Sub */}
         <p
-          className="text-base sm:text-lg max-w-sm mx-auto leading-relaxed mb-8 transition-all duration-700 delay-150"
+          className="text-xl max-w-sm mx-auto mb-10 leading-relaxed transition-all duration-700 delay-150"
           style={{
             color: "var(--text-sub)",
+            fontWeight: 500,
             opacity: visible ? 1 : 0,
             transform: visible ? "translateY(0)" : "translateY(16px)",
           }}
@@ -156,45 +157,49 @@ function WelcomePage() {
 
         {/* CTA */}
         <div
-          className="flex flex-col sm:flex-row gap-3 items-center justify-center transition-all duration-700 delay-200"
+          className="flex flex-col sm:flex-row gap-3 justify-center transition-all duration-700 delay-200"
           style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(16px)" }}
         >
-          <Link
-            href="/plan"
-            className="flex items-center gap-2 text-white font-black text-base px-8 py-4 rounded-2xl shadow-xl hover:-translate-y-1 transition-all"
-            style={{ background: G, boxShadow: "0 8px 32px rgba(249,115,22,0.35)" }}
-          >
-            {t("hero_cta_main")}
-            <span className="text-white/80">→</span>
+          <Link href="/plan"
+            className="px-8 py-4 rounded-[99px] text-white font-black text-base shadow-lg hover:-translate-y-1 transition-all"
+            style={{ background: "linear-gradient(135deg,#f97316,#ec4899)", boxShadow: "0 12px 32px rgba(249,115,22,0.35)" }}>
+            Plan My Trip ✈️
           </Link>
-          <Link
-            href="/trips"
-            className="text-sm font-bold px-6 py-4 rounded-2xl border-2 transition-all hover:bg-orange-50"
-            style={{ borderColor: "#ffedd5", color: "var(--text-sub)" }}
-          >
-            {t("view_examples_btn")}
+          <Link href="/for-agents"
+            className="px-8 py-4 rounded-[99px] font-black text-base transition-all hover:-translate-y-1"
+            style={{ border: "2px solid #fed7aa", color: "#f97316", background: "white" }}>
+            I&apos;m a Travel Agent →
           </Link>
         </div>
 
-        {/* Floating example cards */}
+        {/* Destination showcase strip */}
         <div
-          className="mt-12 w-full max-w-sm mx-auto transition-all duration-700 delay-300"
+          className="mt-14 w-full transition-all duration-700 delay-300"
           style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(20px)" }}
         >
-          <div className="grid grid-cols-2 gap-3">
-            {EXAMPLES.map((ex, i) => (
-              <motion.div key={i} whileHover={{ y: -5, transition: { duration: 0.2 } }}>
-                <Link href="/plan"
-                  className="block rounded-[1.5rem] p-4 text-left cursor-pointer card-hover"
-                  style={{ background: "var(--bg-card)", border: "1px solid var(--border)", boxShadow: "0 4px 20px rgba(249,115,22,0.08)" }}
-                >
-                  <div className="text-2xl mb-2">{ex.emoji}</div>
-                  <div className="font-black text-sm tracking-tight" style={{ color: "var(--text-main)" }}>{ex.dest}</div>
-                  <div className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>{ex.days} days · {ex.budget}</div>
-                  <div className="badge-premium mt-2">{ex.style}</div>
+          <div className="overflow-x-auto no-scrollbar pb-4">
+            <div className="flex gap-3 px-4 justify-center flex-wrap sm:flex-nowrap" style={{ width: "max-content", margin: "0 auto" }}>
+              {[
+                { name: "Tokyo", emoji: "🗼", g: ["#FF6B6B","#FF8E53"] },
+                { name: "Paris", emoji: "🗼", g: ["#667eea","#764ba2"] },
+                { name: "Bali", emoji: "🌺", g: ["#11998e","#38ef7d"] },
+                { name: "Dubai", emoji: "🏙️", g: ["#f7971e","#ffd200"] },
+                { name: "NYC", emoji: "🗽", g: ["#4776E6","#8E54E9"] },
+                { name: "Bangkok", emoji: "🐘", g: ["#f7971e","#ffd200"] },
+              ].map((dest, i) => (
+                <Link key={i} href={`/plan?destination=${encodeURIComponent(dest.name)}`}
+                  className="flex-shrink-0 rounded-[1.5rem] p-5 text-white cursor-pointer hover:-translate-y-1 transition-all"
+                  style={{
+                    background: `linear-gradient(135deg,${dest.g[0]},${dest.g[1]})`,
+                    width: "120px", height: "120px",
+                    boxShadow: `0 8px 24px ${dest.g[0]}40`,
+                    display: "flex", flexDirection: "column", justifyContent: "flex-end"
+                  }}>
+                  <div className="text-3xl mb-2">{dest.emoji}</div>
+                  <div className="font-black text-sm tracking-tight">{dest.name}</div>
                 </Link>
-              </motion.div>
-            ))}
+              ))}
+            </div>
           </div>
           <p className="text-center text-xs mt-3" style={{ color: "var(--text-muted)" }}>
             {t("click_destination_hint")}
