@@ -38,13 +38,12 @@ function WeatherBadge({ destination, dateStr }) {
 
   if (!weather) return null;
   return (
-    <span className="inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: "#fff7ed", color: "#f97316" }}>
+    <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-orange-50 text-orange-600 border border-orange-100">
       {weather.emoji} {weather.temp}°
     </span>
   );
 }
 
-const G = "linear-gradient(135deg,#f97316,#ec4899)";
 const STYLE_E = { adventure:"🧗", relaxed:"🏖️", cultural:"🏛️", luxury:"✨", business:"💼" };
 const DEST_COLORS = {
   japan:"#FF6B6B",tokyo:"#FF6B6B",paris:"#667eea",france:"#667eea",italy:"#11998e",
@@ -111,22 +110,20 @@ export default function TripsPage() {
 
   if (!mounted) return (
     <div className="min-h-screen flex items-center justify-center">
-      <div className="w-10 h-10 rounded-full border-4 border-orange-300 border-t-transparent animate-spin" />
+      <div className="w-8 h-8 rounded-full border-2 border-gray-200 border-t-orange-500 animate-spin" />
     </div>
   );
 
   return (
-    <div className="min-h-screen" style={{ background: "var(--bg-page)" }}>
+    <div className="min-h-screen bg-gray-50">
       <div className="px-4 sm:px-6 pt-8 pb-4 max-w-2xl mx-auto">
+        {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="dot-live" />
-              <span className="label-micro">YOUR TRIPS</span>
-            </div>
-            <h1 className="text-3xl font-black tracking-tighter text-gray-900">{t("my_trips")}</h1>
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Your trips</p>
+            <h1 className="text-2xl font-bold text-gray-900">{t("my_trips")}</h1>
           </div>
-          <Link href="/plan" className="font-black text-white text-sm px-5 py-3 rounded-2xl shadow-md shadow-orange-200" style={{ background: G }}>
+          <Link href="/plan" className="bg-orange-500 text-white rounded-lg font-semibold text-sm px-4 py-2 hover:bg-orange-600 transition-colors">
             {t("new_trip_btn")}
           </Link>
         </div>
@@ -137,8 +134,7 @@ export default function TripsPage() {
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder={t("search_trips_placeholder")}
-            className="w-full text-sm font-bold rounded-2xl px-4 py-3 border-2 border-orange-100 focus:border-orange-300 outline-none"
-            style={{ background: "var(--bg-card)", color: "var(--text-main)" }}
+            className="w-full text-sm rounded-xl px-4 py-3 border border-gray-200 focus:border-gray-300 outline-none bg-white text-gray-900 placeholder-gray-400 transition-colors"
           />
         </div>
 
@@ -146,22 +142,22 @@ export default function TripsPage() {
         <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 mb-5">
           {FILTERS.map(f => (
             <button key={f.id} onClick={() => setFilter(f.id)}
-              className="flex-shrink-0 px-5 py-2 rounded-[99px] text-sm font-bold transition-all"
-              style={filter === f.id
-                ? { background: G, color: "white", boxShadow: "0 4px 14px rgba(249,115,22,0.3)" }
-                : { background: "white", color: "#9ca3af", border: "2px solid #ffedd5" }}>
+              className={`flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-colors border ${
+                filter === f.id
+                  ? "bg-orange-50 text-orange-600 border-orange-200"
+                  : "bg-white text-gray-500 border-gray-200 hover:border-gray-300"
+              }`}>
               {t(f.labelKey)}
             </button>
           ))}
         </div>
 
-        {/* Trips grid */}
+        {/* Trips list */}
         {shown.length === 0 ? (
-          <div className="text-center py-20 bg-white rounded-[1.75rem] border border-orange-100">
-            <div className="text-7xl mb-4">🗺️</div>
-            <p className="font-black tracking-tighter text-gray-900 text-lg mb-1">{t("no_trips_here")}</p>
+          <div className="text-center py-16 bg-white rounded-xl border border-gray-100">
+            <p className="font-semibold text-gray-900 text-base mb-1">{t("no_trips_here")}</p>
             <p className="text-sm text-gray-400 mb-6">{t("start_planning_trips")}</p>
-            <Link href="/plan" className="inline-block font-black text-white text-sm px-8 py-3 rounded-2xl" style={{ background: G }}>
+            <Link href="/plan" className="inline-block bg-orange-500 text-white rounded-lg font-semibold text-sm px-5 py-2.5 hover:bg-orange-600 transition-colors">
               {t("plan_a_trip_btn")}
             </Link>
           </div>
@@ -173,32 +169,34 @@ export default function TripsPage() {
               const isDel = deleting === tr.id;
 
               return (
-                <motion.div key={tr.id} whileHover={{ y: -4 }} className="card-hover bg-white rounded-[1.75rem] border border-orange-100 overflow-hidden shadow-sm">
-                  <div className="h-1.5" style={{ background: `linear-gradient(90deg,${color},${color}66)` }} />
+                <motion.div key={tr.id} whileHover={{ y: -2 }}
+                  className="bg-white rounded-xl border border-gray-100 overflow-hidden hover:border-gray-200 transition-colors">
+                  {/* Colored accent line */}
+                  <div className="h-0.5" style={{ background: color }} />
                   <div className="p-4">
                     <div className="flex items-start gap-3">
-                      <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0"
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl flex-shrink-0"
                         style={{ background: `${color}15` }}>
                         {STYLE_E[tr.style] || "🌍"}
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2">
                           <div>
-                            <div className="font-black tracking-tighter text-lg text-gray-900">{tr.destination || t("untitled_trip")}</div>
+                            <div className="text-base font-semibold text-gray-900">{tr.destination || t("untitled_trip")}</div>
                             <div className="text-xs text-gray-400 mt-0.5">
                               {tr.form?.startDate ? `${tr.form.startDate} → ${tr.form.endDate}` : t("no_dates_set")}
                               {tr.days ? ` · ${tr.days} ${t("days")}` : ""}
                             </div>
                           </div>
                           <div className="text-right flex-shrink-0 flex flex-col items-end gap-1">
-                            <div className="font-black text-sm" style={{ color }}>{tr.currency} {tr.total_estimated_cost?.toLocaleString()}</div>
+                            <div className="text-sm font-semibold" style={{ color }}>{tr.currency} {tr.total_estimated_cost?.toLocaleString()}</div>
                             {d !== null && d >= 0 && (
-                              <div className="text-xs text-orange-400 font-bold">
+                              <div className="text-xs text-orange-500 font-medium">
                                 {d === 0 ? t("today_badge") : t("x_d_away", { n: d })}
                               </div>
                             )}
                             {d !== null && d < 0 && (
-                              <div className="text-xs text-gray-300 font-medium">{t("completed")}</div>
+                              <div className="text-xs text-gray-400 font-medium">{t("completed")}</div>
                             )}
                             <WeatherBadge destination={tr.destination} dateStr={tr.form?.startDate} />
                           </div>
@@ -206,27 +204,27 @@ export default function TripsPage() {
 
                         <div className="flex gap-2 mt-3">
                           <Link href={`/trip/${tr.id}`}
-                            className="flex-1 text-center text-xs font-black py-2.5 rounded-xl text-white" style={{ background: G }}>
+                            className="flex-1 text-center text-xs font-semibold py-2 rounded-lg bg-orange-500 text-white hover:bg-orange-600 transition-colors">
                             {t("open_trip")} →
                           </Link>
                           <Link href={`/chat?tripId=${tr.id}`}
-                            className="text-xs font-black py-2.5 px-3 rounded-xl border-2 border-orange-100 text-orange-500 hover:bg-orange-50 transition-colors">
+                            className="text-xs font-semibold py-2 px-3 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors">
                             🤖 AI
                           </Link>
                           {isDel ? (
                             <div className="flex gap-1">
                               <button onClick={() => handleDelete(tr.id)}
-                                className="text-xs font-black py-2.5 px-3 rounded-xl bg-red-500 text-white hover:bg-red-600 transition-colors">
+                                className="text-xs font-semibold py-2 px-3 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors">
                                 {t("delete")}
                               </button>
                               <button onClick={() => setDeleting(null)}
-                                className="text-xs font-black py-2.5 px-3 rounded-xl border-2 border-gray-200 text-gray-400 hover:bg-gray-50 transition-colors">
+                                className="text-xs font-semibold py-2 px-3 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors">
                                 {t("cancel")}
                               </button>
                             </div>
                           ) : (
                             <button onClick={() => setDeleting(tr.id)}
-                              className="text-xs font-black py-2.5 px-3 rounded-xl border-2 border-red-100 text-red-300 hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition-all">
+                              className="text-xs font-semibold py-2 px-3 rounded-lg border border-gray-200 text-gray-400 hover:bg-gray-50 hover:text-gray-600 hover:border-gray-300 transition-all">
                               🗑️
                             </button>
                           )}

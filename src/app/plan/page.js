@@ -76,29 +76,28 @@ function DatePickerWidget({ onConfirm, t }) {
   const days = start && end ? Math.ceil((new Date(end) - new Date(start)) / 86400000) : 0;
 
   return (
-    <div className="mt-3 bg-white rounded-2xl border-2 border-orange-100 p-4 space-y-3">
+    <div className="mt-3 bg-white rounded-xl border border-gray-100 p-4 space-y-3">
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-400 mb-1.5">{t("depart_label")}</p>
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">{t("depart_label")}</p>
           <input type="date" value={start} min={today}
             onChange={e => { setStart(e.target.value); if (end && e.target.value >= end) setEnd(""); }}
-            className="w-full px-3 py-3 rounded-2xl border-2 border-orange-100 focus:border-orange-300 outline-none text-sm font-medium text-gray-800" />
+            className="w-full px-3 py-2.5 rounded-xl border border-gray-200 focus:border-orange-400 outline-none text-sm font-medium text-gray-800 transition-colors" />
         </div>
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-400 mb-1.5">{t("return_label")}</p>
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">{t("return_label")}</p>
           <input type="date" value={end} min={start || today}
             onChange={e => setEnd(e.target.value)}
-            className="w-full px-3 py-3 rounded-2xl border-2 border-orange-100 focus:border-orange-300 outline-none text-sm font-medium text-gray-800" />
+            className="w-full px-3 py-2.5 rounded-xl border border-gray-200 focus:border-orange-400 outline-none text-sm font-medium text-gray-800 transition-colors" />
         </div>
       </div>
       {days > 0 && (
-        <p className="text-xs font-black text-orange-500">{t("x_day_trip", { n: days })}</p>
+        <p className="text-xs font-semibold text-orange-500">{t("x_day_trip", { n: days })}</p>
       )}
       <button
         disabled={!start || !end || days <= 0}
         onClick={() => onConfirm(`Departing ${start}, returning ${end} (${days} days)`)}
-        className="w-full py-4 rounded-2xl text-white text-base font-black tracking-tight disabled:opacity-40 transition-opacity"
-        style={{ background: G }}>
+        className="w-full py-3 rounded-xl bg-orange-500 text-white text-sm font-semibold disabled:opacity-40 hover:bg-orange-600 transition-all">
         {t("confirm_dates")}
       </button>
     </div>
@@ -112,24 +111,26 @@ function BudgetPickerWidget({ currency, onConfirm, t }) {
   const value = selected === "custom" ? Number(custom) : selected;
 
   return (
-    <div className="mt-3 bg-white rounded-2xl border-2 border-orange-100 p-4 space-y-3">
+    <div className="mt-3 bg-white rounded-xl border border-gray-100 p-4 space-y-3">
       <div className="flex flex-wrap gap-2">
         {PRESETS.map(p => (
           <button key={p}
             onClick={() => { setSelected(p); setCustom(""); }}
-            className="px-3 py-2 rounded-xl text-xs font-black border-2 transition-all"
-            style={selected === p
-              ? { borderColor: "#f97316", background: "#fff7ed", color: "#ea580c" }
-              : { borderColor: "#ffe4cc", background: "white", color: "#6b7280" }}>
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
+              selected === p
+                ? "border-orange-400 bg-orange-50 text-orange-600"
+                : "border-gray-200 bg-white text-gray-500 hover:border-gray-300"
+            }`}>
             {currency} {p.toLocaleString()}
           </button>
         ))}
         <button
           onClick={() => setSelected("custom")}
-          className="px-3 py-2 rounded-xl text-xs font-black border-2 transition-all"
-          style={selected === "custom"
-            ? { borderColor: "#f97316", background: "#fff7ed", color: "#ea580c" }
-            : { borderColor: "#ffe4cc", background: "white", color: "#6b7280" }}>
+          className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
+            selected === "custom"
+              ? "border-orange-400 bg-orange-50 text-orange-600"
+              : "border-gray-200 bg-white text-gray-500 hover:border-gray-300"
+          }`}>
           {t("custom_label")}
         </button>
       </div>
@@ -137,13 +138,12 @@ function BudgetPickerWidget({ currency, onConfirm, t }) {
         <input
           type="number" value={custom} onChange={e => setCustom(e.target.value)}
           placeholder={t("your_amount", { c: currency })}
-          className="w-full px-4 py-3 rounded-xl border-2 border-orange-200 focus:border-orange-400 outline-none text-sm font-medium" />
+          className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-orange-400 outline-none text-sm font-medium transition-colors" />
       )}
       <button
         disabled={!value || value <= 0}
         onClick={() => onConfirm(`My total budget is ${currency} ${Number(value).toLocaleString()}`)}
-        className="w-full py-4 rounded-2xl text-white text-base font-black tracking-tight disabled:opacity-40 transition-opacity"
-        style={{ background: G }}>
+        className="w-full py-3 rounded-xl bg-orange-500 text-white text-sm font-semibold disabled:opacity-40 hover:bg-orange-600 transition-all">
         {t("set_budget")}
       </button>
     </div>
@@ -167,10 +167,11 @@ function MultiOptionsWidget({ options, onConfirm }) {
       <div className="flex flex-wrap gap-2">
         {options.map(o => (
           <button key={o} onClick={() => toggle(o)}
-            className="px-3 py-2.5 rounded-xl text-xs font-bold border-2 transition-all"
-            style={selected.has(o)
-              ? { borderColor: "#f97316", background: "#fff7ed", color: "#ea580c" }
-              : { borderColor: "#ffe4cc", background: "white", color: "#374151" }}>
+            className={`px-3 py-2 rounded-lg text-xs font-semibold border transition-all ${
+              selected.has(o)
+                ? "border-orange-400 bg-orange-50 text-orange-600"
+                : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
+            }`}>
             {o}
           </button>
         ))}
@@ -178,8 +179,7 @@ function MultiOptionsWidget({ options, onConfirm }) {
       <button
         disabled={selected.size === 0}
         onClick={() => onConfirm(Array.from(selected).join(", "))}
-        className="w-full py-4 rounded-2xl text-white text-base font-black tracking-tight disabled:opacity-40 transition-opacity"
-        style={{ background: G }}>
+        className="w-full py-3 rounded-xl bg-orange-500 text-white text-sm font-semibold disabled:opacity-40 hover:bg-orange-600 transition-all">
         {selected.size > 0 ? t("confirm_selection", { n: selected.size }) : t("select_at_least_one")}
       </button>
     </div>
@@ -188,14 +188,14 @@ function MultiOptionsWidget({ options, onConfirm }) {
 
 function CountryPickerWidget({ onSelect, t }) {
   return (
-    <div className="mt-3 bg-white rounded-2xl border-2 border-orange-100 p-4">
-      <p className="text-xs font-black text-orange-400 uppercase tracking-wide mb-3">{t("popular_destinations")}</p>
+    <div className="mt-3 bg-white rounded-xl border border-gray-100 p-4">
+      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">{t("popular_destinations")}</p>
       <div className="grid grid-cols-3 gap-2">
         {COUNTRIES.map(c => (
           <button key={c.name} onClick={() => onSelect(c.name)}
-            className="flex flex-col items-center gap-1 p-2.5 rounded-xl border-2 border-orange-100 bg-white hover:border-orange-300 hover:bg-orange-50 transition-all">
+            className="flex flex-col items-center gap-1 p-2.5 rounded-xl border border-gray-100 bg-white hover:border-orange-300 hover:bg-orange-50 transition-all">
             <span className="text-2xl">{c.flag}</span>
-            <span className="text-xs font-bold text-gray-700 text-center leading-tight">{c.name}</span>
+            <span className="text-xs font-semibold text-gray-700 text-center leading-tight">{c.name}</span>
           </button>
         ))}
       </div>
@@ -226,10 +226,11 @@ function CitiesMultiWidget({ cities, onConfirm, t }) {
       <div className="flex flex-wrap gap-2">
         {cities.map(c => (
           <button key={c} onClick={() => toggle(c)}
-            className="px-3 py-2.5 rounded-xl text-xs font-bold border-2 transition-all"
-            style={selected.has(c)
-              ? { borderColor: "#f97316", background: "#fff7ed", color: "#ea580c" }
-              : { borderColor: "#ffe4cc", background: "white", color: "#374151" }}>
+            className={`px-3 py-2 rounded-lg text-xs font-semibold border transition-all ${
+              selected.has(c)
+                ? "border-orange-400 bg-orange-50 text-orange-600"
+                : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
+            }`}>
             📍 {c}
           </button>
         ))}
@@ -243,8 +244,7 @@ function CitiesMultiWidget({ cities, onConfirm, t }) {
             : `I'd like to visit ${arr.slice(0, -1).join(", ")} and ${arr[arr.length - 1]}`;
           onConfirm(text);
         }}
-        className="w-full py-4 rounded-2xl text-white text-base font-black tracking-tight disabled:opacity-40 transition-opacity"
-        style={{ background: G }}>
+        className="w-full py-3 rounded-xl bg-orange-500 text-white text-sm font-semibold disabled:opacity-40 hover:bg-orange-600 transition-all">
         {label}
       </button>
     </div>
@@ -260,7 +260,7 @@ function renderMarkdown(text) {
       <p key={i} className={`text-gray-800 text-sm leading-relaxed ${i > 0 ? "mt-1.5" : ""}`}>
         {parts.map((part, j) => {
           if (part.startsWith("**") && part.endsWith("**"))
-            return <strong key={j} className="font-black text-gray-900">{part.slice(2, -2)}</strong>;
+            return <strong key={j} className="font-bold text-gray-900">{part.slice(2, -2)}</strong>;
           if (part.startsWith("*") && part.endsWith("*"))
             return <em key={j} className="italic">{part.slice(1, -1)}</em>;
           return part;
@@ -274,9 +274,9 @@ function renderMarkdown(text) {
 function BotBubble({ text, cities, options, multiOptions, datePicker, budgetPicker, countryPicker, onChip, onWidget, currency, streaming, widgetUsed, t }) {
   return (
     <div className="flex items-end gap-3 rtl:flex-row-reverse">
-      <div className="w-9 h-9 rounded-2xl flex items-center justify-center text-base flex-shrink-0 shadow-md" style={{ background: G }}>🤖</div>
+      <div className="w-9 h-9 rounded-xl flex items-center justify-center text-base flex-shrink-0" style={{ background: G }}>🤖</div>
       <div className="flex-1 space-y-3">
-        <div className="chat-bot-bubble rounded-3xl rounded-bl-sm rtl:rounded-bl-3xl rtl:rounded-br-sm px-5 py-4 max-w-sm shadow-sm bg-white" style={{ border: "1.5px solid #ffe4cc" }}>
+        <div className="rounded-2xl rounded-bl-sm rtl:rounded-bl-2xl rtl:rounded-br-sm px-4 py-3.5 max-w-sm bg-white border border-gray-100 shadow-sm">
           {renderMarkdown(text)}
           {streaming && <span className="inline-block w-1.5 h-4 bg-orange-300 rounded animate-pulse ml-1 align-middle" />}
         </div>
@@ -293,7 +293,7 @@ function BotBubble({ text, cities, options, multiOptions, datePicker, budgetPick
           <div className="flex flex-col gap-2 pl-1">
             {options.map(o => (
               <button key={o} onClick={() => onChip(o)}
-                className="px-4 py-3 rounded-xl text-sm font-bold border-2 border-orange-100 bg-white text-gray-700 hover:border-orange-300 hover:bg-orange-50 transition-all text-left shadow-sm">
+                className="px-4 py-2.5 rounded-xl text-sm font-semibold border border-gray-200 bg-white text-gray-700 hover:border-orange-300 hover:bg-orange-50 transition-all text-left">
                 {o}
               </button>
             ))}
@@ -319,7 +319,7 @@ function BotBubble({ text, cities, options, multiOptions, datePicker, budgetPick
 function UserBubble({ text }) {
   return (
     <div className="flex justify-end rtl:justify-start">
-      <div className="chat-user-bubble rounded-3xl rounded-br-sm rtl:rounded-br-3xl rtl:rounded-bl-sm px-5 py-4 max-w-xs shadow-md text-white text-sm font-medium" style={{ background: G }}>{text}</div>
+      <div className="rounded-2xl rounded-br-sm rtl:rounded-br-2xl rtl:rounded-bl-sm px-4 py-3.5 max-w-xs text-white text-sm font-medium" style={{ background: G }}>{text}</div>
     </div>
   );
 }
@@ -339,58 +339,58 @@ function ManualForm({ onSubmit, t }) {
 
   return (
     <div className="space-y-4">
-      <div className="bg-white rounded-2xl border-2 border-orange-100 p-5">
-        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-400 block mb-2">{t("destination_label")}</label>
+      <div className="bg-white rounded-xl border border-gray-100 p-5">
+        <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide block mb-2">{t("destination_label")}</label>
         <input value={f.destination} onChange={e => set("destination", e.target.value)} placeholder={t("destination_placeholder")}
-          className="w-full px-4 py-3 rounded-2xl border-2 border-orange-100 focus:border-orange-300 outline-none text-gray-900 placeholder-gray-300 text-sm font-medium" />
+          className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-orange-400 outline-none text-gray-900 placeholder-gray-400 text-sm font-medium transition-colors" />
       </div>
-      <div className="bg-white rounded-2xl border-2 border-orange-100 p-5">
-        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-400 block mb-2">{t("dates_label")}</label>
+      <div className="bg-white rounded-xl border border-gray-100 p-5">
+        <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide block mb-2">{t("dates_label")}</label>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <p className="text-xs text-gray-400 mb-1">{t("from_label")}</p>
-            <input type="date" value={f.startDate} min={new Date().toISOString().split("T")[0]} onChange={e => set("startDate", e.target.value)} className="w-full px-3 py-3 rounded-2xl border-2 border-orange-100 focus:border-orange-300 outline-none text-sm" />
+            <input type="date" value={f.startDate} min={new Date().toISOString().split("T")[0]} onChange={e => set("startDate", e.target.value)} className="w-full px-3 py-2.5 rounded-xl border border-gray-200 focus:border-orange-400 outline-none text-sm transition-colors" />
           </div>
           <div>
             <p className="text-xs text-gray-400 mb-1">{t("to_label")}</p>
-            <input type="date" value={f.endDate} min={f.startDate} onChange={e => set("endDate", e.target.value)} className="w-full px-3 py-3 rounded-2xl border-2 border-orange-100 focus:border-orange-300 outline-none text-sm" />
+            <input type="date" value={f.endDate} min={f.startDate} onChange={e => set("endDate", e.target.value)} className="w-full px-3 py-2.5 rounded-xl border border-gray-200 focus:border-orange-400 outline-none text-sm transition-colors" />
           </div>
         </div>
-        {days > 0 && <p className="text-xs text-orange-500 font-bold mt-2">{t("x_day_trip", { n: days })}</p>}
+        {days > 0 && <p className="text-xs text-orange-500 font-semibold mt-2">{t("x_day_trip", { n: days })}</p>}
       </div>
       <div className="grid grid-cols-2 gap-3">
-        <div className="bg-white rounded-2xl border-2 border-orange-100 p-5">
-          <label className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-400 block mb-2">{t("travelers_label")}</label>
+        <div className="bg-white rounded-xl border border-gray-100 p-5">
+          <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide block mb-2">{t("travelers_label")}</label>
           <div className="flex items-center gap-3 justify-center">
-            <button onClick={() => set("travelers", Math.max(1, f.travelers - 1))} className="w-8 h-8 rounded-xl border-2 border-orange-100 text-orange-400 font-bold hover:bg-orange-50 flex items-center justify-center">−</button>
-            <span className="text-2xl font-black text-gray-900">{f.travelers}</span>
-            <button onClick={() => set("travelers", Math.min(20, f.travelers + 1))} className="w-8 h-8 rounded-xl border-2 border-orange-100 text-orange-400 font-bold hover:bg-orange-50 flex items-center justify-center">+</button>
+            <button onClick={() => set("travelers", Math.max(1, f.travelers - 1))} className="w-8 h-8 rounded-lg border border-gray-200 text-gray-500 font-semibold hover:bg-gray-50 flex items-center justify-center transition-colors">−</button>
+            <span className="text-2xl font-bold text-gray-900">{f.travelers}</span>
+            <button onClick={() => set("travelers", Math.min(20, f.travelers + 1))} className="w-8 h-8 rounded-lg border border-gray-200 text-gray-500 font-semibold hover:bg-gray-50 flex items-center justify-center transition-colors">+</button>
           </div>
         </div>
-        <div className="bg-white rounded-2xl border-2 border-orange-100 p-5">
-          <label className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-400 block mb-2">{t("budget_label")}</label>
+        <div className="bg-white rounded-xl border border-gray-100 p-5">
+          <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide block mb-2">{t("budget_label")}</label>
           <div className="flex gap-2">
-            <select value={f.currency} onChange={e => set("currency", e.target.value)} className="px-2 py-2 rounded-2xl border-2 border-orange-100 outline-none bg-white text-xs font-bold">{CURRENCIES.map(c => <option key={c}>{c}</option>)}</select>
-            <input type="number" min="1" value={f.budget} onChange={e => set("budget", e.target.value)} placeholder="3000" className="flex-1 min-w-0 px-3 py-2 rounded-2xl border-2 border-orange-100 focus:border-orange-300 outline-none text-sm font-medium" />
+            <select value={f.currency} onChange={e => set("currency", e.target.value)} className="px-2 py-2 rounded-xl border border-gray-200 outline-none bg-white text-xs font-semibold text-gray-700">{CURRENCIES.map(c => <option key={c}>{c}</option>)}</select>
+            <input type="number" min="1" value={f.budget} onChange={e => set("budget", e.target.value)} placeholder="3000" className="flex-1 min-w-0 px-3 py-2 rounded-xl border border-gray-200 focus:border-orange-400 outline-none text-sm font-medium transition-colors" />
           </div>
         </div>
       </div>
-      <div className="bg-white rounded-2xl border-2 border-orange-100 p-5">
-        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-400 block mb-3">{t("trip_style_label")}</label>
+      <div className="bg-white rounded-xl border border-gray-100 p-5">
+        <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide block mb-3">{t("trip_style_label")}</label>
         <div className="grid grid-cols-2 gap-2">
           {STYLES.map(s => (
             <button key={s.value} onClick={() => set("style", s.value)}
-              className="flex items-center gap-2 p-3 rounded-2xl border-2 text-left transition-all duration-200"
-              style={f.style === s.value ? { borderColor: "#f97316", background: "#fff7ed" } : { borderColor: "#ffe4cc", background: "white" }}>
+              className={`flex items-center gap-2 p-3 rounded-xl border text-left transition-all ${
+                f.style === s.value ? "border-orange-400 bg-orange-50" : "border-gray-200 bg-white hover:border-gray-300"
+              }`}>
               <span className="text-xl">{s.icon}</span>
-              <span className="text-xs font-bold text-gray-900">{t(s.labelKey)}</span>
+              <span className="text-xs font-semibold text-gray-900">{t(s.labelKey)}</span>
             </button>
           ))}
         </div>
       </div>
       <button onClick={() => valid && onSubmit(f)} disabled={!valid}
-        className="w-full font-black text-base tracking-tight text-white py-4 rounded-2xl shadow-lg shadow-orange-200 transition-all hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
-        style={{ background: G }}>
+        className="w-full bg-orange-500 text-white text-sm font-semibold py-3.5 rounded-xl hover:bg-orange-600 transition-all disabled:opacity-40 disabled:cursor-not-allowed">
         {t("build_template")}
       </button>
     </div>
@@ -632,25 +632,24 @@ export default function PlanPage() {
 
   // ── Mode selection ──
   if (!mode) return (
-    <main className="min-h-screen flex flex-col items-center justify-center px-4 py-12" style={{ background: "var(--bg-page)" }}>
+    <main className="min-h-screen flex flex-col items-center justify-center px-4 py-12 bg-gray-50">
       <nav className="fixed top-0 left-0 right-0 px-4 py-4 z-50">
-        <div className="max-w-2xl mx-auto flex items-center justify-between bg-white rounded-2xl px-5 py-3 shadow-sm border border-orange-100">
+        <div className="max-w-2xl mx-auto flex items-center justify-between bg-white rounded-xl px-5 py-3 shadow-sm border border-gray-100">
           <Link href="/" className="text-gray-400 hover:text-gray-600 transition-colors text-sm font-medium">← {t("nav_home")}</Link>
-          <span className="font-black text-gray-900">✈️ <span style={{ background: G, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>AI-gency</span></span>
+          <span className="font-bold text-gray-900">✈️ <span style={{ background: G, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>AI-gency</span></span>
           <div className="w-16" />
         </div>
       </nav>
 
       <div className="max-w-lg w-full mt-16">
         <div className="text-center mb-10">
-          <div className="text-5xl mb-4">🗺️</div>
-          <h1 className="text-4xl font-black tracking-tighter text-gray-900 mb-2">{t("plan_your_trip")}</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">{t("plan_your_trip")}</h1>
           <p className="text-gray-400 font-medium">{t("how_to_start")}</p>
         </div>
 
         {/* Quick Templates */}
         <div className="mb-6">
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-3">{t("trip_templates_title")}</p>
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">{t("trip_templates_title")}</p>
           <div className="grid grid-cols-2 gap-2">
             {[
               { labelKey: "trip_template_weekend", days: 3, style: "relaxed", budget: 500 },
@@ -662,10 +661,9 @@ export default function PlanPage() {
                 setSf(p => ({ ...p, style: tpl.style, budget: tpl.budget }));
                 startAI();
               }}
-                whileHover={{ y: -4 }}
-                className="card-hover rounded-[1.75rem] p-5 text-left border-2 transition-all hover:border-orange-300 hover:bg-orange-50"
-                style={{ borderColor: "#ffedd5", background: "white" }}>
-                <div className="font-black text-xs text-gray-900">{t(tpl.labelKey)}</div>
+                whileHover={{ y: -2 }}
+                className="bg-white rounded-xl p-4 text-left border border-gray-100 hover:border-orange-300 hover:bg-orange-50 transition-all">
+                <div className="font-semibold text-xs text-gray-900">{t(tpl.labelKey)}</div>
                 <div className="text-xs text-gray-400 mt-0.5">{tpl.days} days · {currency} {tpl.budget.toLocaleString()}</div>
               </motion.button>
             ))}
@@ -673,37 +671,38 @@ export default function PlanPage() {
         </div>
 
         <div className="grid grid-cols-1 gap-4">
+          {/* Chat with AI — solid orange */}
           <motion.button onClick={startAI}
-            whileHover={{ y: -6 }}
-            className="card-hover relative overflow-hidden rounded-[2rem] p-8 text-white text-left shadow-xl shadow-orange-200 transition-all"
-            style={{ background: G }}>
-            <div className="absolute top-0 right-0 text-[120px] opacity-10 font-black leading-none -mt-6 -mr-4">AI</div>
+            whileHover={{ y: -4 }}
+            className="relative overflow-hidden rounded-xl p-8 bg-orange-500 text-white text-left shadow-lg shadow-orange-200 transition-all hover:bg-orange-600">
+            <div className="absolute top-0 right-0 text-[120px] opacity-10 font-bold leading-none -mt-6 -mr-4">AI</div>
             <div className="relative">
               <div className="text-4xl mb-3">🤖</div>
-              <div className="text-xl font-black tracking-tighter mb-1">{t("chat_with_claude")}</div>
-              <div className="text-white/75 text-sm leading-relaxed">{t("chat_desc")}</div>
-              <div className="mt-5 inline-flex items-center gap-2 bg-white/20 rounded-xl px-4 py-2.5 text-sm font-bold">{t("start_chatting")} →</div>
+              <div className="text-xl font-bold mb-1">{t("chat_with_claude")}</div>
+              <div className="text-white/80 text-sm leading-relaxed">{t("chat_desc")}</div>
+              <div className="mt-5 inline-flex items-center gap-2 bg-white/20 rounded-xl px-4 py-2.5 text-sm font-semibold">{t("start_chatting")} →</div>
             </div>
           </motion.button>
 
           <div className="grid grid-cols-2 gap-4">
+            {/* Build yourself — white with gray border */}
             <motion.button onClick={() => setMode("manual")}
-              whileHover={{ y: -6 }}
-              className="card-hover relative overflow-hidden rounded-[2rem] p-8 text-left border-2 bg-white transition-all shadow-sm"
-              style={{ borderColor: "#ffe4cc" }}>
+              whileHover={{ y: -4 }}
+              className="relative overflow-hidden rounded-xl p-8 text-left bg-white border border-gray-200 hover:border-gray-300 transition-all">
               <div className="text-4xl mb-3">✏️</div>
-              <div className="text-lg font-black tracking-tighter text-gray-900 mb-1">{t("build_yourself")}</div>
+              <div className="text-base font-bold text-gray-900 mb-1">{t("build_yourself")}</div>
               <div className="text-gray-400 text-xs leading-relaxed">{t("build_yourself_desc")}</div>
             </motion.button>
 
+            {/* Surprise me — dark purple */}
             <motion.button onClick={() => setMode("surprise")}
-              whileHover={{ y: -6 }}
-              className="card-hover relative overflow-hidden rounded-[2rem] p-8 text-white text-left transition-all shadow-xl"
-              style={{ background: "linear-gradient(135deg,#7c3aed,#a21caf)" }}>
-              <div className="absolute top-0 right-0 text-7xl opacity-10 font-black leading-none -mt-2 -mr-2">🎲</div>
+              whileHover={{ y: -4 }}
+              className="relative overflow-hidden rounded-xl p-8 text-white text-left transition-all"
+              style={{ background: "#7c3aed" }}>
+              <div className="absolute top-0 right-0 text-7xl opacity-10 font-bold leading-none -mt-2 -mr-2">🎲</div>
               <div className="relative">
                 <div className="text-4xl mb-3">🎲</div>
-                <div className="text-lg font-black tracking-tighter mb-1">{t("surprise_me")}</div>
+                <div className="text-base font-bold mb-1">{t("surprise_me")}</div>
                 <div className="text-white/70 text-xs leading-relaxed">{t("surprise_me_desc")}</div>
               </div>
             </motion.button>
@@ -727,51 +726,52 @@ export default function PlanPage() {
     const days  = sf.startDate && sf.endDate ? Math.ceil((new Date(sf.endDate)-new Date(sf.startDate))/86400000) : 0;
     const valid = sf.startDate && sf.endDate && days > 0 && sf.budget;
     return (
-      <main className="min-h-screen" style={{ background:"var(--bg-page)" }}>
+      <main className="min-h-screen bg-gray-50">
         <nav className="px-4 py-4 sticky top-0 z-50">
-          <div className="max-w-lg mx-auto flex items-center justify-between bg-white rounded-2xl px-5 py-3 shadow-sm border border-orange-100">
+          <div className="max-w-lg mx-auto flex items-center justify-between bg-white rounded-xl px-5 py-3 shadow-sm border border-gray-100">
             <button onClick={()=>setMode(null)} className="text-gray-400 hover:text-gray-600 text-sm font-medium">← {t("back")}</button>
-            <span className="font-black" style={{background:"linear-gradient(135deg,#7c3aed,#a21caf)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>🎲 {t("surprise_me")}</span>
-            <select value={currency} onChange={e=>setCurrency(e.target.value)} className="text-xs font-bold px-2 py-1.5 rounded-xl border-2 border-orange-100 bg-white outline-none text-gray-600">
+            <span className="font-bold" style={{color:"#7c3aed"}}>🎲 {t("surprise_me")}</span>
+            <select value={currency} onChange={e=>setCurrency(e.target.value)} className="text-xs font-semibold px-2 py-1.5 rounded-lg border border-gray-200 bg-white outline-none text-gray-600">
               {CURRENCIES.map(c=><option key={c}>{c}</option>)}
             </select>
           </div>
         </nav>
         <div className="max-w-lg mx-auto px-4 py-6 space-y-5">
-          <div className="rounded-3xl p-6 text-white text-center" style={{background:"linear-gradient(135deg,#7c3aed,#a21caf)"}}>
+          <div className="rounded-xl p-6 text-white text-center" style={{background:"#7c3aed"}}>
             <div className="text-5xl mb-3">🎲</div>
-            <h1 className="text-2xl font-black mb-1">{t("mystery_destination")}</h1>
+            <h1 className="text-2xl font-bold mb-1">{t("mystery_destination")}</h1>
             <p className="text-white/70 text-sm">{t("surprise_subtitle")}</p>
           </div>
 
           {/* Dates */}
-          <div className="bg-white rounded-2xl border-2 border-orange-100 p-5">
-            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-400 block mb-3">{t("when_going")}</label>
+          <div className="bg-white rounded-xl border border-gray-100 p-5">
+            <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide block mb-3">{t("when_going")}</label>
             <div className="grid grid-cols-2 gap-3">
-              <div><p className="text-xs text-gray-400 mb-1">{t("depart_label")}</p><input type="date" value={sf.startDate} min={today} onChange={e=>setS("startDate",e.target.value)} className="w-full px-3 py-3 rounded-2xl border-2 border-orange-100 focus:border-orange-300 outline-none text-sm"/></div>
-              <div><p className="text-xs text-gray-400 mb-1">{t("return_label")}</p><input type="date" value={sf.endDate} min={sf.startDate||today} onChange={e=>setS("endDate",e.target.value)} className="w-full px-3 py-3 rounded-2xl border-2 border-orange-100 focus:border-orange-300 outline-none text-sm"/></div>
+              <div><p className="text-xs text-gray-400 mb-1">{t("depart_label")}</p><input type="date" value={sf.startDate} min={today} onChange={e=>setS("startDate",e.target.value)} className="w-full px-3 py-2.5 rounded-xl border border-gray-200 focus:border-orange-400 outline-none text-sm transition-colors"/></div>
+              <div><p className="text-xs text-gray-400 mb-1">{t("return_label")}</p><input type="date" value={sf.endDate} min={sf.startDate||today} onChange={e=>setS("endDate",e.target.value)} className="w-full px-3 py-2.5 rounded-xl border border-gray-200 focus:border-orange-400 outline-none text-sm transition-colors"/></div>
             </div>
-            {days > 0 && <p className="text-xs font-black text-orange-500 mt-2">{t("x_day_trip", { n: days })}</p>}
+            {days > 0 && <p className="text-xs font-semibold text-orange-500 mt-2">{t("x_day_trip", { n: days })}</p>}
           </div>
 
           {/* Travelers */}
-          <div className="bg-white rounded-2xl border-2 border-orange-100 p-5">
-            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-400 block mb-3">{t("how_many")}</label>
+          <div className="bg-white rounded-xl border border-gray-100 p-5">
+            <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide block mb-3">{t("how_many")}</label>
             <div className="flex items-center gap-4 justify-center">
-              <button type="button" onClick={()=>setS("travelers",Math.max(1,sf.travelers-1))} className="w-10 h-10 rounded-xl border-2 border-orange-100 text-orange-400 font-black text-xl hover:bg-orange-50 flex items-center justify-center">−</button>
-              <span className="text-3xl font-black text-gray-900">{sf.travelers}</span>
-              <button type="button" onClick={()=>setS("travelers",Math.min(20,sf.travelers+1))} className="w-10 h-10 rounded-xl border-2 border-orange-100 text-orange-400 font-black text-xl hover:bg-orange-50 flex items-center justify-center">+</button>
+              <button type="button" onClick={()=>setS("travelers",Math.max(1,sf.travelers-1))} className="w-10 h-10 rounded-lg border border-gray-200 text-gray-500 font-bold text-xl hover:bg-gray-50 flex items-center justify-center transition-colors">−</button>
+              <span className="text-3xl font-bold text-gray-900">{sf.travelers}</span>
+              <button type="button" onClick={()=>setS("travelers",Math.min(20,sf.travelers+1))} className="w-10 h-10 rounded-lg border border-gray-200 text-gray-500 font-bold text-xl hover:bg-gray-50 flex items-center justify-center transition-colors">+</button>
             </div>
           </div>
 
           {/* Budget */}
-          <div className="bg-white rounded-2xl border-2 border-orange-100 p-5">
-            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-400 block mb-3">{t("total_budget_c", { c: currency })}</label>
+          <div className="bg-white rounded-xl border border-gray-100 p-5">
+            <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide block mb-3">{t("total_budget_c", { c: currency })}</label>
             <div className="flex flex-wrap gap-2">
               {BUDGETS.map(b=>(
                 <button key={b} type="button" onClick={()=>setS("budget",b)}
-                  className="px-4 py-2 rounded-2xl text-sm font-black border-2 transition-all duration-200"
-                  style={sf.budget===b ? {borderColor:"#7c3aed",background:"#f5f3ff",color:"#7c3aed"} : {borderColor:"#ffe4cc",color:"#6b7280"}}>
+                  className={`px-4 py-2 rounded-lg text-sm font-semibold border transition-all ${
+                    sf.budget===b ? "border-violet-500 bg-violet-50 text-violet-700" : "border-gray-200 text-gray-500 hover:border-gray-300"
+                  }`}>
                   {currency} {b.toLocaleString()}
                 </button>
               ))}
@@ -779,39 +779,40 @@ export default function PlanPage() {
           </div>
 
           {/* Style */}
-          <div className="bg-white rounded-2xl border-2 border-orange-100 p-5">
-            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-400 block mb-3">{t("trip_style_label")}</label>
+          <div className="bg-white rounded-xl border border-gray-100 p-5">
+            <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide block mb-3">{t("trip_style_label")}</label>
             <div className="grid grid-cols-2 gap-2">
               {STYLES_S.map(s=>(
                 <button key={s.value} type="button" onClick={()=>setS("style",s.value)}
-                  className="flex items-center gap-2 p-3 rounded-2xl border-2 text-left transition-all duration-200"
-                  style={sf.style===s.value ? {borderColor:"#7c3aed",background:"#f5f3ff"} : {borderColor:"#ffe4cc",background:"white"}}>
+                  className={`flex items-center gap-2 p-3 rounded-xl border text-left transition-all ${
+                    sf.style===s.value ? "border-violet-400 bg-violet-50" : "border-gray-200 bg-white hover:border-gray-300"
+                  }`}>
                   <span className="text-xl">{s.icon}</span>
-                  <span className="text-xs font-bold text-gray-900">{t(s.labelKey)}</span>
+                  <span className="text-xs font-semibold text-gray-900">{t(s.labelKey)}</span>
                 </button>
               ))}
             </div>
           </div>
 
           {surpriseNote && (
-            <div className="mx-4 mt-2 px-4 py-2 rounded-xl text-xs font-bold text-orange-600 border border-orange-200" style={{ background: "#fff7ed" }}>
+            <div className="px-4 py-2.5 rounded-xl text-xs font-semibold text-orange-600 border border-orange-200 bg-orange-50">
               {surpriseNote}
             </div>
           )}
 
           {error && (
-            <div className="mx-4 my-2 p-4 rounded-2xl border-2" style={{ background: "#fff5f5", borderColor: "#fecaca" }}>
-              <p className="font-black text-sm mb-1" style={{ color: "#ef4444" }}>{t("error_title")}</p>
-              <p className="text-xs" style={{ color: "#f87171" }}>{error}</p>
-              <button onClick={() => setError("")} className="mt-2 text-xs font-bold underline" style={{ color: "#f87171" }}>
+            <div className="p-4 rounded-xl border border-red-100 bg-red-50">
+              <p className="font-semibold text-sm mb-1 text-red-500">{t("error_title")}</p>
+              <p className="text-xs text-red-400">{error}</p>
+              <button onClick={() => setError("")} className="mt-2 text-xs font-semibold underline text-red-400">
                 {t("dismiss_btn")}
               </button>
             </div>
           )}
 
           <button onClick={()=>valid&&generateSurprise(sf)} disabled={!valid||generating}
-            className="w-full py-4 rounded-2xl text-white font-black text-base tracking-tight shadow-xl disabled:opacity-40 hover:-translate-y-0.5 transition-all"
-            style={{background:"linear-gradient(135deg,#7c3aed,#a21caf)"}}>
+            className="w-full py-3.5 rounded-xl text-white font-semibold text-sm disabled:opacity-40 hover:-translate-y-0.5 transition-all"
+            style={{background:"#7c3aed"}}>
             {generating ? (
               <span className="flex items-center justify-center gap-3">
                 <span className="w-5 h-5 rounded-full border-2 border-white/50 border-t-white animate-spin"/>
@@ -826,17 +827,17 @@ export default function PlanPage() {
 
   // ── Manual mode ──
   if (mode === "manual") return (
-    <main className="min-h-screen" style={{ background: "var(--bg-page)" }}>
+    <main className="min-h-screen bg-gray-50">
       <nav className="px-4 py-4 sticky top-0 z-50">
-        <div className="max-w-lg mx-auto flex items-center justify-between bg-white rounded-2xl px-5 py-3 shadow-sm border border-orange-100">
+        <div className="max-w-lg mx-auto flex items-center justify-between bg-white rounded-xl px-5 py-3 shadow-sm border border-gray-100">
           <button onClick={() => setMode(null)} className="text-gray-400 hover:text-gray-600 transition-colors text-sm font-medium">← {t("back")}</button>
-          <span className="font-black text-gray-900">✈️ <span style={{ background: G, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>AI-gency</span></span>
+          <span className="font-bold text-gray-900">✈️ <span style={{ background: G, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>AI-gency</span></span>
           <div className="w-16" />
         </div>
       </nav>
       <div className="max-w-lg mx-auto px-4 py-6">
         <div className="mb-8">
-          <h1 className="text-3xl font-black text-gray-900 mb-2">{t("build_yourself")} ✏️</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">{t("build_yourself")} ✏️</h1>
           <p className="text-gray-400 font-medium">{t("build_yourself_desc")}</p>
         </div>
         <ManualForm onSubmit={handleManualSubmit} t={t} />
@@ -846,17 +847,17 @@ export default function PlanPage() {
 
   // ── AI Chat mode ──
   return (
-    <main className="min-h-screen flex flex-col" style={{ background: "var(--bg-page)" }}>
+    <main className="min-h-screen flex flex-col bg-gray-50">
       {/* Nav */}
       <nav className="flex-shrink-0 px-4 py-4">
-        <div className="max-w-2xl mx-auto flex items-center justify-between bg-white rounded-2xl px-5 py-3 shadow-sm border border-orange-100">
+        <div className="max-w-2xl mx-auto flex items-center justify-between bg-white rounded-xl px-5 py-3 shadow-sm border border-gray-100">
           <button onClick={() => { setMode(null); setChatMsgs([]); }} className="text-gray-400 hover:text-gray-600 transition-colors text-sm font-medium">← {t("back")}</button>
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-            <span className="text-sm font-black text-gray-900">{t("claude_planner")}</span>
+            <span className="text-sm font-semibold text-gray-900">{t("claude_planner")}</span>
           </div>
           <select value={currency} onChange={e => setCurrency(e.target.value)}
-            className="text-xs font-bold px-2 py-1.5 rounded-xl border-2 border-orange-100 bg-white outline-none text-gray-600">
+            className="text-xs font-semibold px-2 py-1.5 rounded-lg border border-gray-200 bg-white outline-none text-gray-600">
             {CURRENCIES.map(c => <option key={c}>{c}</option>)}
           </select>
         </div>
@@ -866,10 +867,10 @@ export default function PlanPage() {
       <div className="flex-1 overflow-y-auto py-4 px-4 sm:px-6">
         <div className="max-w-xl mx-auto space-y-4">
           {restored && (
-            <div className="flex items-center justify-between bg-orange-50 border border-orange-200 rounded-2xl px-4 py-3 text-xs">
-              <span className="text-orange-600 font-bold">{t("continuing_session")}</span>
+            <div className="flex items-center justify-between bg-orange-50 border border-orange-200 rounded-xl px-4 py-3 text-xs">
+              <span className="text-orange-600 font-semibold">{t("continuing_session")}</span>
               <button onClick={() => { clearPlanChat(); setRestored(false); startAI(); }}
-                className="text-orange-400 hover:text-orange-600 font-black underline">
+                className="text-orange-500 hover:text-orange-700 font-semibold underline">
                 {t("start_fresh")}
               </button>
             </div>
@@ -895,12 +896,12 @@ export default function PlanPage() {
           )}
           {(streaming || generating) && chatMsgs[chatMsgs.length - 1]?.role === "user" && (
             <div className="flex items-end gap-3">
-              <div className="w-9 h-9 rounded-2xl flex items-center justify-center text-base" style={{ background: G }}>🤖</div>
-              <div className="bg-white rounded-3xl rounded-bl-sm px-5 py-4 border border-orange-100 shadow-sm">
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center text-base" style={{ background: G }}>🤖</div>
+              <div className="bg-white rounded-2xl rounded-bl-sm px-4 py-3.5 border border-gray-100 shadow-sm">
                 <span className="inline-flex gap-1.5 items-center">
-                  <span className="w-2 h-2 bg-orange-300 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                  <span className="w-2 h-2 bg-orange-300 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                  <span className="w-2 h-2 bg-orange-300 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                  <span className="w-2 h-2 bg-gray-300 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                  <span className="w-2 h-2 bg-gray-300 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                  <span className="w-2 h-2 bg-gray-300 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
                 </span>
               </div>
             </div>
@@ -913,16 +914,16 @@ export default function PlanPage() {
       <div className="flex-shrink-0 px-4 sm:px-6 pb-6 pt-3">
         <div className="max-w-xl mx-auto">
           {error && (
-            <div className="mx-4 my-2 p-4 rounded-2xl border-2" style={{ background: "#fff5f5", borderColor: "#fecaca" }}>
-              <p className="font-black text-sm mb-1" style={{ color: "#ef4444" }}>{t("error_title")}</p>
-              <p className="text-xs" style={{ color: "#f87171" }}>{error}</p>
+            <div className="mb-3 p-4 rounded-xl border border-red-100 bg-red-50">
+              <p className="font-semibold text-sm mb-1 text-red-500">{t("error_title")}</p>
+              <p className="text-xs text-red-400">{error}</p>
               <div className="flex items-center gap-3 mt-2">
-                <button onClick={() => setError("")} className="text-xs font-bold underline" style={{ color: "#f87171" }}>
+                <button onClick={() => setError("")} className="text-xs font-semibold underline text-red-400">
                   {t("dismiss_btn")}
                 </button>
                 {collectedData && (
                   <button onClick={() => generateTrip(collectedData)}
-                    className="text-xs bg-red-500 text-white px-3 py-1.5 rounded-lg font-bold hover:bg-red-600">
+                    className="text-xs bg-red-500 text-white px-3 py-1.5 rounded-lg font-semibold hover:bg-red-600">
                     {t("retry")}
                   </button>
                 )}
@@ -931,9 +932,11 @@ export default function PlanPage() {
           )}
 
           {generating ? (
-            <div className="flex items-center justify-center gap-3 py-5 text-gray-400">
-              <div className="w-5 h-5 rounded-full border-2 border-orange-400 border-t-transparent animate-spin" />
-              <span className="text-sm font-medium">{t("building_itinerary")}</span>
+            <div className="flex flex-col items-center gap-3 py-5">
+              <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                <div className="h-full bg-orange-500 rounded-full animate-pulse" style={{ width: "60%" }} />
+              </div>
+              <span className="text-sm text-gray-400 font-medium">{t("building_itinerary")}</span>
             </div>
           ) : (
             <form onSubmit={e => { e.preventDefault(); sendMessage(input); }} className="flex gap-2.5">
@@ -944,11 +947,10 @@ export default function PlanPage() {
                 onChange={e => setInput(e.target.value)}
                 placeholder={t("or_type_answer")}
                 disabled={streaming || generating}
-                className="flex-1 min-w-0 px-4 py-3.5 rounded-2xl outline-none text-gray-900 placeholder-gray-300 text-sm font-medium border-2 border-orange-100 focus:border-orange-300 bg-white transition-all disabled:opacity-50"
+                className="flex-1 min-w-0 px-4 py-3 rounded-xl outline-none text-gray-900 placeholder-gray-400 text-sm font-medium border border-gray-200 focus:border-orange-400 bg-white transition-colors disabled:opacity-50"
               />
               <button type="submit" disabled={!input.trim() || streaming || generating}
-                className="font-bold text-white px-5 py-3.5 rounded-2xl text-sm flex-shrink-0 shadow-md disabled:opacity-40 transition-all"
-                style={{ background: G }}>
+                className="bg-orange-500 text-white px-5 py-3 rounded-xl text-sm font-semibold flex-shrink-0 hover:bg-orange-600 disabled:opacity-40 transition-all">
                 →
               </button>
             </form>
