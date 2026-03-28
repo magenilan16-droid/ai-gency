@@ -60,7 +60,7 @@ Example: [FLIGHT:Tel Aviv|Tokyo|2026-05-01|2026-05-14|650|https://www.aviasales.
 ${language === "he" ? "- CRITICAL: You MUST respond ONLY in Hebrew (עברית). Every single word of your response must be in Hebrew, no exceptions." : "- Respond in English."}`;
 
     const stream = await client.messages.stream({
-      model: "claude-opus-4-6",
+      model: "claude-sonnet-4-6",
       max_tokens: 1024,
       system: systemPrompt,
       messages: messages.map(m => ({ role: m.role, content: m.content })),

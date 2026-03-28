@@ -5,7 +5,7 @@ const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 export async function POST(req) {
   try {
-    const { type, trip, dayIndex, language } = await req.json();
+    const { type, trip, dayIndex, language, message } = await req.json();
     const langInstruction = language === "he" ? "CRITICAL: Write ALL text values in Hebrew (עברית). JSON keys stay in English." : "";
 
     let prompt = "";
@@ -40,7 +40,7 @@ Make them practical, specific, and not generic. ONLY return valid JSON array, no
     if (type === "chat") {
       // Streaming chat — handled by /api/chat, but quick non-streaming version here
       const tripContext = `Trip: ${trip.destination}, ${trip.days} days, ${trip.style} style, budget ${trip.currency} ${trip.total_estimated_cost}`;
-      prompt = `${tripContext}\nUser: ${req.body?.message || "Give me a tip"}`;
+      prompt = `${tripContext}\nUser: ${message || "Give me a tip"}`;
     }
 
     const response = await client.messages.create({

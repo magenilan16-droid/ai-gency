@@ -3,7 +3,11 @@
 
 export function saveTrip(id, data) {
   if (typeof window === "undefined") return;
-  localStorage.setItem(`aigency_trip_${id}`, JSON.stringify(data));
+  try {
+    localStorage.setItem(`aigency_trip_${id}`, JSON.stringify(data));
+  } catch (err) {
+    console.warn("saveTrip: localStorage quota exceeded or unavailable", err);
+  }
 }
 
 export function getTrip(id) {

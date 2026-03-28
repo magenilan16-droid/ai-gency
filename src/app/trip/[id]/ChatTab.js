@@ -57,7 +57,7 @@ function LoadingDots() {
 
 export default function ChatTab({ trip }) {
   const { t, lang } = useLanguage();
-  const storageKey = `aigency_tripchat_${trip.id}`;
+  const storageKey = `aigency_tripchat_${trip?.id}`;
 
   const welcomeMessage = {
     role: "assistant",

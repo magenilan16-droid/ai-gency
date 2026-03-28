@@ -403,7 +403,7 @@ export default function VisaTab({ trip }) {
                 {t("visa_apply") || "Apply online"}
               </h3>
               <a
-                href={data.apply_url}
+                href={/^https?:\/\//.test(data.apply_url) ? data.apply_url : "#"}
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{

@@ -88,7 +88,7 @@ export async function POST(req) {
     }
 
     const stream = await client.messages.stream({
-      model: "claude-opus-4-6",
+      model: "claude-sonnet-4-6",
       max_tokens: 1500,
       system: SYSTEM + langRule,
       messages: messages.map(m => ({ role: m.role, content: m.content })),

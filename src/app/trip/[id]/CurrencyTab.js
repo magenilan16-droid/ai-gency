@@ -54,6 +54,7 @@ export default function CurrencyTab({ trip }) {
 
       const targets = POPULAR.filter((c) => c !== base).join(",");
       const res = await fetch(`/api/currency?from=${base}&to=${targets}`);
+      if (!res.ok) throw new Error(`Currency API error: ${res.status}`);
       const data = await res.json();
 
       if (!data.ok) throw new Error(data.error || "Failed to fetch rates");
