@@ -1,8 +1,17 @@
 "use client";
 import { createContext, useContext, useEffect, useState } from "react";
-import { supabase, getProfile } from "@/lib/supabase";
+import { getProfile } from "@/lib/supabase";
 
-const AuthContext = createContext(null);
+const AuthContext = createContext({ user: null, profile: null, loading: false });
+
+function getSupabaseClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) return null;
+  // Dynamic import to avoid SSR crash
+  const { createClient } = require("@supabase/supabase-js");
+  return createClient(url, key);
+}
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -10,17 +19,19 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    const client = getSupabaseClient();
+    if (!client) {
+      setLoading(false);
+      return;
+    }
+
+    client.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
-      if (session?.user) {
-        getProfile(session.user.id).then(setProfile);
-      }
+      if (session?.user) getProfile(session.user.id).then(setProfile);
       setLoading(false);
     });
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: { subscription } } = client.auth.onAuthStateChange(async (_event, session) => {
       setUser(session?.user ?? null);
       if (session?.user) {
         const prof = await getProfile(session.user.id);
@@ -33,7 +44,6 @@ export function AuthProvider({ children }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Track referral code from URL
   useEffect(() => {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
