@@ -1,6 +1,7 @@
 import "./globals.css";
 import BottomNav from "./components/BottomNav";
 import { LanguageProvider } from "./LanguageProvider";
+import { AuthProvider } from "./components/AuthProvider";
 import Link from "next/link";
 import OfflineBanner from "./components/OfflineBanner";
 
@@ -50,10 +51,12 @@ export default function RootLayout({ children }) {
       </head>
       <body className="font-sans antialiased pb-24" style={{ background: "#FFF8F0" }}>
         <OfflineBanner />
-        <LanguageProvider>
-          {children}
-          <BottomNav />
-        </LanguageProvider>
+        <AuthProvider>
+          <LanguageProvider>
+            {children}
+            <BottomNav />
+          </LanguageProvider>
+        </AuthProvider>
         <footer className="pb-24 px-4 py-3 flex items-center justify-between max-w-2xl mx-auto">
           <span className="text-xs text-gray-400">© 2025 AI-gency</span>
           <Link href="/legal" className="text-xs text-gray-400 hover:text-orange-400 transition-colors">Privacy &amp; Terms</Link>

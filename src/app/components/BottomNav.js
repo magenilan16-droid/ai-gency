@@ -3,6 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useLanguage } from "@/app/LanguageProvider";
+import { useAuth } from "@/app/components/AuthProvider";
 
 const HIDE_ON = ["/plan"];
 
@@ -17,6 +18,7 @@ const TABS = [
 export default function BottomNav() {
   const pathname = usePathname();
   const { t } = useLanguage();
+  const { user, profile } = useAuth() || {};
   const [hasSavedChat, setHasSavedChat] = useState(false);
 
   useEffect(() => {
@@ -50,6 +52,25 @@ export default function BottomNav() {
       }}
     >
       <div className="max-w-lg mx-auto flex items-center px-2">
+        {/* Auth button top-right of nav */}
+        <div className="absolute right-3 top-1" style={{ top: "6px" }}>
+          {user ? (
+            <Link
+              href={profile?.role === "advisor" ? "/advisor" : profile?.role === "admin" ? "/admin" : "/auth"}
+              className="flex items-center gap-1 px-2.5 py-1 rounded-full border border-gray-200 text-xs font-semibold text-gray-600"
+            >
+              <span className="w-2 h-2 rounded-full bg-green-400 inline-block" />
+              {profile?.role === "advisor" ? "Advisor" : profile?.role === "admin" ? "Admin" : "Account"}
+            </Link>
+          ) : (
+            <Link
+              href="/auth"
+              className="px-2.5 py-1 rounded-full bg-orange-500 text-white text-xs font-semibold"
+            >
+              Login
+            </Link>
+          )}
+        </div>
         {TABS.map((tab) => {
           const active = tab.href === "/" ? pathname === "/" : pathname.startsWith(tab.href);
 
