@@ -3,11 +3,9 @@
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { motion } from "framer-motion";
 import { saveTrip, generateId, createEmptyTrip } from "@/lib/trips";
 import { useLanguage } from "@/app/LanguageProvider";
 
-const G = "linear-gradient(135deg,#f97316,#ec4899)";
 const CURRENCIES = ["USD", "EUR", "GBP", "ILS", "JPY", "AUD", "CAD"];
 
 const SURPRISE_DESTINATIONS = [
@@ -76,7 +74,7 @@ function DatePickerWidget({ onConfirm, t }) {
   const days = start && end ? Math.ceil((new Date(end) - new Date(start)) / 86400000) : 0;
 
   return (
-    <div className="mt-3 bg-white rounded-xl border border-gray-100 p-4 space-y-3">
+    <div className="mt-3 bg-white rounded-xl border border-gray-100 p-4 space-y-3 shadow-sm">
       <div className="grid grid-cols-2 gap-3">
         <div>
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">{t("depart_label")}</p>
@@ -111,7 +109,7 @@ function BudgetPickerWidget({ currency, onConfirm, t }) {
   const value = selected === "custom" ? Number(custom) : selected;
 
   return (
-    <div className="mt-3 bg-white rounded-xl border border-gray-100 p-4 space-y-3">
+    <div className="mt-3 bg-white rounded-xl border border-gray-100 p-4 space-y-3 shadow-sm">
       <div className="flex flex-wrap gap-2">
         {PRESETS.map(p => (
           <button key={p}
@@ -188,12 +186,12 @@ function MultiOptionsWidget({ options, onConfirm }) {
 
 function CountryPickerWidget({ onSelect, t }) {
   return (
-    <div className="mt-3 bg-white rounded-xl border border-gray-100 p-4">
+    <div className="mt-3 bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
       <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">{t("popular_destinations")}</p>
       <div className="grid grid-cols-3 gap-2">
         {COUNTRIES.map(c => (
           <button key={c.name} onClick={() => onSelect(c.name)}
-            className="flex flex-col items-center gap-1 p-2.5 rounded-xl border border-gray-100 bg-white hover:border-orange-300 hover:bg-orange-50 transition-all">
+            className="flex flex-col items-center gap-1 p-2.5 rounded-xl border border-gray-100 bg-white hover:border-orange-300 hover:bg-orange-50 transition-all active:scale-95">
             <span className="text-2xl">{c.flag}</span>
             <span className="text-xs font-semibold text-gray-700 text-center leading-tight">{c.name}</span>
           </button>
@@ -273,10 +271,13 @@ function renderMarkdown(text) {
 // ─── Chat bubbles ─────────────────────────────────────────────────────────────
 function BotBubble({ text, cities, options, multiOptions, datePicker, budgetPicker, countryPicker, onChip, onWidget, currency, streaming, widgetUsed, t }) {
   return (
-    <div className="flex items-end gap-3 rtl:flex-row-reverse">
-      <div className="w-9 h-9 rounded-xl flex items-center justify-center text-base flex-shrink-0" style={{ background: G }}>🤖</div>
+    <div className="flex items-end gap-3 animate-fade-up">
+      {/* AI avatar dot */}
+      <div className="w-9 h-9 rounded-xl flex items-center justify-center text-base flex-shrink-0 bg-orange-500 shadow-sm shadow-orange-200">
+        🤖
+      </div>
       <div className="flex-1 space-y-3">
-        <div className="rounded-2xl rounded-bl-sm rtl:rounded-bl-2xl rtl:rounded-br-sm px-4 py-3.5 max-w-sm bg-white border border-gray-100 shadow-sm">
+        <div className="rounded-2xl rounded-bl-sm px-4 py-3.5 max-w-sm bg-white border border-gray-200 shadow-sm">
           {renderMarkdown(text)}
           {streaming && <span className="inline-block w-1.5 h-4 bg-orange-300 rounded animate-pulse ml-1 align-middle" />}
         </div>
@@ -318,8 +319,10 @@ function BotBubble({ text, cities, options, multiOptions, datePicker, budgetPick
 
 function UserBubble({ text }) {
   return (
-    <div className="flex justify-end rtl:justify-start">
-      <div className="rounded-2xl rounded-br-sm rtl:rounded-br-2xl rtl:rounded-bl-sm px-4 py-3.5 max-w-xs text-white text-sm font-medium" style={{ background: G }}>{text}</div>
+    <div className="flex justify-end animate-fade-up">
+      <div className="rounded-2xl rounded-br-sm px-4 py-3.5 max-w-xs text-white text-sm font-medium bg-orange-500 shadow-sm shadow-orange-200">
+        {text}
+      </div>
     </div>
   );
 }
@@ -339,12 +342,12 @@ function ManualForm({ onSubmit, t }) {
 
   return (
     <div className="space-y-4">
-      <div className="bg-white rounded-xl border border-gray-100 p-5">
+      <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
         <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide block mb-2">{t("destination_label")}</label>
         <input value={f.destination} onChange={e => set("destination", e.target.value)} placeholder={t("destination_placeholder")}
           className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-orange-400 outline-none text-gray-900 placeholder-gray-400 text-sm font-medium transition-colors" />
       </div>
-      <div className="bg-white rounded-xl border border-gray-100 p-5">
+      <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
         <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide block mb-2">{t("dates_label")}</label>
         <div className="grid grid-cols-2 gap-3">
           <div>
@@ -359,7 +362,7 @@ function ManualForm({ onSubmit, t }) {
         {days > 0 && <p className="text-xs text-orange-500 font-semibold mt-2">{t("x_day_trip", { n: days })}</p>}
       </div>
       <div className="grid grid-cols-2 gap-3">
-        <div className="bg-white rounded-xl border border-gray-100 p-5">
+        <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
           <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide block mb-2">{t("travelers_label")}</label>
           <div className="flex items-center gap-3 justify-center">
             <button onClick={() => set("travelers", Math.max(1, f.travelers - 1))} className="w-8 h-8 rounded-lg border border-gray-200 text-gray-500 font-semibold hover:bg-gray-50 flex items-center justify-center transition-colors">−</button>
@@ -367,7 +370,7 @@ function ManualForm({ onSubmit, t }) {
             <button onClick={() => set("travelers", Math.min(20, f.travelers + 1))} className="w-8 h-8 rounded-lg border border-gray-200 text-gray-500 font-semibold hover:bg-gray-50 flex items-center justify-center transition-colors">+</button>
           </div>
         </div>
-        <div className="bg-white rounded-xl border border-gray-100 p-5">
+        <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
           <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide block mb-2">{t("budget_label")}</label>
           <div className="flex gap-2">
             <select value={f.currency} onChange={e => set("currency", e.target.value)} className="px-2 py-2 rounded-xl border border-gray-200 outline-none bg-white text-xs font-semibold text-gray-700">{CURRENCIES.map(c => <option key={c}>{c}</option>)}</select>
@@ -375,7 +378,7 @@ function ManualForm({ onSubmit, t }) {
           </div>
         </div>
       </div>
-      <div className="bg-white rounded-xl border border-gray-100 p-5">
+      <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
         <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide block mb-3">{t("trip_style_label")}</label>
         <div className="grid grid-cols-2 gap-2">
           {STYLES.map(s => (
@@ -390,7 +393,7 @@ function ManualForm({ onSubmit, t }) {
         </div>
       </div>
       <button onClick={() => valid && onSubmit(f)} disabled={!valid}
-        className="w-full bg-orange-500 text-white text-sm font-semibold py-3.5 rounded-xl hover:bg-orange-600 transition-all disabled:opacity-40 disabled:cursor-not-allowed">
+        className="w-full bg-orange-500 text-white text-sm font-semibold py-3.5 rounded-xl hover:bg-orange-600 transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-sm shadow-orange-200">
         {t("build_template")}
       </button>
     </div>
@@ -632,11 +635,11 @@ export default function PlanPage() {
 
   // ── Mode selection ──
   if (!mode) return (
-    <main className="min-h-screen flex flex-col items-center justify-center px-4 py-12 bg-gray-50">
+    <main className="min-h-screen flex flex-col items-center justify-center px-4 py-12 bg-white animate-fade-up">
       <nav className="fixed top-0 left-0 right-0 px-4 py-4 z-50">
         <div className="max-w-2xl mx-auto flex items-center justify-between bg-white rounded-xl px-5 py-3 shadow-sm border border-gray-100">
           <Link href="/" className="text-gray-400 hover:text-gray-600 transition-colors text-sm font-medium">← {t("nav_home")}</Link>
-          <span className="font-bold text-gray-900">✈️ <span style={{ background: G, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>AI-gency</span></span>
+          <span className="font-bold text-gray-900">✈️ <span className="text-orange-500">AI-gency</span></span>
           <div className="w-16" />
         </div>
       </nav>
@@ -657,24 +660,22 @@ export default function PlanPage() {
               { labelKey: "trip_template_backpacker", days: 14, style: "adventure", budget: 1000 },
               { labelKey: "trip_template_family", days: 7, style: "cultural", budget: 3000 },
             ].map((tpl) => (
-              <motion.button key={tpl.labelKey} onClick={() => {
+              <button key={tpl.labelKey} onClick={() => {
                 setSf(p => ({ ...p, style: tpl.style, budget: tpl.budget }));
                 startAI();
               }}
-                whileHover={{ y: -2 }}
-                className="bg-white rounded-xl p-4 text-left border border-gray-100 hover:border-orange-300 hover:bg-orange-50 transition-all">
+                className="card-premium bg-white rounded-xl p-4 text-left border border-gray-100 hover:border-orange-300 hover:bg-orange-50 transition-all">
                 <div className="font-semibold text-xs text-gray-900">{t(tpl.labelKey)}</div>
                 <div className="text-xs text-gray-400 mt-0.5">{tpl.days} days · {currency} {tpl.budget.toLocaleString()}</div>
-              </motion.button>
+              </button>
             ))}
           </div>
         </div>
 
         <div className="grid grid-cols-1 gap-4">
           {/* Chat with AI — solid orange */}
-          <motion.button onClick={startAI}
-            whileHover={{ y: -4 }}
-            className="relative overflow-hidden rounded-xl p-8 bg-orange-500 text-white text-left shadow-lg shadow-orange-200 transition-all hover:bg-orange-600">
+          <button onClick={startAI}
+            className="relative overflow-hidden rounded-xl p-8 bg-orange-500 text-white text-left shadow-lg shadow-orange-200 transition-all hover:bg-orange-600 hover:-translate-y-0.5">
             <div className="absolute top-0 right-0 text-[120px] opacity-10 font-bold leading-none -mt-6 -mr-4">AI</div>
             <div className="relative">
               <div className="text-4xl mb-3">🤖</div>
@@ -682,22 +683,20 @@ export default function PlanPage() {
               <div className="text-white/80 text-sm leading-relaxed">{t("chat_desc")}</div>
               <div className="mt-5 inline-flex items-center gap-2 bg-white/20 rounded-xl px-4 py-2.5 text-sm font-semibold">{t("start_chatting")} →</div>
             </div>
-          </motion.button>
+          </button>
 
           <div className="grid grid-cols-2 gap-4">
             {/* Build yourself — white with gray border */}
-            <motion.button onClick={() => setMode("manual")}
-              whileHover={{ y: -4 }}
-              className="relative overflow-hidden rounded-xl p-8 text-left bg-white border border-gray-200 hover:border-gray-300 transition-all">
+            <button onClick={() => setMode("manual")}
+              className="relative overflow-hidden rounded-xl p-8 text-left bg-white border border-gray-200 hover:border-gray-300 hover:-translate-y-0.5 transition-all">
               <div className="text-4xl mb-3">✏️</div>
               <div className="text-base font-bold text-gray-900 mb-1">{t("build_yourself")}</div>
               <div className="text-gray-400 text-xs leading-relaxed">{t("build_yourself_desc")}</div>
-            </motion.button>
+            </button>
 
             {/* Surprise me — dark purple */}
-            <motion.button onClick={() => setMode("surprise")}
-              whileHover={{ y: -4 }}
-              className="relative overflow-hidden rounded-xl p-8 text-white text-left transition-all"
+            <button onClick={() => setMode("surprise")}
+              className="relative overflow-hidden rounded-xl p-8 text-white text-left transition-all hover:-translate-y-0.5"
               style={{ background: "#7c3aed" }}>
               <div className="absolute top-0 right-0 text-7xl opacity-10 font-bold leading-none -mt-2 -mr-2">🎲</div>
               <div className="relative">
@@ -705,7 +704,7 @@ export default function PlanPage() {
                 <div className="text-base font-bold mb-1">{t("surprise_me")}</div>
                 <div className="text-white/70 text-xs leading-relaxed">{t("surprise_me_desc")}</div>
               </div>
-            </motion.button>
+            </button>
           </div>
         </div>
       </div>
@@ -726,7 +725,7 @@ export default function PlanPage() {
     const days  = sf.startDate && sf.endDate ? Math.ceil((new Date(sf.endDate)-new Date(sf.startDate))/86400000) : 0;
     const valid = sf.startDate && sf.endDate && days > 0 && sf.budget;
     return (
-      <main className="min-h-screen bg-gray-50">
+      <main className="min-h-screen bg-white">
         <nav className="px-4 py-4 sticky top-0 z-50">
           <div className="max-w-lg mx-auto flex items-center justify-between bg-white rounded-xl px-5 py-3 shadow-sm border border-gray-100">
             <button onClick={()=>setMode(null)} className="text-gray-400 hover:text-gray-600 text-sm font-medium">← {t("back")}</button>
@@ -744,7 +743,7 @@ export default function PlanPage() {
           </div>
 
           {/* Dates */}
-          <div className="bg-white rounded-xl border border-gray-100 p-5">
+          <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
             <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide block mb-3">{t("when_going")}</label>
             <div className="grid grid-cols-2 gap-3">
               <div><p className="text-xs text-gray-400 mb-1">{t("depart_label")}</p><input type="date" value={sf.startDate} min={today} onChange={e=>setS("startDate",e.target.value)} className="w-full px-3 py-2.5 rounded-xl border border-gray-200 focus:border-orange-400 outline-none text-sm transition-colors"/></div>
@@ -754,7 +753,7 @@ export default function PlanPage() {
           </div>
 
           {/* Travelers */}
-          <div className="bg-white rounded-xl border border-gray-100 p-5">
+          <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
             <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide block mb-3">{t("how_many")}</label>
             <div className="flex items-center gap-4 justify-center">
               <button type="button" onClick={()=>setS("travelers",Math.max(1,sf.travelers-1))} className="w-10 h-10 rounded-lg border border-gray-200 text-gray-500 font-bold text-xl hover:bg-gray-50 flex items-center justify-center transition-colors">−</button>
@@ -764,7 +763,7 @@ export default function PlanPage() {
           </div>
 
           {/* Budget */}
-          <div className="bg-white rounded-xl border border-gray-100 p-5">
+          <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
             <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide block mb-3">{t("total_budget_c", { c: currency })}</label>
             <div className="flex flex-wrap gap-2">
               {BUDGETS.map(b=>(
@@ -779,7 +778,7 @@ export default function PlanPage() {
           </div>
 
           {/* Style */}
-          <div className="bg-white rounded-xl border border-gray-100 p-5">
+          <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
             <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide block mb-3">{t("trip_style_label")}</label>
             <div className="grid grid-cols-2 gap-2">
               {STYLES_S.map(s=>(
@@ -811,7 +810,7 @@ export default function PlanPage() {
           )}
 
           <button onClick={()=>valid&&generateSurprise(sf)} disabled={!valid||generating}
-            className="w-full py-3.5 rounded-xl text-white font-semibold text-sm disabled:opacity-40 hover:-translate-y-0.5 transition-all"
+            className="w-full py-3.5 rounded-xl text-white font-semibold text-sm disabled:opacity-40 hover:-translate-y-0.5 transition-all shadow-sm"
             style={{background:"#7c3aed"}}>
             {generating ? (
               <span className="flex items-center justify-center gap-3">
@@ -827,11 +826,11 @@ export default function PlanPage() {
 
   // ── Manual mode ──
   if (mode === "manual") return (
-    <main className="min-h-screen bg-gray-50">
+    <main className="min-h-screen bg-white">
       <nav className="px-4 py-4 sticky top-0 z-50">
         <div className="max-w-lg mx-auto flex items-center justify-between bg-white rounded-xl px-5 py-3 shadow-sm border border-gray-100">
           <button onClick={() => setMode(null)} className="text-gray-400 hover:text-gray-600 transition-colors text-sm font-medium">← {t("back")}</button>
-          <span className="font-bold text-gray-900">✈️ <span style={{ background: G, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>AI-gency</span></span>
+          <span className="font-bold text-gray-900">✈️ <span className="text-orange-500">AI-gency</span></span>
           <div className="w-16" />
         </div>
       </nav>
@@ -847,14 +846,14 @@ export default function PlanPage() {
 
   // ── AI Chat mode ──
   return (
-    <main className="min-h-screen flex flex-col bg-gray-50">
-      {/* Nav */}
-      <nav className="flex-shrink-0 px-4 py-4">
-        <div className="max-w-2xl mx-auto flex items-center justify-between bg-white rounded-xl px-5 py-3 shadow-sm border border-gray-100">
+    <main className="min-h-screen flex flex-col bg-white">
+      {/* Chat header — clean white with destination + progress */}
+      <nav className="flex-shrink-0 px-4 py-4 border-b border-gray-100 bg-white">
+        <div className="max-w-2xl mx-auto flex items-center justify-between">
           <button onClick={() => { setMode(null); setChatMsgs([]); }} className="text-gray-400 hover:text-gray-600 transition-colors text-sm font-medium">← {t("back")}</button>
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-            <span className="text-sm font-semibold text-gray-900">{t("claude_planner")}</span>
+            <span className="text-sm font-bold text-gray-900">{t("claude_planner")}</span>
           </div>
           <select value={currency} onChange={e => setCurrency(e.target.value)}
             className="text-xs font-semibold px-2 py-1.5 rounded-lg border border-gray-200 bg-white outline-none text-gray-600">
@@ -864,8 +863,8 @@ export default function PlanPage() {
       </nav>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto py-4 px-4 sm:px-6">
-        <div className="max-w-xl mx-auto space-y-4">
+      <div className="flex-1 overflow-y-auto py-5 px-4 sm:px-6 bg-gray-50">
+        <div className="max-w-xl mx-auto space-y-5">
           {restored && (
             <div className="flex items-center justify-between bg-orange-50 border border-orange-200 rounded-xl px-4 py-3 text-xs">
               <span className="text-orange-600 font-semibold">{t("continuing_session")}</span>
@@ -895,9 +894,9 @@ export default function PlanPage() {
                 />
           )}
           {(streaming || generating) && chatMsgs[chatMsgs.length - 1]?.role === "user" && (
-            <div className="flex items-end gap-3">
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center text-base" style={{ background: G }}>🤖</div>
-              <div className="bg-white rounded-2xl rounded-bl-sm px-4 py-3.5 border border-gray-100 shadow-sm">
+            <div className="flex items-end gap-3 animate-fade-up">
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center text-base bg-orange-500 shadow-sm shadow-orange-200">🤖</div>
+              <div className="bg-white rounded-2xl rounded-bl-sm px-4 py-3.5 border border-gray-200 shadow-sm">
                 <span className="inline-flex gap-1.5 items-center">
                   <span className="w-2 h-2 bg-gray-300 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
                   <span className="w-2 h-2 bg-gray-300 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
@@ -906,12 +905,26 @@ export default function PlanPage() {
               </div>
             </div>
           )}
+
+          {/* Loading skeleton while generating trip */}
+          {generating && (
+            <div className="space-y-3 animate-fade-up">
+              {[1,2,3].map(n => (
+                <div key={n} className="bg-white rounded-xl border border-gray-100 p-4 animate-pulse">
+                  <div className="h-3 bg-gray-200 rounded-full w-3/4 mb-3" />
+                  <div className="h-3 bg-gray-200 rounded-full w-1/2 mb-2" />
+                  <div className="h-3 bg-gray-100 rounded-full w-5/6" />
+                </div>
+              ))}
+            </div>
+          )}
+
           <div ref={bottomRef} />
         </div>
       </div>
 
-      {/* Input */}
-      <div className="flex-shrink-0 px-4 sm:px-6 pb-6 pt-3">
+      {/* Input bar — floating with shadow */}
+      <div className="flex-shrink-0 px-4 sm:px-6 pb-6 pt-3 bg-white border-t border-gray-100">
         <div className="max-w-xl mx-auto">
           {error && (
             <div className="mb-3 p-4 rounded-xl border border-red-100 bg-red-50">
@@ -939,7 +952,8 @@ export default function PlanPage() {
               <span className="text-sm text-gray-400 font-medium">{t("building_itinerary")}</span>
             </div>
           ) : (
-            <form onSubmit={e => { e.preventDefault(); sendMessage(input); }} className="flex gap-2.5">
+            <form onSubmit={e => { e.preventDefault(); sendMessage(input); }}
+              className="flex gap-2.5 bg-white rounded-2xl border border-gray-200 shadow-md p-2">
               <input
                 ref={inputRef}
                 type="text"
@@ -947,10 +961,10 @@ export default function PlanPage() {
                 onChange={e => setInput(e.target.value)}
                 placeholder={t("or_type_answer")}
                 disabled={streaming || generating}
-                className="flex-1 min-w-0 px-4 py-3 rounded-xl outline-none text-gray-900 placeholder-gray-400 text-sm font-medium border border-gray-200 focus:border-orange-400 bg-white transition-colors disabled:opacity-50"
+                className="flex-1 min-w-0 px-3 py-2 rounded-xl outline-none text-gray-900 placeholder-gray-400 text-sm font-medium bg-transparent disabled:opacity-50"
               />
               <button type="submit" disabled={!input.trim() || streaming || generating}
-                className="bg-orange-500 text-white px-5 py-3 rounded-xl text-sm font-semibold flex-shrink-0 hover:bg-orange-600 disabled:opacity-40 transition-all">
+                className="bg-orange-500 text-white px-5 py-2.5 rounded-xl text-sm font-bold flex-shrink-0 hover:bg-orange-600 disabled:opacity-40 transition-all shadow-sm shadow-orange-200">
                 →
               </button>
             </form>

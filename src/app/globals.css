@@ -157,3 +157,188 @@ html.dark input, html.dark textarea, html.dark select {
   color: var(--text-main) !important;
   border-color: var(--border-strong) !important;
 }
+
+/* ════════════════════════════════════════════════════════════════
+   PREMIUM DESIGN SYSTEM — Keyframes + Utility classes
+   ════════════════════════════════════════════════════════════════ */
+
+/* ── Keyframe animations ─────────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.6; }
+}
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes bounceIn {
+  0%   { transform: scale(0.8); opacity: 0; }
+  70%  { transform: scale(1.05); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* ── Animation utility classes ───────────────────────────────── */
+.animate-fade-up   { animation: fadeUp 0.4s ease both; }
+.animate-fade-in   { animation: fadeIn 0.3s ease both; }
+.animate-scale-in  { animation: scaleIn 0.3s ease both; }
+.animate-bounce-in { animation: bounceIn 0.5s cubic-bezier(0.34,1.56,0.64,1) both; }
+
+/* Stagger delays */
+.delay-1 { animation-delay: 0.05s; }
+.delay-2 { animation-delay: 0.1s; }
+.delay-3 { animation-delay: 0.15s; }
+.delay-4 { animation-delay: 0.2s; }
+.delay-5 { animation-delay: 0.25s; }
+.delay-6 { animation-delay: 0.3s; }
+
+/* ── Skeleton shimmer ────────────────────────────────────────── */
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 8px;
+}
+
+/* ── Premium card styles ─────────────────────────────────────── */
+.card-premium {
+  background: #ffffff;
+  border: 1px solid #f3f4f6;
+  border-radius: 16px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.card-premium:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+  border-color: #e5e7eb;
+}
+
+.card-glow:hover {
+  box-shadow: 0 8px 32px rgba(249,115,22,0.12);
+  border-color: #fed7aa;
+}
+
+/* ── Button styles ───────────────────────────────────────────── */
+.btn-primary {
+  background: #f97316;
+  color: #ffffff;
+  font-weight: 600;
+  border-radius: 12px;
+  padding: 12px 24px;
+  font-size: 14px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  box-shadow: 0 4px 14px rgba(249,115,22,0.3);
+}
+.btn-primary:hover { background: #ea6c0a; box-shadow: 0 6px 20px rgba(249,115,22,0.4); }
+.btn-primary:active { transform: scale(0.97); }
+
+.btn-ghost {
+  background: transparent;
+  border: 1px solid #e5e7eb;
+  color: #374151;
+  font-weight: 600;
+  border-radius: 12px;
+  padding: 12px 24px;
+  font-size: 14px;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.btn-ghost:hover { background: #f9fafb; border-color: #d1d5db; }
+
+/* ── Tab bar styles ──────────────────────────────────────────── */
+.tab-pill {
+  padding: 8px 16px;
+  border-radius: 99px;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+.tab-pill-active {
+  background: #fff7ed;
+  color: #f97316;
+  border: 1px solid #fed7aa;
+}
+.tab-pill-inactive {
+  background: transparent;
+  color: #9ca3af;
+  border: 1px solid transparent;
+}
+.tab-pill-inactive:hover { color: #6b7280; background: #f9fafb; }
+
+/* ── Smooth page transitions ─────────────────────────────────── */
+.page-enter {
+  animation: fadeUp 0.35s ease both;
+}
+
+/* Smooth scroll snap for horizontal scrollers */
+.snap-scroll {
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+.snap-scroll > * {
+  scroll-snap-align: start;
+}
+
+/* ── Input focus styles ──────────────────────────────────────── */
+.input-field {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 12px;
+  font-size: 14px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  background: #ffffff;
+  color: #111827;
+  outline: none;
+}
+.input-field:focus {
+  border-color: #f97316;
+  box-shadow: 0 0 0 3px rgba(249,115,22,0.1);
+}
+.input-field::placeholder { color: #9ca3af; }
+
+/* ── Dark mode overrides for new classes ─────────────────────── */
+html.dark .card-premium {
+  background: var(--bg-card);
+  border-color: var(--border);
+}
+html.dark .card-premium:hover {
+  border-color: var(--border-strong);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+}
+html.dark .skeleton {
+  background: linear-gradient(90deg, #1f1f1f 25%, #2a2a2a 50%, #1f1f1f 75%);
+  background-size: 200% 100%;
+}
+html.dark .btn-ghost {
+  border-color: var(--border-strong);
+  color: var(--text-main);
+}
+html.dark .btn-ghost:hover {
+  background: var(--bg-subtle);
+  border-color: var(--border-strong);
+}
+html.dark .tab-pill-inactive:hover {
+  background: var(--bg-subtle);
+  color: var(--text-sub);
+}
+html.dark .input-field {
+  background: var(--bg-subtle);
+  border-color: var(--border-strong);
+  color: var(--text-main);
+}

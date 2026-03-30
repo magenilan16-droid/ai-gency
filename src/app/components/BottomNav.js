@@ -7,14 +7,6 @@ import { useAuth } from "@/app/components/AuthProvider";
 
 const HIDE_ON = ["/plan"];
 
-const TABS = [
-  { href: "/",         icon: "🏠", labelKey: "nav_home"     },
-  { href: "/trips",    icon: "🗺️", labelKey: "nav_trips"    },
-  { href: "/plan",     icon: null,  labelKey: "nav_new",  special: true },
-  { href: "/chat",     icon: "🤖", labelKey: "nav_ai",   chatTab: true },
-  { href: "/settings", icon: "⚙️", labelKey: "nav_settings" },
-];
-
 export default function BottomNav() {
   const pathname = usePathname();
   const { t } = useLanguage();
@@ -40,6 +32,31 @@ export default function BottomNav() {
 
   const isOnChat = pathname.startsWith("/chat");
 
+  // Determine account tab based on auth state
+  function getAccountTab() {
+    if (!user) {
+      return { href: "/auth", icon: "👤", label: "Account", dot: null };
+    }
+    if (profile?.role === "advisor") {
+      return { href: "/advisor", icon: "💼", label: "Advisor", dot: null };
+    }
+    if (profile?.role === "admin") {
+      return { href: "/admin", icon: "⚡", label: "Admin", dot: null };
+    }
+    // logged in as client
+    return { href: "/settings", icon: "👤", label: "Profile", dot: "green" };
+  }
+
+  const accountTab = getAccountTab();
+
+  const TABS = [
+    { href: "/",         icon: "🏠", label: t("nav_home")     },
+    { href: "/trips",    icon: "🗺️", label: t("nav_trips")    },
+    { href: "/plan",     icon: null,  label: t("nav_new"),  special: true },
+    { href: "/chat",     icon: "🤖", label: t("nav_ai"),   chatTab: true },
+    { href: accountTab.href, icon: accountTab.icon, label: accountTab.label, accountTab: true, dot: accountTab.dot },
+  ];
+
   return (
     <nav
       className="fixed bottom-0 left-0 right-0 z-50"
@@ -52,25 +69,6 @@ export default function BottomNav() {
       }}
     >
       <div className="max-w-lg mx-auto flex items-center px-2">
-        {/* Auth button top-right of nav */}
-        <div className="absolute right-3 top-1" style={{ top: "6px" }}>
-          {user ? (
-            <Link
-              href={profile?.role === "advisor" ? "/advisor" : profile?.role === "admin" ? "/admin" : "/auth"}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-full border border-gray-200 text-xs font-semibold text-gray-600"
-            >
-              <span className="w-2 h-2 rounded-full bg-green-400 inline-block" />
-              {profile?.role === "advisor" ? "Advisor" : profile?.role === "admin" ? "Admin" : "Account"}
-            </Link>
-          ) : (
-            <Link
-              href="/auth"
-              className="px-2.5 py-1 rounded-full bg-orange-500 text-white text-xs font-semibold"
-            >
-              Login
-            </Link>
-          )}
-        </div>
         {TABS.map((tab) => {
           const active = tab.href === "/" ? pathname === "/" : pathname.startsWith(tab.href);
 
@@ -78,10 +76,13 @@ export default function BottomNav() {
             return (
               <Link key={tab.href} href={tab.href} className="flex-1 flex justify-center py-2">
                 <div
-                  className="w-12 h-12 rounded-xl flex items-center justify-center text-white text-2xl font-light -mt-4 transition-transform active:scale-95"
+                  className="flex items-center justify-center text-white text-2xl font-light -mt-4 transition-transform active:scale-95"
                   style={{
+                    width: 52,
+                    height: 52,
+                    borderRadius: 16,
                     background: "#f97316",
-                    boxShadow: "0 4px 16px rgba(249,115,22,0.35)",
+                    boxShadow: "0 6px 20px rgba(249,115,22,0.4), 0 2px 8px rgba(249,115,22,0.2)",
                   }}
                 >
                   +
@@ -94,11 +95,17 @@ export default function BottomNav() {
             <Link
               key={tab.href}
               href={tab.href}
-              className="flex-1 flex flex-col items-center gap-0.5 py-3 transition-opacity"
+              className="flex-1 flex flex-col items-center gap-0.5 py-3"
+              style={{ transition: "all 0.2s ease" }}
             >
               <span
                 className="text-xl leading-none relative"
-                style={{ opacity: active ? 1 : 0.4, transition: "opacity 0.15s" }}
+                style={{
+                  opacity: active ? 1 : 0.4,
+                  transform: active ? "scale(1.1)" : "scale(1)",
+                  transition: "opacity 0.2s ease, transform 0.2s ease",
+                  display: "inline-block",
+                }}
               >
                 {tab.icon}
                 {tab.chatTab && hasSavedChat && !isOnChat && (
@@ -107,12 +114,21 @@ export default function BottomNav() {
                     style={{ background: "#f97316" }}
                   />
                 )}
+                {tab.dot === "green" && (
+                  <span
+                    className="absolute -top-0.5 -right-1 w-2 h-2 rounded-full border-2 border-white"
+                    style={{ background: "#22c55e" }}
+                  />
+                )}
               </span>
               <span
-                className="text-[10px] font-semibold transition-colors"
-                style={{ color: active ? "#f97316" : "#9ca3af" }}
+                className="text-[10px] font-semibold"
+                style={{
+                  color: active ? "#f97316" : "#9ca3af",
+                  transition: "color 0.2s ease",
+                }}
               >
-                {t(tab.labelKey)}
+                {tab.label}
               </span>
             </Link>
           );

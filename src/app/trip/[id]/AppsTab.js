@@ -5,11 +5,11 @@ import { useLanguage } from "@/app/LanguageProvider";
 
 // Universal apps always shown
 const UNIVERSAL_APPS = [
-  { name: "Google Maps", icon: "🗺️", category: "Navigation", desc: "Download offline maps before you go", platforms: "iOS & Android" },
-  { name: "Google Translate", icon: "🔤", category: "Translation", desc: "Works offline with downloaded language packs", platforms: "iOS & Android" },
-  { name: "WhatsApp", icon: "💬", category: "Communication", desc: "Free international messaging & calls", platforms: "iOS & Android" },
-  { name: "XE Currency", icon: "💱", category: "Finance", desc: "Real-time exchange rates offline", platforms: "iOS & Android" },
-  { name: "Airalo", icon: "📡", category: "Connectivity", desc: "eSIM data plans for 200+ countries", platforms: "iOS & Android" },
+  { name: "Google Maps", icon: "🗺️", category: "Maps", desc: "Download offline maps before you go", platforms: ["iOS", "Android"] },
+  { name: "Google Translate", icon: "🔤", category: "Translation", desc: "Works offline with downloaded language packs", platforms: ["iOS", "Android"] },
+  { name: "WhatsApp", icon: "💬", category: "Communication", desc: "Free international messaging & calls", platforms: ["iOS", "Android"] },
+  { name: "XE Currency", icon: "💱", category: "Finance", desc: "Real-time exchange rates, works offline", platforms: ["iOS", "Android"] },
+  { name: "Airalo", icon: "📡", category: "Connectivity", desc: "eSIM data plans for 200+ countries", platforms: ["iOS", "Android"] },
 ];
 
 // Country-specific apps
@@ -106,7 +106,7 @@ const COUNTRY_APPS = {
     label: "South Korea 🇰🇷",
     apps: [
       { name: "Kakao T", icon: "🚗", category: "Transport", desc: "Dominant ride-hailing & taxi app" },
-      { name: "Naver Maps", icon: "🗺️", category: "Navigation", desc: "Better than Google Maps in Korea" },
+      { name: "Naver Maps", icon: "🗺️", category: "Maps", desc: "Better than Google Maps in Korea" },
       { name: "KakaoTalk", icon: "💬", category: "Communication", desc: "Primary messaging app in Korea" },
       { name: "T-money", icon: "💳", category: "Payment", desc: "Transit card for Seoul metro & buses" },
     ],
@@ -164,9 +164,9 @@ const COUNTRY_APPS = {
     label: "China 🇨🇳",
     apps: [
       { name: "WeChat", icon: "💬", category: "Communication", desc: "Essential for everything in China" },
-      { name: "Alipay", icon: "💳", category: "Payment", desc: "Primary payment method - set up before you go" },
+      { name: "Alipay", icon: "💳", category: "Payment", desc: "Primary payment method — set up before you go" },
       { name: "DiDi", icon: "🚗", category: "Transport", desc: "Dominant ride-hailing app" },
-      { name: "Baidu Maps", icon: "🗺️", category: "Navigation", desc: "Google Maps is blocked in China" },
+      { name: "Baidu Maps", icon: "🗺️", category: "Maps", desc: "Google Maps is blocked in China" },
     ],
   },
   turkey: {
@@ -180,7 +180,7 @@ const COUNTRY_APPS = {
   israel: {
     label: "Israel 🇮🇱",
     apps: [
-      { name: "Waze", icon: "🚗", category: "Navigation", desc: "Born in Israel - best for driving" },
+      { name: "Waze", icon: "🚗", category: "Maps", desc: "Born in Israel — best for driving" },
       { name: "Gett", icon: "🚕", category: "Transport", desc: "Licensed taxi app" },
       { name: "Moovit", icon: "🚌", category: "Transport", desc: "Public transit planner" },
       { name: "10bis", icon: "🍕", category: "Food", desc: "Food delivery with work budget cards" },
@@ -214,20 +214,31 @@ function detectCountry(destination) {
   return null;
 }
 
-const CATEGORY_COLORS = {
-  Transport: { bg: "#eff6ff", color: "#2563eb" },
-  Navigation: { bg: "#f0fdf4", color: "#16a34a" },
-  Communication: { bg: "#fdf4ff", color: "#9333ea" },
-  Finance: { bg: "#fff7ed", color: "#ea580c" },
-  Connectivity: { bg: "#f0fdf4", color: "#0891b2" },
-  Payment: { bg: "#fefce8", color: "#ca8a04" },
-  Food: { bg: "#fff1f2", color: "#e11d48" },
-  Hotels: { bg: "#fff7ed", color: "#f97316" },
-  Tourism: { bg: "#f0f9ff", color: "#0369a1" },
-  Shopping: { bg: "#fdf4ff", color: "#7c3aed" },
-  Services: { bg: "#f8fafc", color: "#475569" },
-  Travel: { bg: "#fff7ed", color: "#f97316" },
+const CATEGORY_META = {
+  Transport:     { icon: "🚌", bg: "#eff6ff", color: "#2563eb" },
+  Maps:          { icon: "🗺️", bg: "#f0fdf4", color: "#16a34a" },
+  Communication: { icon: "💬", bg: "#fdf4ff", color: "#9333ea" },
+  Finance:       { icon: "💰", bg: "#fff7ed", color: "#ea580c" },
+  Connectivity:  { icon: "📡", bg: "#ecfdf5", color: "#0891b2" },
+  Payment:       { icon: "💳", bg: "#fefce8", color: "#ca8a04" },
+  Food:          { icon: "🍽️", bg: "#fff1f2", color: "#e11d48" },
+  Hotels:        { icon: "🏨", bg: "#fff7ed", color: "#f97316" },
+  Tourism:       { icon: "🏛️", bg: "#f0f9ff", color: "#0369a1" },
+  Shopping:      { icon: "🛒", bg: "#fdf4ff", color: "#7c3aed" },
+  Services:      { icon: "📋", bg: "#f8fafc", color: "#475569" },
+  Travel:        { icon: "✈️", bg: "#fff7ed", color: "#f97316" },
+  Translation:   { icon: "🔤", bg: "#f5f3ff", color: "#7c3aed" },
 };
+
+// Group apps by category for section rendering
+function groupByCategory(apps) {
+  const groups = {};
+  for (const app of apps) {
+    if (!groups[app.category]) groups[app.category] = [];
+    groups[app.category].push(app);
+  }
+  return groups;
+}
 
 export default function AppsTab({ trip }) {
   const { t } = useLanguage();
@@ -235,61 +246,57 @@ export default function AppsTab({ trip }) {
   const countryKey = detectCountry(destination);
   const countryData = countryKey ? COUNTRY_APPS[countryKey] : null;
 
+  const countryGroups = useMemo(
+    () => countryData ? groupByCategory(countryData.apps) : {},
+    [countryData]
+  );
+  const universalGroups = useMemo(
+    () => groupByCategory(UNIVERSAL_APPS),
+    []
+  );
+
   return (
-    <div style={{ paddingBottom: 48, display: "flex", flexDirection: "column", gap: 16, paddingTop: 8 }}>
+    <div style={{ paddingBottom: 48, display: "flex", flexDirection: "column", gap: 20, paddingTop: 4 }}>
 
       {/* Header */}
       <div>
-        <p style={{ fontSize: 13, fontWeight: 700, color: "#111827", marginBottom: 4 }}>
-          📱 Recommended Apps for {destination || "your trip"}
-        </p>
-        <p style={{ fontSize: 12, color: "#9ca3af", margin: 0 }}>
-          Download these before you travel — some work offline
+        <h2 style={{ fontSize: 22, fontWeight: 900, color: "#111827", letterSpacing: -0.5, marginBottom: 4 }}>
+          📱 Essential Apps
+        </h2>
+        <p style={{ fontSize: 12, color: "#9ca3af", fontWeight: 600, margin: 0 }}>
+          For {destination || "your trip"} — download before you travel
         </p>
       </div>
 
-      {/* Country-specific apps */}
+      {/* Country-specific section */}
       {countryData && (
-        <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #f3f4f6", overflow: "hidden" }}>
-          <div style={{ padding: "14px 16px 12px", borderBottom: "1px solid #f9fafb" }}>
-            <span style={{ fontSize: 13, fontWeight: 700, color: "#111827" }}>
-              Essential for {countryData.label}
-            </span>
-          </div>
-          {countryData.apps.map((app, i) => (
-            <AppRow key={i} app={app} isLast={i === countryData.apps.length - 1} />
-          ))}
-        </div>
+        <AppSection
+          title={`Essential for ${countryData.label}`}
+          groups={countryGroups}
+          accent
+        />
       )}
 
-      {/* Universal travel apps */}
-      <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #f3f4f6", overflow: "hidden" }}>
-        <div style={{ padding: "14px 16px 12px", borderBottom: "1px solid #f9fafb" }}>
-          <span style={{ fontSize: 13, fontWeight: 700, color: "#111827" }}>
-            🌍 Universal Travel Apps
-          </span>
-        </div>
-        {UNIVERSAL_APPS.map((app, i) => (
-          <AppRow key={i} app={app} isLast={i === UNIVERSAL_APPS.length - 1} />
-        ))}
-      </div>
+      {/* Universal apps section */}
+      <AppSection
+        title="🌍 Universal Travel Apps"
+        groups={universalGroups}
+      />
 
-      {/* Tip card */}
+      {/* Pro tip */}
       <div style={{
         background: "#fff7ed",
-        borderRadius: 12,
-        padding: "12px 14px",
+        borderRadius: 16,
+        padding: "14px 16px",
         border: "1px solid #fed7aa",
         display: "flex",
-        gap: 10,
+        gap: 12,
         alignItems: "flex-start",
       }}>
-        <span style={{ fontSize: 16, flexShrink: 0 }}>💡</span>
+        <span style={{ fontSize: 20, flexShrink: 0 }}>💡</span>
         <div>
-          <div style={{ fontSize: 12, fontWeight: 700, color: "#92400e", marginBottom: 2 }}>
-            Pro tip
-          </div>
-          <div style={{ fontSize: 12, color: "#b45309", lineHeight: 1.5 }}>
+          <div style={{ fontSize: 12, fontWeight: 800, color: "#92400e", marginBottom: 3 }}>Pro tip</div>
+          <div style={{ fontSize: 12, color: "#b45309", lineHeight: 1.6 }}>
             Download offline maps and translation packs while on WiFi before your trip. Mobile data abroad can be expensive!
           </div>
         </div>
@@ -298,38 +305,152 @@ export default function AppsTab({ trip }) {
   );
 }
 
-function AppRow({ app, isLast }) {
-  const style = CATEGORY_COLORS[app.category] || { bg: "#f9fafb", color: "#6b7280" };
+function AppSection({ title, groups, accent = false }) {
+  const categoryKeys = Object.keys(groups);
+  if (categoryKeys.length === 0) return null;
+
+  return (
+    <div>
+      {/* Section header */}
+      <div style={{ fontSize: 13, fontWeight: 800, color: "#111827", marginBottom: 10, paddingLeft: 2 }}>
+        {title}
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {categoryKeys.map(cat => {
+          const meta = CATEGORY_META[cat] || { icon: "📦", bg: "#f9fafb", color: "#6b7280" };
+          const apps = groups[cat];
+          return (
+            <div key={cat} style={{ background: "#fff", borderRadius: 18, border: "1px solid #f3f4f6", overflow: "hidden" }}>
+              {/* Category header */}
+              <div style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                padding: "10px 16px",
+                background: meta.bg,
+                borderBottom: "1px solid #f3f4f6",
+              }}>
+                <span style={{ fontSize: 14 }}>{meta.icon}</span>
+                <span style={{ fontSize: 11, fontWeight: 800, color: meta.color, textTransform: "uppercase", letterSpacing: 0.6 }}>
+                  {cat}
+                </span>
+                <span style={{
+                  marginLeft: "auto",
+                  fontSize: 10,
+                  fontWeight: 700,
+                  color: meta.color,
+                  background: "#fff",
+                  borderRadius: 6,
+                  padding: "2px 7px",
+                  opacity: 0.8,
+                }}>
+                  {apps.length} app{apps.length !== 1 ? "s" : ""}
+                </span>
+              </div>
+
+              {/* App rows */}
+              {apps.map((app, i) => (
+                <AppCard key={i} app={app} isLast={i === apps.length - 1} catMeta={meta} />
+              ))}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function AppCard({ app, isLast, catMeta }) {
+  const hasPlatforms = app.platforms && app.platforms.length > 0;
+  const isIOS = !app.platforms || app.platforms.includes("iOS");
+  const isAndroid = !app.platforms || app.platforms.includes("Android");
+
   return (
     <div style={{
       padding: "12px 16px",
       display: "flex",
-      alignItems: "center",
+      alignItems: "flex-start",
       gap: 12,
       borderBottom: isLast ? "none" : "1px solid #f9fafb",
     }}>
-      <div style={{ fontSize: 22, flexShrink: 0, width: 36, textAlign: "center" }}>
+      {/* App icon */}
+      <div style={{
+        width: 44,
+        height: 44,
+        borderRadius: 12,
+        background: catMeta.bg,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontSize: 22,
+        flexShrink: 0,
+      }}>
         {app.icon}
       </div>
+
+      {/* App info */}
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}>
-          <span style={{ fontSize: 13, fontWeight: 700, color: "#111827" }}>{app.name}</span>
-          <span style={{
-            fontSize: 10,
-            fontWeight: 600,
-            padding: "2px 7px",
-            borderRadius: 6,
-            background: style.bg,
-            color: style.color,
-            flexShrink: 0,
-          }}>
-            {app.category}
-          </span>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2, flexWrap: "wrap" }}>
+          <span style={{ fontSize: 13, fontWeight: 800, color: "#111827" }}>{app.name}</span>
         </div>
-        <div style={{ fontSize: 12, color: "#6b7280", lineHeight: 1.4 }}>{app.desc}</div>
-        {app.platforms && (
-          <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 2 }}>{app.platforms}</div>
+        <div style={{ fontSize: 12, color: "#6b7280", lineHeight: 1.5, marginBottom: hasPlatforms ? 8 : 0 }}>
+          {app.desc}
+        </div>
+
+        {/* Store badges */}
+        {hasPlatforms && (
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+            {isIOS && (
+              <span style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 4,
+                fontSize: 10,
+                fontWeight: 700,
+                color: "#374151",
+                background: "#f3f4f6",
+                borderRadius: 7,
+                padding: "3px 8px",
+                border: "1px solid #e5e7eb",
+              }}>
+                🍎 App Store
+              </span>
+            )}
+            {isAndroid && (
+              <span style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 4,
+                fontSize: 10,
+                fontWeight: 700,
+                color: "#374151",
+                background: "#f3f4f6",
+                borderRadius: 7,
+                padding: "3px 8px",
+                border: "1px solid #e5e7eb",
+              }}>
+                🤖 Google Play
+              </span>
+            )}
+          </div>
         )}
+      </div>
+
+      {/* Download chip */}
+      <div style={{
+        flexShrink: 0,
+        fontSize: 11,
+        fontWeight: 800,
+        color: catMeta.color,
+        background: catMeta.bg,
+        borderRadius: 9,
+        padding: "5px 10px",
+        border: `1.5px solid ${catMeta.color}22`,
+        alignSelf: "center",
+        whiteSpace: "nowrap",
+      }}>
+        Get →
       </div>
     </div>
   );
