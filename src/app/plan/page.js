@@ -412,6 +412,8 @@ export default function PlanPage() {
   const [input, setInput]             = useState("");
   const [streaming, setStreaming]     = useState(false);
   const [generating, setGenerating]   = useState(false);
+  const [genStep, setGenStep]         = useState(0);
+  const [genStepText, setGenStepText] = useState("");
   const [error, setError]             = useState("");
   const [collectedData, setCollectedData] = useState(null);
   const [currency, setCurrency]       = useState("USD");
@@ -566,11 +568,29 @@ export default function PlanPage() {
 
   async function generateTrip(data) {
     setGenerating(true);
+    setGenStep(0);
     setChatMsgs(prev => [...prev, {
       role: "assistant",
       content: t("building_itinerary_msg", { destination: data.destination }),
     }]);
     scrollBottom();
+
+    // Animate through steps while waiting
+    const steps = [
+      t("gen_step_analyzing") || "Analyzing your preferences...",
+      t("gen_step_building") || "Building your day-by-day itinerary...",
+      t("gen_step_hotels") || "Finding the best hotels & restaurants...",
+      t("gen_step_budget") || "Calculating your budget breakdown...",
+      t("gen_step_tips") || "Adding local tips & insider secrets...",
+    ];
+    let stepIdx = 0;
+    setGenStep(0);
+    setGenStepText(steps[0]);
+    const stepTimer = setInterval(() => {
+      stepIdx = Math.min(stepIdx + 1, steps.length - 1);
+      setGenStep(stepIdx);
+      setGenStepText(steps[stepIdx]);
+    }, 4000);
 
     try {
       const res = await fetch("/api/generate-trip", {
@@ -578,11 +598,34 @@ export default function PlanPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...data, currency, language: lang }),
       });
-      const text = await res.text();
-      let tripData;
-      try { tripData = JSON.parse(text); }
-      catch { throw new Error(t("server_timeout")); }
-      if (!res.ok) throw new Error(tripData.error || "Generation failed.");
+
+      if (!res.ok) {
+        const errText = await res.text();
+        try { throw new Error(JSON.parse(errText).error || "Generation failed."); }
+        catch { throw new Error("Generation failed. Please try again."); }
+      }
+
+      // Read streaming response
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let tripData = null;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        for (const line of decoder.decode(value).split("\n")) {
+          if (!line.startsWith("data: ")) continue;
+          try {
+            const parsed = JSON.parse(line.slice(6));
+            if (parsed.error) throw new Error(parsed.error);
+            if (parsed.done && parsed.trip) tripData = parsed.trip;
+          } catch (e) {
+            if (e.message !== "Unexpected end of JSON input") throw e;
+          }
+        }
+      }
+
+      if (!tripData) throw new Error("No trip data received. Please try again.");
 
       const id = generateId();
       saveTrip(id, { ...tripData, form: data });
@@ -592,10 +635,15 @@ export default function PlanPage() {
       setError(err.message);
       setChatMsgs(prev => [...prev, {
         role: "assistant",
-        content: `Oops! ${err.message}\n\nJust click Retry below.`,
+        content: lang === "he"
+          ? `אופס! ${err.message}\n\nלחץ על "נסה שנית" למטה.`
+          : `Oops! ${err.message}\n\nClick Retry below.`,
       }]);
     } finally {
+      clearInterval(stepTimer);
       setGenerating(false);
+      setGenStep(0);
+      setGenStepText("");
     }
   }
 
@@ -608,28 +656,48 @@ export default function PlanPage() {
 
   async function generateSurprise(data) {
     setGenerating(true);
+    setGenStep(0);
+    setGenStepText("Picking your mystery destination...");
     setError("");
-    const randomDest = SURPRISE_DESTINATIONS[Math.floor(Math.random() * SURPRISE_DESTINATIONS.length)];
-    setSurpriseNote(t("visa_verify_warning"));
-    setTimeout(() => setSurpriseNote(""), 4000);
+    const stepTimer = setInterval(() => {
+      setGenStep(s => Math.min(s + 1, 4));
+    }, 4000);
     try {
       const res = await fetch("/api/surprise", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...data, destination: randomDest, currency, language: lang }),
+        body: JSON.stringify({ ...data, currency, language: lang }),
       });
-      const text = await res.text();
-      let tripData;
-      try { tripData = JSON.parse(text); }
-      catch { throw new Error(t("server_timeout")); }
-      if (!res.ok) throw new Error(tripData.error || "Generation failed.");
+      if (!res.ok) throw new Error("Generation failed. Please try again.");
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let tripData = null;
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        for (const line of decoder.decode(value).split("\n")) {
+          if (!line.startsWith("data: ")) continue;
+          try {
+            const parsed = JSON.parse(line.slice(6));
+            if (parsed.error) throw new Error(parsed.error);
+            if (parsed.done && parsed.trip) tripData = parsed.trip;
+          } catch (e) {
+            if (e.message !== "Unexpected end of JSON input") throw e;
+          }
+        }
+      }
+      if (!tripData) throw new Error("No trip data received. Please try again.");
       const id = generateId();
-      saveTrip(id, { ...tripData, isSurprise: true, form: data });
+      saveTrip(id, { ...tripData, isSurprise: true });
       window.location.href = `/trip/${id}?surprise=true`;
     } catch (err) {
       setError(err.message);
     } finally {
+      clearInterval(stepTimer);
       setGenerating(false);
+      setGenStep(0);
+      setGenStepText("");
     }
   }
 
@@ -906,16 +974,25 @@ export default function PlanPage() {
             </div>
           )}
 
-          {/* Loading skeleton while generating trip */}
+          {/* Generating trip — animated card */}
           {generating && (
-            <div className="space-y-3 animate-fade-up">
-              {[1,2,3].map(n => (
-                <div key={n} className="bg-white rounded-xl border border-gray-100 p-4 animate-pulse">
-                  <div className="h-3 bg-gray-200 rounded-full w-3/4 mb-3" />
-                  <div className="h-3 bg-gray-200 rounded-full w-1/2 mb-2" />
-                  <div className="h-3 bg-gray-100 rounded-full w-5/6" />
+            <div className="animate-fade-up">
+              <div className="bg-gradient-to-br from-orange-50 to-white border border-orange-100 rounded-2xl p-5 text-center">
+                <div className="text-4xl mb-3">✈️</div>
+                <p className="font-bold text-gray-900 text-base mb-1">{t("building_itinerary")}</p>
+                <p className="text-sm text-gray-400 mb-4">{genStepText}</p>
+                {/* Animated dots trail */}
+                <div className="flex justify-center gap-2 mb-4">
+                  {[0,1,2,3,4].map(i => (
+                    <div key={i} className="w-2 h-2 rounded-full transition-all duration-300"
+                      style={{
+                        background: i <= genStep ? "#f97316" : "#e5e7eb",
+                        transform: i === genStep ? "scale(1.4)" : "scale(1)",
+                      }} />
+                  ))}
                 </div>
-              ))}
+                <p className="text-xs text-gray-400">This takes about 15–20 seconds ☕</p>
+              </div>
             </div>
           )}
 
@@ -945,11 +1022,19 @@ export default function PlanPage() {
           )}
 
           {generating ? (
-            <div className="flex flex-col items-center gap-3 py-5">
+            <div className="flex flex-col items-center gap-4 py-4">
+              {/* Progress bar */}
               <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
-                <div className="h-full bg-orange-500 rounded-full animate-pulse" style={{ width: "60%" }} />
+                <div
+                  className="h-full bg-orange-500 rounded-full transition-all duration-1000"
+                  style={{ width: `${Math.min(95, 10 + genStep * 20)}%` }}
+                />
               </div>
-              <span className="text-sm text-gray-400 font-medium">{t("building_itinerary")}</span>
+              {/* Step text */}
+              <div className="flex items-center gap-2">
+                <span className="w-4 h-4 border-2 border-orange-300 border-t-orange-500 rounded-full animate-spin flex-shrink-0" />
+                <span className="text-sm text-gray-500 font-medium">{genStepText || t("building_itinerary")}</span>
+              </div>
             </div>
           ) : (
             <form onSubmit={e => { e.preventDefault(); sendMessage(input); }}

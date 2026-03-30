@@ -33,25 +33,19 @@ export async function POST(request) {
       comfort: "comfort hotels (4★, good amenities)",
       luxury: "luxury hotels and resorts (5★)",
     };
-    const foodDesc = {
-      street: "street food and local cheap eateries",
-      mixed: "mix of local restaurants and occasional nice dinners",
-      fine: "fine dining and rooftop restaurants",
-    };
 
     const interestStr = interests?.length ? `Special interests: ${interests.join(", ")}.` : "";
     const budgetHint = budgetBreakdown
-      ? `Budget breakdown hint: flights ${currency} ${budgetBreakdown.flights}, accommodation ${budgetBreakdown.accommodation}, food ${budgetBreakdown.food}, activities ${budgetBreakdown.activities}, other ${budgetBreakdown.other}.`
+      ? `Budget hint: flights ${currency} ${budgetBreakdown.flights}, accommodation ${budgetBreakdown.accommodation}, food ${budgetBreakdown.food}, activities ${budgetBreakdown.activities}.`
       : "";
 
-    // For long trips, use compact format to fit within token limits
     const isLong = days > 8;
     const activitiesPerDay = isLong ? 2 : 3;
-    const descLength = isLong ? "ONE short sentence" : "1-2 sentences with local details";
+    const descLength = isLong ? "ONE short sentence" : "1-2 sentences";
     const restaurantCount = isLong ? 3 : 5;
     const maxTokens = isLong ? 6000 : 4096;
 
-    const prompt = `You are an expert travel planner. Create a personalized itinerary. Be CONCISE — descriptions must be ${descLength} max. ${langInstruction}
+    const prompt = `You are an expert travel planner. Create a personalized itinerary. Be CONCISE. ${langInstruction}
 
 TRIP:
 - Destination: ${destination}
@@ -97,39 +91,52 @@ Return ONLY valid JSON. No markdown. No text outside JSON.
 }
 
 CRITICAL RULES:
-- Generate ALL ${days} days — do NOT stop early
+- Generate ALL ${days} days
 - Replace ALL 0s with realistic numbers
 - Stay within ${budget} ${currency} total
-- budget_breakdown must sum to total_estimated_cost
-- recommended_hotels: 3 options | recommended_restaurants: ${restaurantCount} options
-- Keep descriptions SHORT (${descLength}) to save space`;
+- Keep descriptions SHORT (${descLength})`;
 
-    let message;
-    try {
-      message = await client.messages.create({
-        model: "claude-sonnet-4-6",
-        max_tokens: maxTokens,
-        messages: [{ role: "user", content: prompt }],
-      });
-    } catch (apiErr) {
-      return Response.json({ error: `AI error: ${apiErr.message}` }, { status: 502 });
-    }
+    // Use streaming to avoid Vercel timeout
+    const encoder = new TextEncoder();
+    const readable = new ReadableStream({
+      async start(controller) {
+        let fullText = "";
+        try {
+          const stream = await client.messages.stream({
+            model: "claude-sonnet-4-6",
+            max_tokens: maxTokens,
+            messages: [{ role: "user", content: prompt }],
+          });
 
-    const raw = message.content[0]?.text || "";
-    let tripData;
-    try {
-      const jsonMatch = raw.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) throw new Error("No JSON in response");
-      tripData = JSON.parse(jsonMatch[0]);
-    } catch {
-      return Response.json({ error: "AI returned unexpected format. Please try again." }, { status: 500 });
-    }
+          for await (const chunk of stream) {
+            if (chunk.type === "content_block_delta" && chunk.delta?.type === "text_delta") {
+              fullText += chunk.delta.text;
+              // Send progress ping every ~500 chars to keep connection alive
+              if (fullText.length % 500 < 20) {
+                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ progress: true })}\n\n`));
+              }
+            }
+          }
 
-    if (!tripData.daily_itinerary || !Array.isArray(tripData.daily_itinerary)) {
-      return Response.json({ error: "Incomplete response. Please try again." }, { status: 500 });
-    }
+          // Parse and send complete trip
+          const jsonMatch = fullText.match(/\{[\s\S]*\}/);
+          if (!jsonMatch) throw new Error("No JSON in response");
+          const tripData = JSON.parse(jsonMatch[0]);
+          if (!tripData.daily_itinerary || !Array.isArray(tripData.daily_itinerary)) {
+            throw new Error("Incomplete response");
+          }
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ done: true, trip: tripData })}\n\n`));
+          controller.close();
+        } catch (err) {
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ error: err.message })}\n\n`));
+          controller.close();
+        }
+      },
+    });
 
-    return Response.json(tripData);
+    return new Response(readable, {
+      headers: { "Content-Type": "text/event-stream", "Cache-Control": "no-cache", Connection: "keep-alive" },
+    });
   } catch (err) {
     return Response.json({ error: `Error: ${err.message}` }, { status: 500 });
   }

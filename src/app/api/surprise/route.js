@@ -81,32 +81,42 @@ CRITICAL RULES:
 - Keep descriptions SHORT${isLong ? " (ONE sentence max) to save space" : ""}`;
 
 
-    let message;
-    try {
-      message = await client.messages.create({
-        model: "claude-sonnet-4-6",
-        max_tokens: isLong ? 6000 : 4096,
-        messages: [{ role: "user", content: prompt }],
-      });
-    } catch (apiErr) {
-      return Response.json({ error: `AI error: ${apiErr.message}` }, { status: 502 });
-    }
+    // Use streaming to avoid Vercel timeout
+    const encoder = new TextEncoder();
+    const form = { startDate, endDate, travelers, budget, currency, style, accommodation };
+    const readable = new ReadableStream({
+      async start(controller) {
+        let fullText = "";
+        try {
+          const stream = await client.messages.stream({
+            model: "claude-sonnet-4-6",
+            max_tokens: isLong ? 6000 : 4096,
+            messages: [{ role: "user", content: prompt }],
+          });
+          for await (const chunk of stream) {
+            if (chunk.type === "content_block_delta" && chunk.delta?.type === "text_delta") {
+              fullText += chunk.delta.text;
+              if (fullText.length % 500 < 20) {
+                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ progress: true })}\n\n`));
+              }
+            }
+          }
+          const jsonMatch = fullText.match(/\{[\s\S]*\}/);
+          if (!jsonMatch) throw new Error("No JSON in response");
+          const tripData = JSON.parse(jsonMatch[0]);
+          if (!tripData.daily_itinerary || !tripData.destination) throw new Error("Incomplete response");
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ done: true, trip: { ...tripData, form } })}\n\n`));
+          controller.close();
+        } catch (err) {
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ error: err.message })}\n\n`));
+          controller.close();
+        }
+      },
+    });
 
-    const raw = message.content[0]?.text || "";
-    let tripData;
-    try {
-      const jsonMatch = raw.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) throw new Error("No JSON in response");
-      tripData = JSON.parse(jsonMatch[0]);
-    } catch {
-      return Response.json({ error: "AI returned unexpected format. Please try again." }, { status: 500 });
-    }
-
-    if (!tripData.daily_itinerary || !tripData.destination) {
-      return Response.json({ error: "Incomplete response. Please try again." }, { status: 500 });
-    }
-
-    return Response.json({ ...tripData, form: { startDate, endDate, travelers, budget, currency, style, accommodation } });
+    return new Response(readable, {
+      headers: { "Content-Type": "text/event-stream", "Cache-Control": "no-cache", Connection: "keep-alive" },
+    });
   } catch (err) {
     return Response.json({ error: `Error: ${err.message}` }, { status: 500 });
   }
