@@ -13,6 +13,12 @@ import VisaTab from "./VisaTab";
 import ChatTab from "./ChatTab";
 import ReviewsTab from "./ReviewsTab";
 import AppsTab from "./AppsTab";
+import {
+  Calendar, Plane, Map as MapIcon, DollarSign, Info, Luggage, Receipt, Globe,
+  FileCheck, FileText, Smartphone, Star, Bot, Sparkles, MessageSquare, Wallet,
+  MapPin, Sunrise, Sun, Moon, Mountain, Waves, Landmark, Utensils, Music, Gem,
+  Download, Check, Loader2, Printer, Home, Share2, Pencil, X, ArrowRight,
+} from "lucide-react";
 
 // ─── Themes ───────────────────────────────────────────────────────────────────
 const DEST_THEMES = {
@@ -70,11 +76,11 @@ function getTheme(dest, style) {
   return DEST_THEMES.default;
 }
 
-const STYLE_ICONS = { adventure:"🧗", relaxed:"🏖️", cultural:"🏛️", luxury:"✨", nightlife:"🎉", culinary:"🍽️" };
+const STYLE_ICONS = { adventure: Mountain, relaxed: Waves, cultural: Landmark, luxury: Gem, nightlife: Music, culinary: Utensils };
 const TIME_STYLE  = {
-  morning:   { bg:"#fff7ed", text:"#ea580c" },
-  afternoon: { bg:"#fdf4ff", text:"#9333ea" },
-  evening:   { bg:"#eff6ff", text:"#2563eb" },
+  morning:   { bg:"#f4f4f5", text:"#0a0a0a", Icon: Sunrise },
+  afternoon: { bg:"#f4f4f5", text:"#0a0a0a", Icon: Sun },
+  evening:   { bg:"#f4f4f5", text:"#0a0a0a", Icon: Moon },
 };
 
 // ─── Editable ─────────────────────────────────────────────────────────────────
@@ -84,13 +90,13 @@ function Editable({ value, onChange, className = "", multiline = false, placehol
   useEffect(() => { setLocal(value); }, [value]);
   function done() { setEditing(false); if (local !== value) onChange(local); }
   if (editing) {
-    const cls = "w-full bg-orange-50 border-2 border-orange-300 rounded-xl px-3 py-2 outline-none text-sm text-gray-900 font-medium " + className;
+    const cls = "w-full bg-gray-50 border border-gray-900 rounded-md px-3 py-2 outline-none text-sm text-gray-900 " + className;
     return multiline
       ? <textarea autoFocus rows={2} value={local} onChange={e => setLocal(e.target.value)} onBlur={done} className={cls} />
       : <input autoFocus type="text" value={local} onChange={e => setLocal(e.target.value)} onBlur={done} onKeyDown={e => e.key === "Enter" && done()} className={cls} />;
   }
   return (
-    <span onClick={() => setEditing(true)} className={"cursor-text hover:bg-orange-50 rounded-lg px-1 -mx-1 transition-colors border border-dashed border-transparent hover:border-orange-200 " + className} title="Click to edit">
+    <span onClick={() => setEditing(true)} className={"cursor-text hover:bg-gray-50 rounded px-1 -mx-1 transition-colors border border-dashed border-transparent hover:border-gray-300 " + className} title="Click to edit">
       {value || <span className="text-gray-300 italic">{placeholder}</span>}
     </span>
   );
@@ -100,13 +106,12 @@ function EditableNumber({ value, onChange, prefix = "", className = "" }) {
   const [local, setLocal] = useState(value);
   useEffect(() => { setLocal(value); }, [value]);
   function done() { setEditing(false); const n = Number(local); if (!isNaN(n)) onChange(n); }
-  if (editing) return <input autoFocus type="number" min="0" value={local} onChange={e => setLocal(e.target.value)} onBlur={done} onKeyDown={e => e.key === "Enter" && done()} className={"w-24 bg-orange-50 border-2 border-orange-300 rounded-lg px-2 py-1 outline-none text-sm font-bold " + className} />;
-  return <span onClick={() => setEditing(true)} className={"cursor-text hover:bg-orange-50 rounded-lg px-1 -mx-1 transition-colors border border-dashed border-transparent hover:border-orange-200 font-bold " + className} title="Click to edit">{prefix}{value?.toLocaleString()}</span>;
+  if (editing) return <input autoFocus type="number" min="0" value={local} onChange={e => setLocal(e.target.value)} onBlur={done} onKeyDown={e => e.key === "Enter" && done()} className={"w-24 bg-gray-50 border border-gray-900 rounded-md px-2 py-1 outline-none text-sm font-medium num " + className} />;
+  return <span onClick={() => setEditing(true)} className={"cursor-text hover:bg-gray-50 rounded px-1 -mx-1 transition-colors border border-dashed border-transparent hover:border-gray-300 font-medium num " + className} title="Click to edit">{prefix}{value?.toLocaleString()}</span>;
 }
 
 // ─── AI Chat Panel (overlay) ──────────────────────────────────────────────────
 function AIChatPanel({ trip, onClose }) {
-  const G = "linear-gradient(135deg,#f97316,#ec4899)";
   const { t, lang } = useLanguage();
   const [msgs, setMsgs] = useState([{ role: "assistant", content: t("ai_panel_greeting", { dest: trip.destination }) }]);
   const [input, setInput] = useState("");
@@ -137,25 +142,25 @@ function AIChatPanel({ trip, onClose }) {
   return (
     <div className="fixed inset-0 z-50 flex flex-col" style={{ background: "var(--bg-page)" }}>
       <div className="flex items-center gap-3 px-4 pt-8 pb-4 bg-white border-b border-gray-100">
-        <button onClick={onClose} className="w-9 h-9 rounded-xl bg-orange-50 flex items-center justify-center text-orange-400 font-black text-lg">←</button>
-        <div className="w-9 h-9 rounded-2xl flex items-center justify-center text-lg" style={{ background: G }}>🤖</div>
-        <div><div className="font-black text-gray-900 text-sm">{t("ask_ai_btn")}</div><div className="text-xs text-gray-400">{trip.destination}</div></div>
-        <Link href={`/chat?tripId=${trip.id || ""}`} className="ml-auto text-xs font-bold text-orange-500 border border-gray-200 px-3 py-1.5 rounded-xl hover:bg-orange-50">{t("full_chat_link")}</Link>
+        <button onClick={onClose} className="w-9 h-9 rounded-md bg-gray-100 flex items-center justify-center text-gray-700 hover:bg-gray-200 transition-all"><ArrowRight size={16} strokeWidth={1.75} className="rotate-180"/></button>
+        <div className="w-9 h-9 rounded-md flex items-center justify-center text-white bg-gray-900"><Bot size={16} strokeWidth={1.75}/></div>
+        <div><div className="font-medium text-gray-900 text-[13px]">{t("ask_ai_btn")}</div><div className="text-[11px] text-gray-400">{trip.destination}</div></div>
+        <Link href={`/chat?tripId=${trip.id || ""}`} className="ml-auto text-[11px] font-medium text-gray-700 border border-gray-200 px-3 py-1.5 rounded-md hover:border-gray-900">{t("full_chat_link")}</Link>
       </div>
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
         {msgs.map((m, i) => (
           <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
-            <div className={`max-w-[85%] px-4 py-3 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${m.role==="user" ? "text-white rounded-tr-sm" : "bg-white border border-gray-100 text-gray-800 rounded-tl-sm"}`} style={m.role==="user"?{background:"#f97316"}:{}}>
-              {m.content || <span className="inline-flex gap-1"><span className="w-1.5 h-1.5 bg-orange-300 rounded-full animate-bounce"/><span className="w-1.5 h-1.5 bg-orange-300 rounded-full animate-bounce" style={{animationDelay:"150ms"}}/><span className="w-1.5 h-1.5 bg-orange-300 rounded-full animate-bounce" style={{animationDelay:"300ms"}}/></span>}
+            <div className={`max-w-[85%] px-4 py-3 rounded-lg text-[13px] leading-relaxed whitespace-pre-wrap ${m.role==="user" ? "text-white rounded-tr-sm bg-gray-900" : "bg-white border border-gray-200 text-gray-800 rounded-tl-sm"}`}>
+              {m.content || <span className="inline-flex gap-1"><span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"/><span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{animationDelay:"150ms"}}/><span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{animationDelay:"300ms"}}/></span>}
             </div>
           </div>
         ))}
       </div>
-      {msgs.length <= 1 && <div className="px-4 pb-2"><div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">{QUICK.map(q=><button key={q} onClick={()=>send(q)} className="flex-shrink-0 text-xs font-bold px-3 py-2 rounded-xl bg-white border border-gray-200 text-orange-500 whitespace-nowrap">{q}</button>)}</div></div>}
+      {msgs.length <= 1 && <div className="px-4 pb-2"><div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">{QUICK.map(q=><button key={q} onClick={()=>send(q)} className="flex-shrink-0 text-[11px] font-medium px-3 py-2 rounded-md bg-white border border-gray-200 text-gray-700 hover:border-gray-900 whitespace-nowrap">{q}</button>)}</div></div>}
       <div className="px-4 pb-6 pt-2">
-        <div className="flex gap-2 bg-white rounded-2xl border border-gray-200 p-2 shadow-sm">
-          <input value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"){e.preventDefault();send(input);}}} placeholder="Ask anything..." disabled={loading} className="flex-1 bg-transparent text-sm text-gray-800 placeholder-gray-300 outline-none px-2 font-medium"/>
-          <button onClick={()=>send(input)} disabled={loading||!input.trim()} className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold disabled:opacity-40" style={{background:"#f97316"}}>↑</button>
+        <div className="flex gap-2 bg-white rounded-md border border-gray-200 p-2">
+          <input value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"){e.preventDefault();send(input);}}} placeholder="Ask anything..." disabled={loading} className="flex-1 bg-transparent text-[13px] text-gray-800 placeholder-gray-300 outline-none px-2 font-medium"/>
+          <button onClick={()=>send(input)} disabled={loading||!input.trim()} className="w-9 h-9 rounded-md flex items-center justify-center text-white disabled:opacity-40 bg-gray-900"><ArrowRight size={14} strokeWidth={1.75} className="-rotate-90"/></button>
         </div>
       </div>
     </div>
@@ -1404,27 +1409,27 @@ function TripContent() {
   const touchStartX = useRef(null);
 
   const TABS = [
-    { id: "itinerary", labelKey: "tab_itinerary", icon: "🗓️" },
-    { id: "book",      labelKey: "tab_book",      icon: "✈️" },
-    { id: "map",       labelKey: "tab_map",       icon: "🗺️" },
-    { id: "currency",  labelKey: "tab_currency",  icon: "💱" },
-    { id: "info",      labelKey: "tab_info",      icon: "ℹ️" },
-    { id: "pack",      labelKey: "tab_pack",      icon: "🧳" },
-    { id: "expenses",  labelKey: "tab_expenses",  icon: "💸" },
-    { id: "local",     labelKey: "tab_local",     icon: "🌐" },
-    { id: "visa",      labelKey: "tab_visa",      icon: "🛂" },
-    { id: "docs",      labelKey: "tab_docs",      icon: "📄" },
-    { id: "apps",      labelKey: "tab_apps",      icon: "📱" },
-    { id: "reviews",   labelKey: "tab_reviews",   icon: "⭐" },
-    { id: "chat",      labelKey: "tab_chat",      icon: "🤖" },
+    { id: "itinerary", labelKey: "tab_itinerary", Icon: Calendar },
+    { id: "book",      labelKey: "tab_book",      Icon: Plane },
+    { id: "map",       labelKey: "tab_map",       Icon: MapIcon },
+    { id: "currency",  labelKey: "tab_currency",  Icon: DollarSign },
+    { id: "info",      labelKey: "tab_info",      Icon: Info },
+    { id: "pack",      labelKey: "tab_pack",      Icon: Luggage },
+    { id: "expenses",  labelKey: "tab_expenses",  Icon: Receipt },
+    { id: "local",     labelKey: "tab_local",     Icon: Globe },
+    { id: "visa",      labelKey: "tab_visa",      Icon: FileCheck },
+    { id: "docs",      labelKey: "tab_docs",      Icon: FileText },
+    { id: "apps",      labelKey: "tab_apps",      Icon: Smartphone },
+    { id: "reviews",   labelKey: "tab_reviews",   Icon: Star },
+    { id: "chat",      labelKey: "tab_chat",      Icon: Bot },
   ];
 
   const BUDGET_CATS = {
-    accommodation:  { color: "#f97316", label: t("accommodation_label") },
-    food:           { color: "#ec4899", label: t("food_label") },
-    activities:     { color: "#8b5cf6", label: t("activities_label") },
-    transportation: { color: "#3b82f6", label: t("transportation_label") },
-    other:          { color: "#9ca3af", label: t("other_label") },
+    accommodation:  { color: "#0a0a0a", label: t("accommodation_label") },
+    food:           { color: "#525252", label: t("food_label") },
+    activities:     { color: "#737373", label: t("activities_label") },
+    transportation: { color: "#a3a3a3", label: t("transportation_label") },
+    other:          { color: "#d4d4d4", label: t("other_label") },
   };
 
   useEffect(() => {
@@ -1678,7 +1683,7 @@ function TripContent() {
   const totalBudget = Object.values(budget_breakdown).reduce((a,b)=>a+b,0);
   const theme = getTheme(trip.destination||form?.destination, trip.style||form?.style);
   const hero  = `linear-gradient(135deg,${theme.g[0]},${theme.g[1]})`;
-  const G     = "linear-gradient(135deg,#f97316,#ec4899)";
+  const G     = "#0a0a0a";
 
   return (
     <main className="min-h-screen" style={{ background:"var(--bg-page)" }}>
@@ -1691,106 +1696,103 @@ function TripContent() {
       )}
 
       {/* ── Nav ── */}
-      <nav className="sticky top-0 z-40 px-3 py-3">
-        <div className="max-w-5xl mx-auto flex items-center justify-between px-4 py-3 rounded-2xl"
-          style={{
-            background: "rgba(255,255,255,0.95)",
-            backdropFilter: "blur(20px)",
-            WebkitBackdropFilter: "blur(20px)",
-            boxShadow: "0 1px 0 #f3f4f6, 0 4px 16px rgba(0,0,0,0.06)",
-            border: "1px solid #f3f4f6",
-          }}>
-          <Link href="/trips" className="text-xs font-semibold text-gray-400 hover:text-gray-600 transition-colors">← {t("nav_trips")}</Link>
+      <nav className="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-gray-100">
+        <div className="max-w-5xl mx-auto flex items-center justify-between px-6 py-4">
+          <Link href="/trips" className="text-[13px] font-medium text-gray-500 hover:text-gray-900 transition-colors">← {t("nav_trips")}</Link>
           <div className="flex items-center gap-1.5">
             <button
               onClick={() => setEditMode(e => !e)}
-              className="no-print text-xs font-semibold px-3 py-1.5 rounded-xl border transition-all"
+              className="no-print text-[12px] font-medium px-3 py-1.5 rounded-md border transition-all"
               style={editMode
-                ? { background: "#f97316", color: "white", borderColor: "#f97316" }
-                : { borderColor: "#e5e7eb", color: "#6b7280", background: "transparent" }
+                ? { background: "#0a0a0a", color: "white", borderColor: "#0a0a0a" }
+                : { borderColor: "#e5e7eb", color: "#525252", background: "transparent" }
               }
             >
               {editMode ? t("editing_active") : t("edit_btn_label")}
             </button>
-            <button onClick={handlePrint} disabled={printLoading} className="no-print text-xs font-semibold px-2.5 py-1.5 rounded-xl border border-gray-200 text-gray-500 hover:bg-gray-50 transition-all disabled:opacity-50">
-              {printLoading ? "⏳" : "🖨️"}
+            <button onClick={handlePrint} disabled={printLoading} className="no-print text-[12px] font-medium px-2.5 py-1.5 rounded-md border border-gray-200 text-gray-500 hover:border-gray-900 hover:text-gray-900 transition-all disabled:opacity-50" title="Print">
+              {printLoading ? "…" : "⎙"}
             </button>
-            <button onClick={downloadCalendar} className="no-print text-xs font-semibold px-2.5 py-1.5 rounded-xl border border-gray-200 text-gray-500 hover:bg-gray-50 transition-all">
-              📅
+            <button onClick={downloadCalendar} className="no-print text-[12px] font-medium px-2.5 py-1.5 rounded-md border border-gray-200 text-gray-500 hover:border-gray-900 hover:text-gray-900 transition-all" title="Calendar">
+              ⌂
             </button>
-            <button onClick={shareWhatsApp} className="no-print text-xs font-semibold px-2.5 py-1.5 rounded-xl text-white" style={{background:"#25D366"}} title="WhatsApp">
-              💬
+            <button onClick={shareWhatsApp} className="no-print text-[12px] font-medium px-2.5 py-1.5 rounded-md border border-gray-200 text-gray-500 hover:border-gray-900 hover:text-gray-900 transition-all" title="WhatsApp">
+              ⤴
             </button>
-            <button onClick={copyLink} className="text-xs font-semibold px-4 py-1.5 rounded-xl text-white transition-all hover:opacity-90"
-              style={{ background: "#f97316", boxShadow: "0 2px 8px rgba(249,115,22,0.3)" }}>
-              {copied ? "✓ Copied!" : t("share_trip")}
+            <button onClick={copyLink} className="text-[12px] font-medium px-3.5 py-1.5 rounded-md text-white bg-gray-900 hover:bg-black transition-all">
+              {copied ? "✓ Copied" : t("share_trip")}
             </button>
           </div>
         </div>
       </nav>
 
       {editMode && (
-        <div className="mx-3 mb-3 rounded-xl px-4 py-2.5 flex items-center gap-3 text-sm border border-orange-200" style={{background:"#fff7ed"}}>
-          <span className="text-orange-500">✏️</span>
-          <span className="text-orange-700 font-bold">{t("edit_mode_hint")}</span>
-          {saved && <span className="ml-auto text-green-600 font-bold text-xs">{t("saved_indicator")}</span>}
+        <div className="max-w-5xl mx-auto mx-3 mt-3 mb-3 rounded-md px-4 py-2.5 flex items-center gap-3 text-[13px] bg-gray-900 text-white">
+          <span className="font-medium">{t("edit_mode_hint")}</span>
+          {saved && <span className="ml-auto text-green-400 font-medium text-[11px]">{t("saved_indicator")}</span>}
         </div>
       )}
 
-      {/* ── Hero ── */}
-      <div className="mx-3 rounded-3xl overflow-hidden mb-0" style={{ background: "#ffffff", border: "1px solid #f3f4f6", boxShadow: "0 2px 16px rgba(0,0,0,0.06)" }}>
-        {/* Thin colored accent strip at very top */}
-        <div className="h-1.5 w-full" style={{ background: `linear-gradient(90deg, ${theme.g[0]}, ${theme.g[1]})` }} />
-        <div className="px-5 pt-6 pb-4 max-w-5xl mx-auto">
-          {/* Destination row */}
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-3xl">{theme.e}</span>
-                <span className="text-xs font-semibold px-2.5 py-1 rounded-full text-white" style={{ background: theme.g[0] }}>
-                  {trip.style ? trip.style.charAt(0).toUpperCase() + trip.style.slice(1) : "Trip"}
-                </span>
-              </div>
-              <h1 className="text-2xl font-bold text-gray-900 leading-tight">
-                {editMode
-                  ? <Editable value={trip.destination} onChange={v=>setTripAndSave(p=>({...p,destination:v}))}/>
-                  : trip.destination}
-              </h1>
-              <p className="text-sm text-gray-500 mt-1">
-                {form?.startDate} → {form?.endDate} · {trip.days} {t("days")} · {trip.travelers} {t("travelers_word")}
-              </p>
-            </div>
-            <div className="text-right flex-shrink-0">
-              <p className="text-2xl font-bold text-gray-900">{trip.currency} {trip.total_estimated_cost?.toLocaleString()}</p>
-              <p className="text-xs text-gray-400 mt-0.5">{t("budget_label")}</p>
-              {trip.travelers > 1 && <p className="text-xs text-gray-400">≈ {trip.currency} {Math.round(trip.total_estimated_cost/trip.travelers).toLocaleString()}/{t("travelers_word").replace(/s$/,"")}</p>}
-            </div>
-          </div>
-          {/* Quick stat chips */}
-          <div className="flex gap-2 mt-4 flex-wrap">
-            {[
-              { icon: "📅", label: `${trip.days} ${t("days")}` },
-              { icon: "👥", label: `${trip.travelers} ${t("travelers_word")}` },
-              { icon: "💰", label: `${trip.currency} ${Math.round((trip.total_estimated_cost || 0) / (trip.days || 1))}/day` },
-            ].map(chip => (
-              <span key={chip.label} className="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1.5 bg-gray-50 text-gray-600 rounded-full border border-gray-100">
-                {chip.icon} {chip.label}
-              </span>
-            ))}
-          </div>
-          {/* Summary */}
-          {trip.summary && (
-            <p className="mt-4 text-sm text-gray-500 leading-relaxed max-w-2xl">
-              {editMode ? <Editable value={trip.summary} onChange={v=>setTripAndSave(p=>({...p,summary:v}))} multiline/> : trip.summary}
+      {/* ── Hero — editorial ── */}
+      <div className="max-w-5xl mx-auto px-6 pt-10 pb-10">
+        {/* Accent strip — thin, subtle */}
+        <div className="h-[3px] w-16 rounded-full mb-6" style={{ background: `linear-gradient(90deg, ${theme.g[0]}, ${theme.g[1]})` }} />
+
+        <div className="flex items-start justify-between gap-8 flex-wrap">
+          <div className="flex-1 min-w-[280px]">
+            <p className="eyebrow mb-3">
+              {trip.style ? trip.style.charAt(0).toUpperCase() + trip.style.slice(1) : "Itinerary"}
             </p>
-          )}
-          {trip.surprise_reveal && !showSurprise && (
-            <div className="mt-3 flex items-start gap-3 max-w-2xl rounded-xl px-4 py-3 border border-amber-100" style={{background:"#fffbeb"}}>
-              <span className="text-amber-400 flex-shrink-0">🎲</span>
-              <p className="text-amber-700 text-xs leading-relaxed italic">{trip.surprise_reveal}</p>
-            </div>
-          )}
+            <h1 className="font-serif text-[56px] font-medium text-gray-900 leading-[0.95] tracking-tight mb-4">
+              {editMode
+                ? <Editable value={trip.destination} onChange={v=>setTripAndSave(p=>({...p,destination:v}))}/>
+                : trip.destination}
+            </h1>
+            <p className="text-[14px] text-gray-500 num">
+              {form?.startDate} — {form?.endDate} · {trip.days} {t("days")} · {trip.travelers} {t("travelers_word")}
+            </p>
+          </div>
+
+          <div className="text-right flex-shrink-0">
+            <p className="label-micro mb-2">{t("budget_label")}</p>
+            <p className="font-serif text-[40px] font-medium text-gray-900 leading-none num tabular-nums">
+              {trip.currency} {trip.total_estimated_cost?.toLocaleString()}
+            </p>
+            {trip.travelers > 1 && <p className="text-[12px] text-gray-400 mt-2 num">≈ {trip.currency} {Math.round(trip.total_estimated_cost/trip.travelers).toLocaleString()} / {t("travelers_word").replace(/s$/,"")}</p>}
+          </div>
         </div>
+
+        {/* Quick stats — borderless row */}
+        <div className="flex items-center gap-6 mt-8 pt-6 border-t border-gray-100 flex-wrap">
+          <div>
+            <div className="label-micro mb-1">Duration</div>
+            <div className="text-[15px] font-medium text-gray-900 num">{trip.days} days</div>
+          </div>
+          <div className="w-px h-8 bg-gray-100" />
+          <div>
+            <div className="label-micro mb-1">Travelers</div>
+            <div className="text-[15px] font-medium text-gray-900 num">{trip.travelers}</div>
+          </div>
+          <div className="w-px h-8 bg-gray-100" />
+          <div>
+            <div className="label-micro mb-1">Daily avg.</div>
+            <div className="text-[15px] font-medium text-gray-900 num">{trip.currency} {Math.round((trip.total_estimated_cost || 0) / (trip.days || 1)).toLocaleString()}</div>
+          </div>
+        </div>
+
+        {/* Summary */}
+        {trip.summary && (
+          <p className="mt-8 text-[15px] text-gray-600 leading-relaxed max-w-2xl font-serif italic">
+            {editMode ? <Editable value={trip.summary} onChange={v=>setTripAndSave(p=>({...p,summary:v}))} multiline/> : trip.summary}
+          </p>
+        )}
+
+        {trip.surprise_reveal && !showSurprise && (
+          <div className="mt-6 max-w-2xl rounded-md px-4 py-3 border border-gray-200 bg-gray-50">
+            <p className="eyebrow mb-1" style={{ color: "#ea580c" }}>Mystery reveal</p>
+            <p className="text-gray-700 text-[13px] leading-relaxed italic font-serif">{trip.surprise_reveal}</p>
+          </div>
+        )}
       </div>
 
       {/* Offline Cache Button */}
@@ -1828,29 +1830,34 @@ function TripContent() {
             } catch(e) {}
             setCachingOffline(false);
           }}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-medium transition-all border"
           style={offlineCached
-            ? { background:"#d1fae5", color:"#065f46", border:"1px solid #6ee7b7" }
-            : { background:"var(--bg-card)", color:"var(--text-sub)", border:"1px solid var(--border)" }}
+            ? { background:"#f4f4f5", color:"#0a0a0a", borderColor:"#e5e5e5" }
+            : { background:"#ffffff", color:"#525252", borderColor:"#e5e5e5" }}
         >
-          {cachingOffline ? "⏳" : offlineCached ? "✅" : "📥"} {offlineCached ? "Saved offline" : "Save for offline"}
+          {cachingOffline ? <Loader2 size={13} className="animate-spin"/> : offlineCached ? <Check size={13}/> : <Download size={13}/>}
+          {offlineCached ? "Saved offline" : "Save for offline"}
         </button>
       </div>
 
       {/* ── Tab Bar ── */}
-      <div className="sticky top-16 z-30 mb-4 bg-white border-b border-gray-100" style={{ boxShadow: "0 1px 0 #f3f4f6" }}>
+      <div className="sticky top-16 z-30 mb-4 bg-white border-b border-gray-100">
         <div className="max-w-5xl mx-auto px-3">
           <div className="flex gap-0 overflow-x-auto no-scrollbar">
-            {TABS.map(tab => (
-              <button key={tab.id} onClick={()=>setActiveTab(tab.id)}
-                className="flex-shrink-0 flex items-center gap-1.5 px-3 py-3 text-xs whitespace-nowrap transition-colors duration-150 relative"
-                style={activeTab===tab.id
-                  ? { color: "#f97316", fontWeight: 700, borderBottom: "2px solid #f97316" }
-                  : { color: "#9ca3af", fontWeight: 500, borderBottom: "2px solid transparent" }}>
-                <span className="text-sm leading-none">{tab.icon}</span>
-                <span>{t(tab.labelKey)}</span>
-              </button>
-            ))}
+            {TABS.map(tab => {
+              const TabIcon = tab.Icon;
+              const active = activeTab === tab.id;
+              return (
+                <button key={tab.id} onClick={()=>setActiveTab(tab.id)}
+                  className="flex-shrink-0 flex items-center gap-1.5 px-3 py-3 text-[12px] whitespace-nowrap transition-colors duration-150 relative"
+                  style={active
+                    ? { color: "#0a0a0a", fontWeight: 600, borderBottom: "1.5px solid #0a0a0a", marginBottom: "-1px" }
+                    : { color: "#a3a3a3", fontWeight: 500, borderBottom: "1.5px solid transparent", marginBottom: "-1px" }}>
+                  <TabIcon size={14} strokeWidth={active ? 2 : 1.75} />
+                  <span>{t(tab.labelKey)}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -1863,51 +1870,55 @@ function TripContent() {
           <>
             {/* Quick Actions */}
             <section>
-              <div className="grid grid-cols-2 gap-2.5">
+              <div className="grid grid-cols-2 gap-2">
                 {[
-                  { onClick: ()=>setShowAI(true), icon: "🤖", title: t("ask_ai_btn"), sub: t("ai_tips_subtitle"), accent: "#f97316" },
-                  { onClick: ()=>setActiveTab("pack"), icon: "🧳", title: t("tab_pack"), sub: t("ai_packing_list"), accent: "#8b5cf6" },
-                  { onClick: ()=>setActiveTab("expenses"), icon: "💸", title: t("tab_expenses"), sub: `${expenses.length}${t("expenses_count_suffix")}`, accent: "#0d9488" },
-                  { onClick: ()=>setActiveTab("local"), icon: "🗣️", title: t("tab_local"), sub: t("local_phrases"), accent: "#d97706" },
-                ].map((card, i) => (
-                  <button key={i} onClick={card.onClick}
-                    className="bg-white rounded-2xl p-4 text-left transition-all active:scale-95 border border-gray-100"
-                    style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-                    <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg mb-3" style={{background:`${card.accent}15`}}>
-                      {card.icon}
-                    </div>
-                    <div className="font-semibold text-sm text-gray-900 leading-snug">{card.title}</div>
-                    <div className="text-xs text-gray-400 mt-0.5">{card.sub}</div>
-                  </button>
-                ))}
+                  { onClick: ()=>setShowAI(true), Icon: Bot, title: t("ask_ai_btn"), sub: t("ai_tips_subtitle") },
+                  { onClick: ()=>setActiveTab("pack"), Icon: Luggage, title: t("tab_pack"), sub: t("ai_packing_list") },
+                  { onClick: ()=>setActiveTab("expenses"), Icon: Receipt, title: t("tab_expenses"), sub: `${expenses.length}${t("expenses_count_suffix")}` },
+                  { onClick: ()=>setActiveTab("local"), Icon: Globe, title: t("tab_local"), sub: t("local_phrases") },
+                ].map((card, i) => {
+                  const CardIcon = card.Icon;
+                  return (
+                    <button key={i} onClick={card.onClick}
+                      className="bg-white rounded-lg p-4 text-left transition-all border border-gray-200 hover:border-gray-900">
+                      <div className="w-8 h-8 rounded-md flex items-center justify-center mb-3 bg-gray-100 text-gray-900">
+                        <CardIcon size={16} strokeWidth={1.75} />
+                      </div>
+                      <div className="font-medium text-[13px] text-gray-900 leading-snug">{card.title}</div>
+                      <div className="text-[11px] text-gray-400 mt-0.5">{card.sub}</div>
+                    </button>
+                  );
+                })}
               </div>
             </section>
 
             {/* Budget Breakdown */}
             {totalBudget > 0 && (
               <section>
-                <h2 className="text-lg font-black text-gray-900 mb-1">💰 {t("budget_breakdown")}</h2>
-                <p className="text-xs text-gray-400 mb-3">{trip.currency} {totalBudget.toLocaleString()} total · {trip.days} days</p>
-                <div className="bg-white rounded-2xl border border-gray-100 p-5" style={{boxShadow:"0 1px 4px rgba(0,0,0,0.05)"}}>
+                <div className="flex items-baseline justify-between mb-3">
+                  <h2 className="font-serif text-[22px] font-medium text-gray-900 tracking-tight">{t("budget_breakdown")}</h2>
+                  <p className="text-[11px] text-gray-400 num">{trip.currency} {totalBudget.toLocaleString()} · {trip.days} days</p>
+                </div>
+                <div className="bg-white rounded-lg border border-gray-200 p-5">
                   <div className="space-y-4">
                     {Object.entries(budget_breakdown).map(([k,v])=>{
                       const pct = totalBudget > 0 ? Math.round((v/totalBudget)*100) : 0;
-                      const color = BUDGET_CATS[k]?.color || "#9ca3af";
+                      const color = BUDGET_CATS[k]?.color || "#a3a3a3";
                       return (
                         <div key={k}>
                           <div className="flex items-center justify-between mb-1.5">
                             <div className="flex items-center gap-2">
-                              <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{background:color}}/>
-                              <span className="text-sm font-semibold text-gray-700">{BUDGET_CATS[k]?.label||k}</span>
+                              <div className="w-2 h-2 rounded-full flex-shrink-0" style={{background:color}}/>
+                              <span className="text-[13px] font-medium text-gray-700">{BUDGET_CATS[k]?.label||k}</span>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs text-gray-400">{pct}%</span>
-                              <span className="text-sm font-bold text-gray-900">
+                            <div className="flex items-center gap-3">
+                              <span className="text-[11px] text-gray-400 num tabular-nums">{pct}%</span>
+                              <span className="text-[13px] font-medium text-gray-900 num tabular-nums">
                                 {trip.currency} {editMode ? <EditableNumber value={v} onChange={val=>updateBudget(k,val)}/> : v?.toLocaleString()}
                               </span>
                             </div>
                           </div>
-                          <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                          <div className="h-1 bg-gray-100 rounded-full overflow-hidden">
                             <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, background: color }} />
                           </div>
                         </div>
@@ -1921,23 +1932,22 @@ function TripContent() {
             {/* Daily Itinerary */}
             {daily_itinerary.length > 0 && (
               <section>
-                <h2 className="text-lg font-black text-gray-900 mb-3">🗓️ Day-by-Day</h2>
-                <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2 mb-4">
+                <h2 className="font-serif text-[22px] font-medium text-gray-900 tracking-tight mb-3">Day-by-day</h2>
+                <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-2 mb-4">
                   {daily_itinerary.map((day,i)=>(
                     <button key={i} onClick={()=>setActiveDay(i)}
-                      className="flex-shrink-0 px-4 py-2 rounded-xl text-sm transition-all flex items-center gap-1"
+                      className="flex-shrink-0 px-3 py-1.5 rounded-md text-[12px] transition-all flex items-center gap-1.5 border"
                       style={activeDay===i
-                        ? {background:"#f97316",color:"white",fontWeight:600}
-                        : {background:"white",color:"#6b7280",border:"1px solid #e5e7eb",fontWeight:500}}>
+                        ? {background:"#0a0a0a",color:"white",fontWeight:500,borderColor:"#0a0a0a"}
+                        : {background:"white",color:"#525252",borderColor:"#e5e5e5",fontWeight:500}}>
                       {t("day_label")} {day.day}
-                      {dayForecast?.[i] && <span className="text-xs">{dayForecast[i].emoji}</span>}
+                      {dayForecast?.[i] && <span className="text-[11px] opacity-80">{dayForecast[i].emoji}</span>}
                     </button>
                   ))}
                 </div>
 
                 {daily_itinerary[activeDay] && (
-                  <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden"
-                    style={{boxShadow:"0 1px 4px rgba(0,0,0,0.05)"}}
+                  <div className="bg-white rounded-lg border border-gray-200 overflow-hidden"
                     onTouchStart={e => { touchStartX.current = e.touches[0].clientX; }}
                     onTouchEnd={e => {
                       if (touchStartX.current === null) return;
@@ -1948,48 +1958,50 @@ function TripContent() {
                         if (diff < 0 && activeDay > 0) setActiveDay(p => p - 1);
                       }
                     }}>
-                    {/* Day header with colored left border */}
-                    <div className="p-5 border-b border-gray-50" style={{ borderLeft: `4px solid ${theme.g[0]}` }}>
+                    {/* Day header */}
+                    <div className="p-5 border-b border-gray-100">
                       <div className="flex items-start justify-between gap-4 flex-wrap">
                         <div>
-                          <div className="text-xs font-semibold uppercase tracking-wide mb-1" style={{color:"#f97316"}}>
-                            {t("day_label")} {daily_itinerary[activeDay].day} — {daily_itinerary[activeDay].date}
+                          <div className="eyebrow mb-2">
+                            {t("day_label")} {daily_itinerary[activeDay].day} · {daily_itinerary[activeDay].date}
                           </div>
-                          <h3 className="text-xl font-black text-gray-900 flex items-center flex-wrap gap-2">
+                          <h3 className="font-serif text-[22px] font-medium text-gray-900 tracking-tight flex items-center flex-wrap gap-2">
                             {editMode ? <Editable value={daily_itinerary[activeDay].title} onChange={v=>updateDayField(activeDay,"title",v)}/> : daily_itinerary[activeDay].title}
                             {dayForecast?.[activeDay] && (
-                              <span className="inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: "#fff7ed", color: "#f97316" }}>
+                              <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-md bg-gray-100 text-gray-700 num">
                                 {dayForecast[activeDay].emoji} {dayForecast[activeDay].max}°/{dayForecast[activeDay].min}°
                               </span>
                             )}
                           </h3>
                           {daily_itinerary[activeDay].accommodation && (
-                            <span className="inline-flex items-center gap-1.5 mt-2 text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-50 text-gray-500 border border-gray-100">
-                              🏨 {editMode ? <Editable value={daily_itinerary[activeDay].accommodation} onChange={v=>updateDayField(activeDay,"accommodation",v)} placeholder="Add hotel..."/> : daily_itinerary[activeDay].accommodation}
+                            <span className="inline-flex items-center gap-1.5 mt-2 text-[11px] font-medium px-2 py-1 rounded-md bg-gray-50 text-gray-600 border border-gray-200">
+                              <Home size={11} strokeWidth={1.75}/> {editMode ? <Editable value={daily_itinerary[activeDay].accommodation} onChange={v=>updateDayField(activeDay,"accommodation",v)} placeholder="Add hotel..."/> : daily_itinerary[activeDay].accommodation}
                             </span>
                           )}
                         </div>
                         <div className="flex items-center gap-2">
-                          <div className="rounded-xl px-4 py-2 text-center border border-gray-100">
-                            <div className="text-base font-bold text-orange-500">{trip.currency} {daily_itinerary[activeDay].daily_cost?.toLocaleString()}</div>
-                            <div className="text-xs text-gray-400">{t("day_total")}</div>
+                          <div className="rounded-md px-3 py-2 text-right border border-gray-200">
+                            <div className="text-[10px] font-medium uppercase tracking-[0.08em] text-gray-400">{t("day_total")}</div>
+                            <div className="text-[14px] font-medium text-gray-900 num tabular-nums mt-0.5">{trip.currency} {daily_itinerary[activeDay].daily_cost?.toLocaleString()}</div>
                           </div>
-                          <button onClick={()=>setDaySuggestIndex(activeDay)} className="px-3 py-2 rounded-xl text-white text-xs font-semibold transition-all hover:opacity-90" style={{background:"#f97316"}}>✨ AI</button>
+                          <button onClick={()=>setDaySuggestIndex(activeDay)} className="px-3 py-2 rounded-md text-white text-[12px] font-medium transition-all hover:opacity-90 bg-gray-900 flex items-center gap-1.5">
+                            <Sparkles size={12} strokeWidth={1.75}/> AI
+                          </button>
                         </div>
                       </div>
                     </div>
                     <div className="p-3 space-y-2">
                       {daily_itinerary[activeDay].activities?.map((a,j)=>{
                         const ts = TIME_STYLE[a.time]||TIME_STYLE.morning;
+                        const TimeIcon = ts.Icon;
                         const timeLabel = a.time === "morning" ? t("morning") : a.time === "afternoon" ? t("afternoon") : t("evening");
                         return (
-                          <div key={j} className="bg-gray-50 rounded-xl p-3 group transition-colors hover:bg-orange-50/40">
+                          <div key={j} className="bg-gray-50 rounded-md p-3 group transition-colors hover:bg-gray-100/60 border border-transparent hover:border-gray-200">
                             <div className="flex items-start gap-2 mb-1">
                               <div className="flex-shrink-0">
                                 {editMode ? (
                                   <select value={a.time} onChange={e=>updateActivity(activeDay,j,"time",e.target.value)}
-                                    className="text-xs font-bold px-2 py-1 rounded-full border-2 outline-none"
-                                    style={{background:ts.bg,color:ts.text,borderColor:ts.bg}}>
+                                    className="text-[11px] font-medium px-2 py-1 rounded-md border outline-none bg-white text-gray-900 border-gray-200">
                                     {["morning","afternoon","evening"].map(tm=>(
                                       <option key={tm} value={tm}>
                                         {tm === "morning" ? t("morning") : tm === "afternoon" ? t("afternoon") : t("evening")}
@@ -1997,23 +2009,25 @@ function TripContent() {
                                     ))}
                                   </select>
                                 ) : (
-                                  <span className="text-xs font-bold px-2.5 py-1 rounded-full" style={{background:ts.bg,color:ts.text}}>{timeLabel}</span>
+                                  <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-md uppercase tracking-wide bg-white border border-gray-200 text-gray-700">
+                                    <TimeIcon size={11} strokeWidth={1.75}/> {timeLabel}
+                                  </span>
                                 )}
                               </div>
                               {a.estimated_cost > 0 && (
-                                <span className="ml-auto text-xs font-bold px-2 py-1 rounded-full text-white flex-shrink-0" style={{background:"#f97316"}}>
+                                <span className="ml-auto text-[11px] font-medium px-2 py-0.5 rounded-md text-gray-900 bg-white border border-gray-200 flex-shrink-0 num tabular-nums">
                                   {trip.currency} {editMode ? <EditableNumber value={a.estimated_cost} onChange={v=>updateActivity(activeDay,j,"estimated_cost",v)}/> : a.estimated_cost?.toLocaleString()}
                                 </span>
                               )}
-                              {editMode && <button onClick={()=>deleteActivity(activeDay,j)} className="opacity-0 group-hover:opacity-100 w-6 h-6 rounded-lg bg-red-100 text-red-400 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center text-xs font-black flex-shrink-0">×</button>}
+                              {editMode && <button onClick={()=>deleteActivity(activeDay,j)} className="opacity-0 group-hover:opacity-100 w-6 h-6 rounded-md bg-gray-200 text-gray-600 hover:bg-gray-900 hover:text-white transition-all flex items-center justify-center flex-shrink-0"><X size={12}/></button>}
                             </div>
-                            <h4 className="font-bold text-gray-900 text-sm leading-snug">{editMode ? <Editable value={a.name} onChange={v=>updateActivity(activeDay,j,"name",v)}/> : a.name}</h4>
-                            <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{editMode ? <Editable value={a.description} onChange={v=>updateActivity(activeDay,j,"description",v)} multiline/> : a.description}</p>
+                            <h4 className="font-medium text-gray-900 text-[13px] leading-snug mt-1">{editMode ? <Editable value={a.name} onChange={v=>updateActivity(activeDay,j,"name",v)}/> : a.name}</h4>
+                            <p className="text-[12px] text-gray-500 mt-0.5 leading-relaxed">{editMode ? <Editable value={a.description} onChange={v=>updateActivity(activeDay,j,"description",v)} multiline/> : a.description}</p>
                           </div>
                         );
                       })}
                     </div>
-                    {editMode && <div className="p-4 border-t border-gray-50"><button onClick={()=>addActivity(activeDay)} className="w-full py-3 rounded-xl border border-dashed border-gray-200 text-gray-400 hover:border-orange-300 hover:bg-orange-50 hover:text-orange-400 transition-all text-sm font-medium">{t("add_activity")}</button></div>}
+                    {editMode && <div className="p-4 border-t border-gray-100"><button onClick={()=>addActivity(activeDay)} className="w-full py-2.5 rounded-md border border-dashed border-gray-300 text-gray-500 hover:border-gray-900 hover:bg-gray-50 hover:text-gray-900 transition-all text-[13px] font-medium">{t("add_activity")}</button></div>}
                     {/* Photo Diary */}
                     <PhotoDiary tripId={id} dayIndex={activeDay} />
                     {/* Diary Notes */}
@@ -2095,15 +2109,15 @@ function TripContent() {
             {(tips.length>0||editMode) && (
               <section>
                 <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-lg font-black text-gray-900">💡 {t("tips_label")}</h2>
-                  {editMode && <button onClick={addTip} className="text-xs font-bold px-4 py-2 rounded-xl border-2 border-orange-200 text-orange-500 bg-orange-50">{t("add_tip")}</button>}
+                  <h2 className="font-serif text-[22px] font-medium text-gray-900 tracking-tight">{t("tips_label")}</h2>
+                  {editMode && <button onClick={addTip} className="text-[12px] font-medium px-3 py-1.5 rounded-md border border-gray-200 text-gray-700 bg-white hover:border-gray-900">{t("add_tip")}</button>}
                 </div>
-                <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden" style={{boxShadow:"0 1px 4px rgba(0,0,0,0.05)"}}>
+                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
                   {tips.map((tip,i)=>(
-                    <div key={i} className="flex gap-3 px-4 py-3.5 border-b border-gray-50 last:border-0 group hover:bg-gray-50/50 transition-colors">
-                      <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs text-white font-black flex-shrink-0 mt-0.5" style={{background:"#f97316"}}>{i+1}</span>
-                      <p className="text-gray-600 text-sm leading-relaxed flex-1">{editMode ? <Editable value={tip} onChange={v=>updateTip(i,v)} multiline/> : tip}</p>
-                      {editMode && <button onClick={()=>deleteTip(i)} className="opacity-0 group-hover:opacity-100 w-5 h-5 rounded-lg bg-red-100 text-red-400 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center text-xs font-black">×</button>}
+                    <div key={i} className="flex gap-3 px-4 py-3.5 border-b border-gray-100 last:border-0 group hover:bg-gray-50/50 transition-colors">
+                      <span className="text-[11px] text-gray-400 font-medium num tabular-nums flex-shrink-0 mt-1 w-5">{String(i+1).padStart(2,"0")}</span>
+                      <p className="text-gray-700 text-[13px] leading-relaxed flex-1">{editMode ? <Editable value={tip} onChange={v=>updateTip(i,v)} multiline/> : tip}</p>
+                      {editMode && <button onClick={()=>deleteTip(i)} className="opacity-0 group-hover:opacity-100 w-5 h-5 rounded-md bg-gray-100 text-gray-500 hover:bg-gray-900 hover:text-white transition-all flex items-center justify-center"><X size={11}/></button>}
                     </div>
                   ))}
                 </div>
@@ -2146,20 +2160,23 @@ function TripContent() {
 
             {/* Share CTA */}
             <section>
-              <div className="rounded-2xl overflow-hidden p-6 text-center" style={{background:"#111827"}}>
-                <div className="text-3xl mb-2">{theme.e}</div>
-                <h2 className="text-lg font-bold text-white mb-1">{t("share_adventure")} {theme.e}</h2>
-                <p className="text-gray-400 mb-5 text-sm">{t("share_with_friends")}</p>
-                <div className="flex flex-col sm:flex-row gap-2 justify-center">
-                  <button onClick={copyLink} className="font-semibold px-6 py-3 rounded-xl text-sm text-white transition-all hover:opacity-90" style={{background:"#f97316"}}>
-                    {copied ? t("whatsapp_copied") : t("copy_link")}
-                  </button>
-                  <button onClick={shareWhatsApp} className="font-semibold px-6 py-3 rounded-xl text-sm text-white flex items-center justify-center gap-2" style={{background:"#25D366"}}>
-                    💬 {t("whatsapp_share")}
-                  </button>
-                  <Link href="/plan" className="font-semibold px-6 py-3 rounded-xl text-sm text-gray-300 border border-gray-700 flex items-center justify-center">
-                    {t("plan_another")}
-                  </Link>
+              <div className="relative rounded-lg overflow-hidden p-8 text-center" style={{background:"#0a0a0a"}}>
+                <div className="absolute inset-0 opacity-60 pointer-events-none" style={{ background: "radial-gradient(circle at 80% 0%, rgba(234,88,12,0.18), transparent 50%)" }}/>
+                <div className="relative">
+                  <p className="eyebrow mb-3" style={{color:"#fb923c"}}>{trip.style || "Share"}</p>
+                  <h2 className="font-serif text-[26px] font-medium text-white mb-2 tracking-tight">{t("share_adventure")}</h2>
+                  <p className="text-gray-400 mb-6 text-[13px] max-w-md mx-auto leading-relaxed">{t("share_with_friends")}</p>
+                  <div className="flex flex-col sm:flex-row gap-2 justify-center">
+                    <button onClick={copyLink} className="font-medium px-5 py-2.5 rounded-md text-[13px] text-gray-900 bg-white transition-all hover:bg-gray-100 flex items-center justify-center gap-1.5">
+                      <Share2 size={14} strokeWidth={1.75}/> {copied ? t("whatsapp_copied") : t("copy_link")}
+                    </button>
+                    <button onClick={shareWhatsApp} className="font-medium px-5 py-2.5 rounded-md text-[13px] text-white transition-all hover:opacity-90 flex items-center justify-center gap-1.5" style={{background:"#25D366"}}>
+                      <MessageSquare size={14} strokeWidth={1.75}/> {t("whatsapp_share")}
+                    </button>
+                    <Link href="/plan" className="font-medium px-5 py-2.5 rounded-md text-[13px] text-gray-300 border border-gray-700 hover:border-gray-500 transition-all flex items-center justify-center gap-1.5">
+                      {t("plan_another")} <ArrowRight size={14} strokeWidth={1.75}/>
+                    </Link>
+                  </div>
                 </div>
               </div>
             </section>
@@ -2193,9 +2210,9 @@ function TripContent() {
 
       {/* ── Floating AI Button ── */}
       <button onClick={()=>setShowAI(true)}
-        className="fixed bottom-28 right-4 z-30 w-14 h-14 rounded-2xl shadow-xl text-white text-2xl flex items-center justify-center hover:-translate-y-1 transition-all no-print"
-        style={{background:"#f97316",boxShadow:"0 6px 20px rgba(249,115,22,0.35)"}}>
-        🤖
+        className="fixed bottom-28 right-4 z-30 w-12 h-12 rounded-full text-white flex items-center justify-center hover:-translate-y-0.5 transition-all no-print"
+        style={{background:"#0a0a0a", boxShadow:"0 4px 14px rgba(0,0,0,0.25)"}}>
+        <Bot size={20} strokeWidth={1.75}/>
       </button>
 
       {/* ── PRINT ONLY SECTION ── */}

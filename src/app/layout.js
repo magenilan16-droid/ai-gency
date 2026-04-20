@@ -28,7 +28,7 @@ export const metadata = {
 export const viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#f97316",
+  themeColor: "#0a0a0a",
 };
 
 export default function RootLayout({ children }) {
@@ -37,7 +37,7 @@ export default function RootLayout({ children }) {
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
         <link rel="manifest" href="/manifest.json" />
         <link rel="apple-touch-icon" href="/icons/icon-192.png" />
         <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-192.png" />
@@ -47,9 +47,9 @@ export default function RootLayout({ children }) {
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="AI-gency" />
         <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="theme-color" content="#f97316" />
+        <meta name="theme-color" content="#0a0a0a" />
       </head>
-      <body className="font-sans antialiased pb-24" style={{ background: "#FFF8F0" }}>
+      <body className="font-sans antialiased pb-24 bg-white">
         <OfflineBanner />
         <AuthProvider>
           <LanguageProvider>
@@ -57,9 +57,9 @@ export default function RootLayout({ children }) {
             <BottomNav />
           </LanguageProvider>
         </AuthProvider>
-        <footer className="pb-24 px-4 py-3 flex items-center justify-between max-w-2xl mx-auto">
-          <span className="text-xs text-gray-400">© 2025 AI-gency</span>
-          <Link href="/legal" className="text-xs text-gray-400 hover:text-orange-400 transition-colors">Privacy &amp; Terms</Link>
+        <footer className="pb-24 px-6 py-6 flex items-center justify-between max-w-3xl mx-auto border-t border-gray-100">
+          <span className="text-[11px] text-gray-400 tracking-wide">© 2025 AI-gency</span>
+          <Link href="/legal" className="text-[11px] text-gray-400 hover:text-gray-900 transition-colors tracking-wide">Privacy &amp; Terms</Link>
         </footer>
       </body>
     </html>

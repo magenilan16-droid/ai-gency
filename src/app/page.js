@@ -2,14 +2,23 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useLanguage } from "@/app/LanguageProvider";
+import {
+  Sparkles, Wallet, CalendarDays, Link2, Briefcase, CloudSun,
+  Bot, Globe, Scale, ArrowRight, ArrowUpRight, Settings, Plane,
+  Sun, Moon, CloudDrizzle, CloudSnow, CloudLightning, Cloud,
+  MessageSquare, Zap, MapPin, Compass,
+} from "lucide-react";
 
-/* ── WMO weather codes ── */
-const WMO_EMOJI = {
-  0:"☀️",1:"🌤️",2:"⛅",3:"☁️",45:"🌫️",48:"🌫️",
-  51:"🌦️",53:"🌦️",55:"🌧️",61:"🌧️",63:"🌧️",65:"🌧️",
-  71:"❄️",73:"❄️",75:"❄️",80:"🌦️",81:"🌧️",82:"⛈️",95:"⛈️",
+/* ── WMO weather → Lucide icon ── */
+const WMO_ICON = {
+  0: Sun, 1: Sun, 2: CloudSun, 3: Cloud,
+  45: Cloud, 48: Cloud,
+  51: CloudDrizzle, 53: CloudDrizzle, 55: CloudDrizzle,
+  61: CloudDrizzle, 63: CloudDrizzle, 65: CloudDrizzle,
+  71: CloudSnow, 73: CloudSnow, 75: CloudSnow,
+  80: CloudDrizzle, 81: CloudDrizzle, 82: CloudLightning, 95: CloudLightning,
 };
-function wmoEmoji(code) { return WMO_EMOJI[code] ?? "🌡️"; }
+function wmoIcon(code) { return WMO_ICON[code] ?? Sun; }
 
 /* ── WeatherBadge ── */
 function WeatherBadge({ destination, dateStr }) {
@@ -28,16 +37,17 @@ function WeatherBadge({ destination, dateStr }) {
         if (cancelled) return;
         const code = wx.daily?.weathercode?.[0];
         const temp = wx.daily?.temperature_2m_max?.[0];
-        if (code != null && temp != null) setWeather({ emoji: wmoEmoji(code), temp: Math.round(temp) });
+        if (code != null && temp != null) setWeather({ Icon: wmoIcon(code), temp: Math.round(temp) });
       } catch {}
     }
     load();
     return () => { cancelled = true; };
   }, [destination, dateStr]);
   if (!weather) return null;
+  const { Icon } = weather;
   return (
-    <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
-      {weather.emoji} {weather.temp}°
+    <span className="inline-flex items-center gap-1 text-[11px] font-medium num text-gray-500">
+      <Icon size={12} strokeWidth={1.75} /> {weather.temp}°
     </span>
   );
 }
@@ -56,26 +66,11 @@ function getAllTrips() {
   return out.sort((a, b) => b.id.localeCompare(a.id));
 }
 
-/* ── Destination color map ── */
-const DEST_COLORS = {
-  japan:"#FF6B6B",tokyo:"#FF6B6B",paris:"#667eea",france:"#667eea",
-  italy:"#11998e",rome:"#f7971e",greece:"#2980B9",spain:"#ee0979",
-  thailand:"#f7971e",bali:"#11998e","new york":"#4776E6",london:"#4776E6",
-  dubai:"#f7971e",israel:"#2980B9","tel aviv":"#11998e",
-};
-function destColor(d) {
-  if (!d) return "#f97316";
-  const k = d.toLowerCase();
-  for (const [key, val] of Object.entries(DEST_COLORS)) { if (k.includes(key)) return val; }
-  return "#f97316";
-}
 function daysUntil(dateStr) {
   if (!dateStr) return null;
   return Math.ceil((new Date(dateStr) - new Date()) / 86400000);
 }
-const STYLE_E = { adventure:"🧗", relaxed:"🏖️", cultural:"🏛️", luxury:"✨", business:"💼" };
 
-/* ── Time-based greeting ── */
 function getGreeting() {
   const h = new Date().getHours();
   if (h < 12) return "Good morning";
@@ -84,138 +79,149 @@ function getGreeting() {
 }
 
 /* ════════════════════════════════════════════════════════════════
-   WELCOME PAGE
+   WELCOME PAGE — Editorial + Fintech
    ════════════════════════════════════════════════════════════════ */
 function WelcomePage() {
   const { t } = useLanguage();
 
   const FEATURES = [
-    { icon: "🤖", color: "#fff7ed", title: t("feature_ai_title"),       desc: t("feature_ai_desc") },
-    { icon: "💰", color: "#f0fdf4", title: t("feature_budget_title"),    desc: t("feature_budget_desc") },
-    { icon: "🗓️", color: "#eff6ff", title: t("feature_daybyday_title"),  desc: t("feature_daybyday_desc") },
-    { icon: "🔗", color: "#fdf4ff", title: t("feature_share_title"),     desc: t("feature_share_desc") },
-    { icon: "🧳", color: "#fff7ed", title: t("feature_packing_title"),   desc: t("feature_packing_desc") },
-    { icon: "🌦️", color: "#f0f9ff", title: t("feature_weather_title"),   desc: t("feature_weather_desc") },
+    { Icon: Sparkles,    title: t("feature_ai_title"),       desc: t("feature_ai_desc") },
+    { Icon: Wallet,      title: t("feature_budget_title"),    desc: t("feature_budget_desc") },
+    { Icon: CalendarDays,title: t("feature_daybyday_title"),  desc: t("feature_daybyday_desc") },
+    { Icon: Link2,       title: t("feature_share_title"),     desc: t("feature_share_desc") },
+    { Icon: Briefcase,   title: t("feature_packing_title"),   desc: t("feature_packing_desc") },
+    { Icon: CloudSun,    title: t("feature_weather_title"),   desc: t("feature_weather_desc") },
   ];
 
   const DESTS = [
-    { name: "Tokyo",    emoji: "🗼", color: "#FF6B6B" },
-    { name: "Paris",    emoji: "🗼", color: "#667eea" },
-    { name: "Bali",     emoji: "🌺", color: "#11998e" },
-    { name: "Dubai",    emoji: "🏙️", color: "#f7971e" },
-    { name: "NYC",      emoji: "🗽", color: "#4776E6" },
-    { name: "Bangkok",  emoji: "🐘", color: "#f7971e" },
+    { name: "Tokyo",    country: "Japan",   tag: "Culture" },
+    { name: "Paris",    country: "France",  tag: "Romance" },
+    { name: "Bali",     country: "Indonesia", tag: "Nature" },
+    { name: "Dubai",    country: "UAE",     tag: "Luxury"  },
+    { name: "New York", country: "USA",     tag: "Urban"   },
+    { name: "Bangkok",  country: "Thailand",tag: "Street"  },
   ];
 
   const STEPS = [
-    { n: "1", icon: "💬", title: t("step1_title"), desc: t("step1_desc") },
-    { n: "2", icon: "⚡", title: t("step2_title"), desc: t("step2_desc") },
-    { n: "3", icon: "✈️", title: t("step3_title"), desc: t("step3_desc") },
+    { n: "01", Icon: MessageSquare, title: t("step1_title"), desc: t("step1_desc") },
+    { n: "02", Icon: Zap,           title: t("step2_title"), desc: t("step2_desc") },
+    { n: "03", Icon: Plane,         title: t("step3_title"), desc: t("step3_desc") },
   ];
 
   return (
     <div className="min-h-screen bg-white page-enter">
 
       {/* ── Header ── */}
-      <header className="px-5 pt-5 pb-2 max-w-2xl mx-auto flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs font-bold"
-            style={{ background: "#f97316" }}>AI</div>
-          <span className="font-bold text-gray-900 text-sm">AI-gency</span>
+      <header className="px-6 pt-6 pb-4 max-w-3xl mx-auto flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <div className="w-7 h-7 rounded-md bg-black flex items-center justify-center">
+            <span className="text-white text-[10px] font-bold tracking-tighter">AI</span>
+          </div>
+          <span className="font-semibold text-gray-900 text-[15px] tracking-tight">AI-gency</span>
         </div>
         <Link href="/plan"
-          className="text-sm font-semibold text-orange-500 hover:text-orange-600 transition-colors">
-          Get started →
+          className="inline-flex items-center gap-1.5 text-[13px] font-medium text-gray-900 hover:text-gray-600 transition-colors">
+          Get started <ArrowRight size={14} strokeWidth={2} />
         </Link>
       </header>
 
       {/* ── Hero ── */}
-      <section className="relative px-5 pt-12 pb-16 max-w-2xl mx-auto text-center overflow-hidden">
-        {/* Subtle animated background blob */}
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background: "radial-gradient(ellipse 80% 50% at 50% -10%, rgba(249,115,22,0.07) 0%, transparent 70%)",
-          }}
-        />
-
-        {/* Badge */}
-        <div className="animate-fade-up inline-flex items-center gap-2 bg-orange-50 border border-orange-200 rounded-full px-3 py-1.5 mb-6">
-          <span className="w-1.5 h-1.5 bg-orange-400 rounded-full" style={{ animation: "pulse-soft 2s ease infinite" }} />
-          <span className="text-xs font-semibold text-orange-600">{t("hero_badge_text")}</span>
+      <section className="px-6 pt-16 pb-20 max-w-3xl mx-auto">
+        {/* Eyebrow */}
+        <div className="animate-fade-up mb-8">
+          <span className="eyebrow">Intelligent Travel Planning</span>
         </div>
 
-        {/* Headline */}
-        <h1 className="animate-fade-up delay-1 text-5xl sm:text-6xl font-bold tracking-tight text-gray-900 leading-[1.05] mb-5">
-          {t("how_it_works_title")}<br />
-          <span style={{ color: "#f97316" }}>in seconds</span>
+        {/* Serif display headline */}
+        <h1 className="animate-fade-up delay-1 display-xl text-[64px] sm:text-[80px] text-gray-900 mb-8">
+          Plan smarter.<br />
+          <span className="italic text-gray-500">Travel further.</span>
         </h1>
 
         {/* Subtitle */}
-        <p className="animate-fade-up delay-2 text-base text-gray-500 max-w-xs mx-auto mb-4 leading-relaxed">
-          {t("hero_subtitle")}
+        <p className="animate-fade-up delay-2 text-[17px] text-gray-600 max-w-md leading-relaxed mb-10">
+          AI-powered itineraries, budget intelligence, and day-by-day plans —
+          built in seconds, refined for taste.
         </p>
 
-        {/* Stats row */}
-        <div className="animate-fade-up delay-3 flex items-center justify-center gap-4 text-xs text-gray-400 font-medium mb-8 flex-wrap">
-          <span>10,000+ trips planned</span>
-          <span className="w-1 h-1 rounded-full bg-gray-300 inline-block" />
-          <span>50+ countries</span>
-          <span className="w-1 h-1 rounded-full bg-gray-300 inline-block" />
-          <span>⭐ 4.9 rating</span>
+        {/* CTAs */}
+        <div className="animate-fade-up delay-3 flex items-center gap-3 flex-wrap mb-12">
+          <Link href="/plan" className="btn-primary">
+            Plan a trip <ArrowRight size={15} strokeWidth={2} />
+          </Link>
+          <Link href="/for-agents" className="btn-ghost">
+            For travel advisors
+          </Link>
         </div>
 
-        {/* CTAs */}
-        <div className="animate-fade-up delay-4 flex items-center justify-center gap-3 flex-wrap">
-          <Link href="/plan" className="btn-primary inline-flex items-center gap-2">
-            Plan my trip ✈️
-          </Link>
-          <Link href="/for-agents" className="btn-ghost inline-flex items-center gap-2">
-            I&apos;m a travel agent →
-          </Link>
+        {/* Stats strip */}
+        <div className="animate-fade-up delay-4 flex items-center gap-8 pt-8 border-t border-gray-100">
+          <div>
+            <div className="display-lg text-[28px] text-gray-900 num">10k+</div>
+            <div className="text-[11px] text-gray-500 uppercase tracking-wider mt-1">Trips planned</div>
+          </div>
+          <div className="w-px h-10 bg-gray-100" />
+          <div>
+            <div className="display-lg text-[28px] text-gray-900 num">50+</div>
+            <div className="text-[11px] text-gray-500 uppercase tracking-wider mt-1">Countries</div>
+          </div>
+          <div className="w-px h-10 bg-gray-100" />
+          <div>
+            <div className="display-lg text-[28px] text-gray-900 num">4.9</div>
+            <div className="text-[11px] text-gray-500 uppercase tracking-wider mt-1">Rating</div>
+          </div>
         </div>
       </section>
 
       {/* ── Destination strip ── */}
-      <section className="mb-12">
-        <div className="overflow-x-auto no-scrollbar snap-scroll px-5">
+      <section className="mb-24">
+        <div className="px-6 max-w-3xl mx-auto mb-5 flex items-baseline justify-between">
+          <p className="label-micro">Popular destinations</p>
+          <Link href="/countries" className="text-[12px] text-gray-500 hover:text-gray-900 transition-colors inline-flex items-center gap-1">
+            Browse all <ArrowRight size={12} />
+          </Link>
+        </div>
+        <div className="overflow-x-auto no-scrollbar snap-scroll px-6">
           <div className="flex gap-3" style={{ width: "max-content" }}>
             {DESTS.map((d, i) => (
               <Link key={d.name} href={`/plan?destination=${encodeURIComponent(d.name)}`}
-                className={`animate-fade-up delay-${Math.min(i + 1, 6)} flex-shrink-0 rounded-2xl p-4 text-white card-hover active:scale-95`}
-                style={{
-                  background: d.color,
-                  width: 100,
-                  height: 100,
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "flex-end",
-                  scrollSnapAlign: "start",
-                }}>
-                <div className="text-2xl mb-1">{d.emoji}</div>
-                <div className="font-semibold text-sm leading-tight">{d.name}</div>
+                className={`animate-fade-up delay-${Math.min(i + 1, 6)} flex-shrink-0 group`}
+                style={{ scrollSnapAlign: "start" }}>
+                <div className="relative overflow-hidden rounded-xl border border-gray-100 bg-gray-50 transition-all group-hover:border-gray-300"
+                  style={{ width: 180, height: 220 }}>
+                  <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-700 to-gray-400"
+                    style={{ opacity: 0.9 }} />
+                  <div className="absolute inset-0 p-4 flex flex-col justify-between text-white">
+                    <span className="text-[10px] font-semibold tracking-wider uppercase opacity-80">{d.tag}</span>
+                    <div>
+                      <div className="font-serif text-2xl font-medium leading-none tracking-tight">{d.name}</div>
+                      <div className="text-[11px] opacity-70 mt-1 tracking-wide">{d.country}</div>
+                    </div>
+                  </div>
+                </div>
               </Link>
             ))}
           </div>
         </div>
-        <p className="text-center text-xs text-gray-400 mt-3 px-5">{t("click_destination_hint")}</p>
       </section>
 
       {/* ── How it works ── */}
-      <section className="px-5 pb-12 max-w-2xl mx-auto">
-        <p className="label-micro mb-2">HOW IT WORKS</p>
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">{t("how_it_works_title")}</h2>
-        <div className="space-y-3">
+      <section className="px-6 pb-24 max-w-3xl mx-auto">
+        <p className="label-micro mb-3">How it works</p>
+        <h2 className="font-serif text-[40px] font-medium text-gray-900 tracking-tight mb-12">
+          Three steps to a<br />refined itinerary.
+        </h2>
+        <div className="space-y-0 border-t border-gray-100">
           {STEPS.map((step, i) => (
             <div key={step.n}
-              className={`animate-fade-up delay-${i + 1} flex items-start gap-4 p-4 rounded-xl border border-gray-100 bg-white card-premium card-glow`}>
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-sm font-bold flex-shrink-0"
-                style={{ background: "#f97316" }}>
-                {step.n}
+              className={`animate-fade-up delay-${i + 1} py-6 border-b border-gray-100 flex items-start gap-6 group`}>
+              <span className="font-mono text-[11px] text-gray-400 mt-1 num flex-shrink-0 w-8">{step.n}</span>
+              <div className="icon-square flex-shrink-0">
+                <step.Icon size={16} strokeWidth={1.75} />
               </div>
-              <div>
-                <div className="font-semibold text-sm text-gray-900">{step.icon} {step.title}</div>
-                <div className="text-xs text-gray-500 mt-0.5 leading-relaxed">{step.desc}</div>
+              <div className="flex-1 min-w-0">
+                <div className="font-medium text-[15px] text-gray-900 mb-1">{step.title}</div>
+                <div className="text-[13px] text-gray-500 leading-relaxed">{step.desc}</div>
               </div>
             </div>
           ))}
@@ -223,39 +229,48 @@ function WelcomePage() {
       </section>
 
       {/* ── Features grid ── */}
-      <section className="px-5 pb-12 max-w-2xl mx-auto">
-        <p className="label-micro mb-2">WHAT YOU GET</p>
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">{t("features_title")}</h2>
-        <div className="grid grid-cols-2 gap-3">
+      <section className="px-6 pb-24 max-w-3xl mx-auto">
+        <p className="label-micro mb-3">Capabilities</p>
+        <h2 className="font-serif text-[40px] font-medium text-gray-900 tracking-tight mb-12">
+          Every detail, considered.
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-gray-100 border border-gray-100 rounded-xl overflow-hidden">
           {FEATURES.map((f, i) => (
             <div key={i}
-              className={`animate-fade-up delay-${Math.min(i + 1, 6)} p-4 rounded-xl border border-gray-100 bg-white card-premium card-glow`}>
-              <div
-                className="w-9 h-9 rounded-xl flex items-center justify-center text-lg mb-3 flex-shrink-0"
-                style={{ background: f.color }}>
-                {f.icon}
+              className={`animate-fade-up delay-${Math.min(i + 1, 6)} p-6 bg-white transition-colors hover:bg-gray-50`}>
+              <div className="icon-square mb-4">
+                <f.Icon size={16} strokeWidth={1.75} />
               </div>
-              <div className="text-sm font-semibold text-gray-900 mb-1">{f.title}</div>
-              <div className="text-xs text-gray-500 leading-relaxed">{f.desc}</div>
+              <div className="text-[15px] font-medium text-gray-900 mb-1.5">{f.title}</div>
+              <div className="text-[13px] text-gray-500 leading-relaxed">{f.desc}</div>
             </div>
           ))}
         </div>
       </section>
 
-      {/* ── Final CTA ── */}
-      <section className="px-5 pb-32 max-w-2xl mx-auto">
-        <div className="rounded-2xl p-8 text-center animate-scale-in" style={{ background: "#111827" }}>
-          <div className="text-4xl mb-3">🌍</div>
-          <h2 className="text-2xl font-bold text-white mb-2">{t("final_cta_title")}</h2>
-          <p className="text-gray-400 text-sm mb-6 max-w-xs mx-auto leading-relaxed">{t("final_cta_subtitle")}</p>
-          <Link href="/plan" className="btn-primary inline-flex items-center gap-2">
-            {t("final_cta_btn")}
-          </Link>
-        </div>
-        <div className="text-center pt-6">
-          <Link href="/for-agents" className="text-xs text-gray-400 hover:text-orange-500 transition-colors font-medium">
-            ✈️ Are you a travel agent? Get your free referral link →
-          </Link>
+      {/* ── Final CTA — deep ink block ── */}
+      <section className="px-6 pb-32 max-w-3xl mx-auto">
+        <div className="rounded-2xl p-12 bg-gray-900 text-white animate-scale-in relative overflow-hidden">
+          <div className="absolute inset-0 opacity-20 pointer-events-none"
+            style={{ background: "radial-gradient(ellipse at top right, rgba(234,88,12,0.3) 0%, transparent 50%)" }} />
+          <div className="relative">
+            <span className="eyebrow" style={{ color: "#ea580c" }}>Ready when you are</span>
+            <h2 className="font-serif text-[44px] font-medium tracking-tight leading-[1.05] mt-4 mb-6">
+              Your next trip,<br />
+              <span className="italic text-gray-400">drafted in seconds.</span>
+            </h2>
+            <p className="text-[14px] text-gray-400 max-w-sm leading-relaxed mb-8">
+              Skip the spreadsheets. Tell us where, when, and how — get a complete plan back.
+            </p>
+            <div className="flex items-center gap-3 flex-wrap">
+              <Link href="/plan" className="btn-accent">
+                Start planning <ArrowRight size={15} strokeWidth={2} />
+              </Link>
+              <Link href="/for-agents" className="text-[13px] text-gray-400 hover:text-white transition-colors inline-flex items-center gap-1">
+                Travel advisor? <ArrowUpRight size={13} />
+              </Link>
+            </div>
+          </div>
         </div>
       </section>
     </div>
@@ -274,76 +289,84 @@ function Dashboard({ trips }) {
   const totalBudget = trips.reduce((s, tr) => s + (tr.total_estimated_cost || 0), 0);
 
   const ACTIONS = [
-    { icon: "✈️", bg: "#fff7ed", iconColor: "#f97316", labelKey: "new_ai_trip",        descKey: "chat_based_planning",   href: "/plan"      },
-    { icon: "🤖", bg: "#eff6ff", iconColor: "#3b82f6", labelKey: "ask_ai_assistant",    descKey: "plan_tips_suggestions", href: "/chat"      },
-    { icon: "💼", bg: "#f0fdf4", iconColor: "#22c55e", labelKey: "business_trip_label", descKey: "per_diems_expenses",    href: "/business"  },
-    { icon: "🌍", bg: "#fdf4ff", iconColor: "#a855f7", labelKey: "explore_countries",   descKey: "discover_destinations", href: "/countries" },
+    { Icon: Plane,     labelKey: "new_ai_trip",        descKey: "chat_based_planning",   href: "/plan"      },
+    { Icon: Bot,       labelKey: "ask_ai_assistant",    descKey: "plan_tips_suggestions", href: "/chat"      },
+    { Icon: Briefcase, labelKey: "business_trip_label", descKey: "per_diems_expenses",    href: "/business"  },
+    { Icon: Globe,     labelKey: "explore_countries",   descKey: "discover_destinations", href: "/countries" },
   ];
 
   return (
     <div className="min-h-screen bg-white page-enter">
 
       {/* ── Header ── */}
-      <header className="px-5 pt-8 pb-4 max-w-2xl mx-auto">
-        <div className="flex items-center justify-between">
+      <header className="px-6 pt-10 pb-8 max-w-3xl mx-auto">
+        <div className="flex items-start justify-between">
           <div>
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">AI-GENCY</p>
-            <h1 className="text-2xl font-bold text-gray-900 animate-fade-up">
-              {getGreeting()}, Traveler 👋
+            <p className="label-micro mb-3">{getGreeting()}</p>
+            <h1 className="font-serif text-[36px] font-medium text-gray-900 tracking-tight animate-fade-up leading-none">
+              Welcome back.
             </h1>
           </div>
           <Link href="/settings"
-            className="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center text-base hover:bg-gray-200 transition-colors animate-fade-in">
-            ⚙️
+            className="w-9 h-9 rounded-md border border-gray-200 flex items-center justify-center text-gray-500 hover:text-gray-900 hover:border-gray-300 transition-colors animate-fade-in">
+            <Settings size={15} strokeWidth={1.75} />
           </Link>
         </div>
       </header>
 
-      <div className="px-5 max-w-2xl mx-auto space-y-5 pb-32">
+      <div className="px-6 max-w-3xl mx-auto space-y-10 pb-32">
 
-        {/* ── Stats chips ── */}
-        <div className="grid grid-cols-3 gap-2 animate-fade-up delay-1">
+        {/* ── Stats row — serious fintech style ── */}
+        <div className="grid grid-cols-3 gap-px bg-gray-100 border border-gray-100 rounded-xl overflow-hidden animate-fade-up delay-1">
           {[
-            { value: trips.length,                          label: t("stat_trips"),    href: "/trips",     color: "#f97316" },
-            { value: countries.length,                      label: t("stat_countries"), href: "/countries", color: "#3b82f6" },
-            { value: `$${Math.round(totalBudget / 1000)}k`, label: t("stat_planned"), href: "/trips",     color: "#22c55e" },
+            { value: trips.length,                          label: t("stat_trips"),     href: "/trips" },
+            { value: countries.length,                      label: t("stat_countries"), href: "/countries" },
+            { value: `$${Math.round(totalBudget / 1000)}k`, label: t("stat_planned"),   href: "/trips" },
           ].map((s, i) => (
             <Link key={i} href={s.href}
-              className="p-3 rounded-xl border border-gray-100 text-center card-premium card-glow group">
-              <div className="text-2xl font-bold text-gray-900 group-hover:transition-colors" style={{ transition: "color 0.2s" }}>
+              className="p-5 bg-white hover:bg-gray-50 transition-colors">
+              <div className="font-serif text-[28px] font-medium text-gray-900 num leading-none mb-2">
                 {s.value}
               </div>
-              <div className="text-xs text-gray-500 mt-0.5">{s.label}</div>
+              <div className="text-[11px] text-gray-500 uppercase tracking-wider">{s.label}</div>
             </Link>
           ))}
         </div>
 
-        {/* ── Upcoming trip ── */}
+        {/* ── Upcoming trip — editorial card ── */}
         {upcoming && (() => {
-          const color = destColor(upcoming.destination);
           const d = daysUntil(upcoming.form?.startDate);
           return (
             <div className="animate-fade-up delay-2">
-              <p className="label-micro mb-3">UPCOMING TRIP</p>
+              <div className="flex items-baseline justify-between mb-4">
+                <p className="label-micro">Next departure</p>
+                <span className="text-[11px] text-gray-400 uppercase tracking-wider">
+                  {d === 0 ? "Today" : d === 1 ? "Tomorrow" : `In ${d} days`}
+                </span>
+              </div>
               <Link href={`/trip/${upcoming.id}`}>
-                <div className="rounded-2xl p-5 border-l-4 bg-white border border-gray-100 card-premium card-glow hover:shadow-md transition-all"
-                  style={{ borderLeftColor: color, borderLeftWidth: 4 }}>
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0"
-                      style={{ background: color + "18" }}>
-                      {STYLE_E[upcoming.style] || "✈️"}
+                <div className="card card-interactive p-6 group">
+                  <div className="flex items-start gap-5">
+                    <div className="icon-square-ink" style={{ width: 44, height: 44 }}>
+                      <Plane size={18} strokeWidth={1.75} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-0.5">
-                        <span className="text-xs font-bold px-2 py-0.5 rounded-full text-white"
-                          style={{ background: color }}>
-                          {d === 0 ? t("today_badge") : d === 1 ? t("tomorrow_badge") : t("in_x_days", { n: d })}
-                        </span>
+                      <div className="font-serif text-[22px] font-medium text-gray-900 tracking-tight leading-tight mb-1">
+                        {upcoming.destination}
                       </div>
-                      <p className="font-bold text-gray-900 text-base truncate">{upcoming.destination}</p>
-                      <p className="text-xs text-gray-400 mt-0.5">{upcoming.form?.startDate} · {upcoming.days} {t("days")}</p>
+                      <div className="flex items-center gap-3 text-[12px] text-gray-500 num">
+                        <span>{upcoming.form?.startDate}</span>
+                        <span className="w-1 h-1 rounded-full bg-gray-300" />
+                        <span>{upcoming.days} days</span>
+                        {upcoming.currency && upcoming.total_estimated_cost && (
+                          <>
+                            <span className="w-1 h-1 rounded-full bg-gray-300" />
+                            <span>{upcoming.currency} {upcoming.total_estimated_cost.toLocaleString()}</span>
+                          </>
+                        )}
+                      </div>
                     </div>
-                    <div className="text-gray-300 text-xl flex-shrink-0">→</div>
+                    <ArrowRight size={16} strokeWidth={1.75} className="text-gray-400 group-hover:text-gray-900 group-hover:translate-x-0.5 transition-all mt-1 flex-shrink-0" />
                   </div>
                 </div>
               </Link>
@@ -351,59 +374,66 @@ function Dashboard({ trips }) {
           );
         })()}
 
-        {/* ── Quick actions ── */}
+        {/* ── Quick actions — tight grid ── */}
         <div className="animate-fade-up delay-3">
-          <p className="label-micro mb-3">{t("quick_actions")}</p>
+          <p className="label-micro mb-4">{t("quick_actions")}</p>
           <div className="grid grid-cols-2 gap-2">
             {ACTIONS.map((a, i) => (
               <Link key={a.labelKey} href={a.href}
-                className={`flex items-center gap-3 p-4 rounded-xl border border-gray-100 bg-white card-premium card-glow delay-${i + 1}`}>
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center text-base flex-shrink-0"
-                  style={{ background: a.bg }}>
-                  {a.icon}
+                className="card card-interactive flex items-center gap-3 p-4 group">
+                <div className="icon-square">
+                  <a.Icon size={16} strokeWidth={1.75} />
                 </div>
-                <div className="min-w-0">
-                  <div className="text-sm font-semibold text-gray-900 leading-tight">{t(a.labelKey)}</div>
-                  <div className="text-xs text-gray-500 leading-tight mt-0.5 truncate">{t(a.descKey)}</div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-[14px] font-medium text-gray-900 leading-tight">{t(a.labelKey)}</div>
+                  <div className="text-[12px] text-gray-500 leading-tight mt-0.5 truncate">{t(a.descKey)}</div>
                 </div>
+                <ArrowRight size={13} strokeWidth={1.75} className="text-gray-300 group-hover:text-gray-900 transition-colors" />
               </Link>
             ))}
           </div>
         </div>
 
-        {/* ── Recent trips ── */}
+        {/* ── Recent trips — list view ── */}
         {recent.length > 0 && (
           <div className="animate-fade-up delay-4">
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex items-baseline justify-between mb-4">
               <p className="label-micro">{t("recent_trips")}</p>
-              <Link href="/trips" className="text-xs font-semibold text-orange-500 hover:text-orange-600 transition-colors">
-                {t("see_all")} →
+              <Link href="/trips" className="text-[12px] text-gray-500 hover:text-gray-900 transition-colors inline-flex items-center gap-1">
+                {t("see_all")} <ArrowRight size={12} />
               </Link>
             </div>
-            <div className="space-y-1">
+            <div className="border-t border-gray-100">
               {recent.map(tr => {
-                const color = destColor(tr.destination);
                 const d = daysUntil(tr.form?.startDate);
                 return (
                   <Link key={tr.id} href={`/trip/${tr.id}`}
-                    className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 border border-transparent hover:border-gray-100 transition-all group">
-                    {/* Left color accent bar */}
-                    <div className="w-1 h-10 rounded-full flex-shrink-0" style={{ background: color }} />
-                    <div className="w-9 h-9 rounded-xl flex items-center justify-center text-base flex-shrink-0"
-                      style={{ background: color + "15" }}>
-                      {STYLE_E[tr.style] || "🌍"}
+                    className="flex items-center gap-4 py-4 border-b border-gray-100 hover:bg-gray-50 transition-colors px-2 -mx-2 group">
+                    <div className="icon-square">
+                      <MapPin size={14} strokeWidth={1.75} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm font-semibold text-gray-900 truncate">{tr.destination}</div>
-                      <div className="text-xs text-gray-400">{tr.form?.startDate || t("no_date")} · {tr.days || "?"} {t("days")}</div>
+                      <div className="text-[14px] font-medium text-gray-900 truncate">{tr.destination}</div>
+                      <div className="text-[12px] text-gray-500 mt-0.5 num">
+                        {tr.form?.startDate || t("no_date")} · {tr.days || "?"} {t("days")}
+                      </div>
                     </div>
                     <div className="text-right flex-shrink-0">
-                      <div className="text-sm font-semibold" style={{ color }}>{tr.currency} {tr.total_estimated_cost?.toLocaleString()}</div>
-                      {d !== null && d >= 0 && (
-                        <div className="text-xs text-orange-400 font-medium">{d === 0 ? t("today_short") : t("x_d_away", { n: d })}</div>
+                      {tr.total_estimated_cost && (
+                        <div className="text-[13px] font-medium text-gray-900 num">
+                          {tr.currency} {tr.total_estimated_cost.toLocaleString()}
+                        </div>
                       )}
-                      <WeatherBadge destination={tr.destination} dateStr={tr.form?.startDate} />
+                      <div className="flex items-center justify-end gap-2 mt-0.5">
+                        {d !== null && d >= 0 && (
+                          <span className="text-[11px] text-gray-400 num">
+                            {d === 0 ? "Today" : `${d}d away`}
+                          </span>
+                        )}
+                        <WeatherBadge destination={tr.destination} dateStr={tr.form?.startDate} />
+                      </div>
                     </div>
+                    <ArrowRight size={14} strokeWidth={1.75} className="text-gray-300 group-hover:text-gray-900 transition-colors" />
                   </Link>
                 );
               })}
@@ -413,47 +443,54 @@ function Dashboard({ trips }) {
 
         {/* ── Smart tools ── */}
         <div className="animate-fade-up delay-5">
-          <p className="label-micro mb-3">{t("smart_tools")}</p>
+          <p className="label-micro mb-4">{t("smart_tools")}</p>
           <div className="grid grid-cols-2 gap-2">
             {[
-              { href: "/budget",  icon: "💰", bg: "#f0fdf4", labelKey: "feature_budget_title", descKey: "feature_budget_desc" },
-              { href: "/compare", icon: "⚖️", bg: "#eff6ff", labelKey: "compare_title",         descKey: "compare_desc" },
+              { href: "/budget",  Icon: Wallet, labelKey: "feature_budget_title", descKey: "feature_budget_desc" },
+              { href: "/compare", Icon: Scale,  labelKey: "compare_title",         descKey: "compare_desc" },
             ].map(tool => (
               <Link key={tool.href} href={tool.href}
-                className="flex items-center gap-3 p-4 rounded-xl border border-gray-100 bg-white card-premium card-glow">
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center text-base flex-shrink-0"
-                  style={{ background: tool.bg }}>
-                  {tool.icon}
+                className="card card-interactive flex items-center gap-3 p-4 group">
+                <div className="icon-square">
+                  <tool.Icon size={16} strokeWidth={1.75} />
                 </div>
-                <div className="min-w-0">
-                  <div className="text-sm font-semibold text-gray-900 leading-tight">{t(tool.labelKey)}</div>
-                  <div className="text-xs text-gray-500 truncate">{t(tool.descKey)}</div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-[14px] font-medium text-gray-900 leading-tight">{t(tool.labelKey)}</div>
+                  <div className="text-[12px] text-gray-500 truncate">{t(tool.descKey)}</div>
                 </div>
               </Link>
             ))}
           </div>
         </div>
 
-        {/* ── New trip CTA (full-width dark card) ── */}
+        {/* ── New trip CTA — deep ink block ── */}
         <div className="animate-fade-up delay-6">
           <Link href="/plan"
-            className="flex items-center justify-between p-5 rounded-2xl text-white transition-all hover:opacity-95 active:scale-[0.99]"
-            style={{ background: "#111827" }}>
-            <div>
-              <div className="font-bold text-base">{t("next_trip_cta_title")}</div>
-              <div className="text-gray-400 text-sm mt-0.5">{t("next_trip_cta_subtitle")}</div>
-            </div>
-            <div className="w-10 h-10 bg-orange-500 rounded-xl flex items-center justify-center text-white font-bold text-lg flex-shrink-0"
-              style={{ boxShadow: "0 4px 14px rgba(249,115,22,0.4)" }}>
-              →
+            className="relative block overflow-hidden rounded-xl bg-gray-900 text-white p-6 transition-all hover:bg-black active:scale-[0.995]">
+            <div className="absolute inset-0 opacity-30 pointer-events-none"
+              style={{ background: "radial-gradient(circle at top right, rgba(234,88,12,0.4) 0%, transparent 60%)" }} />
+            <div className="relative flex items-center justify-between">
+              <div>
+                <span className="eyebrow" style={{ color: "#ea580c" }}>New trip</span>
+                <div className="font-serif text-[24px] font-medium tracking-tight leading-tight mt-2">
+                  {t("next_trip_cta_title")}
+                </div>
+                <div className="text-[13px] text-gray-400 mt-1.5">{t("next_trip_cta_subtitle")}</div>
+              </div>
+              <div className="w-11 h-11 rounded-md bg-white/10 border border-white/15 flex items-center justify-center flex-shrink-0 transition-colors group-hover:bg-white/15">
+                <ArrowRight size={18} strokeWidth={2} />
+              </div>
             </div>
           </Link>
         </div>
 
         {/* ── For Agents ── */}
-        <div className="text-center pb-2">
-          <Link href="/for-agents" className="text-xs text-gray-400 hover:text-orange-500 transition-colors font-medium">
-            ✈️ Are you a travel agent? Get your free referral link →
+        <div className="text-center pt-4">
+          <Link href="/for-agents"
+            className="text-[12px] text-gray-400 hover:text-gray-900 transition-colors inline-flex items-center gap-1.5">
+            <Compass size={12} strokeWidth={1.75} />
+            Travel advisor? Get your referral link
+            <ArrowRight size={11} />
           </Link>
         </div>
 
@@ -486,21 +523,23 @@ function PWAInstallBanner() {
 
   return (
     <div className="fixed bottom-20 left-4 right-4 z-50 max-w-sm mx-auto animate-bounce-in">
-      <div className="bg-gray-900 rounded-2xl p-4 flex items-center gap-3 shadow-2xl">
-        <div className="w-10 h-10 rounded-xl bg-orange-500 flex items-center justify-center text-white text-lg flex-shrink-0">📱</div>
-        <div className="flex-1">
-          <div className="text-white text-sm font-semibold">{t("pwa_title")}</div>
-          <div className="text-gray-400 text-xs">{t("pwa_subtitle")}</div>
+      <div className="bg-gray-900 rounded-xl p-4 flex items-center gap-3 shadow-2xl border border-gray-800">
+        <div className="w-9 h-9 rounded-md bg-white/10 flex items-center justify-center text-white flex-shrink-0">
+          <Plane size={16} strokeWidth={1.75} />
         </div>
-        <div className="flex gap-2">
+        <div className="flex-1">
+          <div className="text-white text-[13px] font-medium">{t("pwa_title")}</div>
+          <div className="text-gray-400 text-[11px] mt-0.5">{t("pwa_subtitle")}</div>
+        </div>
+        <div className="flex gap-1">
           <button
             onClick={() => { setDismissed(true); localStorage.setItem("pwa_dismissed", "1"); }}
-            className="text-gray-500 text-xs p-1.5 hover:text-gray-300 transition-colors">
-            ✕
+            className="text-gray-500 text-xs px-2 py-1.5 hover:text-gray-300 transition-colors">
+            Skip
           </button>
           <button onClick={install}
-            className="bg-orange-500 text-white text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-orange-600 transition-colors">
-            {t("pwa_install_btn")}
+            className="bg-white text-gray-900 text-[12px] font-medium px-3 py-1.5 rounded-md hover:bg-gray-100 transition-colors">
+            Install
           </button>
         </div>
       </div>
@@ -530,7 +569,7 @@ export default function Home() {
 
   if (!mounted) return (
     <div className="min-h-screen flex items-center justify-center bg-white">
-      <div className="w-8 h-8 rounded-full border-2 border-orange-200 border-t-orange-500 animate-spin" />
+      <div className="w-6 h-6 rounded-full border border-gray-200 border-t-gray-900 animate-spin" />
     </div>
   );
 

@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useLanguage } from "@/app/LanguageProvider";
 import { useAuth } from "@/app/components/AuthProvider";
+import { Home, Map, Plus, Bot, User, Briefcase, Zap } from "lucide-react";
 
 const HIDE_ON = ["/plan"];
 
@@ -32,41 +33,27 @@ export default function BottomNav() {
 
   const isOnChat = pathname.startsWith("/chat");
 
-  // Determine account tab based on auth state
   function getAccountTab() {
-    if (!user) {
-      return { href: "/auth", icon: "👤", label: "Account", dot: null };
-    }
-    if (profile?.role === "advisor") {
-      return { href: "/advisor", icon: "💼", label: "Advisor", dot: null };
-    }
-    if (profile?.role === "admin") {
-      return { href: "/admin", icon: "⚡", label: "Admin", dot: null };
-    }
-    // logged in as client
-    return { href: "/settings", icon: "👤", label: "Profile", dot: "green" };
+    if (!user) return { href: "/auth", Icon: User, label: "Account", dot: null };
+    if (profile?.role === "advisor") return { href: "/advisor", Icon: Briefcase, label: "Advisor", dot: null };
+    if (profile?.role === "admin")   return { href: "/admin",   Icon: Zap,       label: "Admin",   dot: null };
+    return { href: "/settings", Icon: User, label: "Profile", dot: "green" };
   }
 
   const accountTab = getAccountTab();
 
   const TABS = [
-    { href: "/",         icon: "🏠", label: t("nav_home")     },
-    { href: "/trips",    icon: "🗺️", label: t("nav_trips")    },
-    { href: "/plan",     icon: null,  label: t("nav_new"),  special: true },
-    { href: "/chat",     icon: "🤖", label: t("nav_ai"),   chatTab: true },
-    { href: accountTab.href, icon: accountTab.icon, label: accountTab.label, accountTab: true, dot: accountTab.dot },
+    { href: "/",      Icon: Home, label: t("nav_home") },
+    { href: "/trips", Icon: Map,  label: t("nav_trips") },
+    { href: "/plan",  Icon: null, label: t("nav_new"), special: true },
+    { href: "/chat",  Icon: Bot,  label: t("nav_ai"), chatTab: true },
+    { href: accountTab.href, Icon: accountTab.Icon, label: accountTab.label, accountTab: true, dot: accountTab.dot },
   ];
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-50"
-      style={{
-        background: "rgba(255,255,255,0.97)",
-        backdropFilter: "blur(20px)",
-        WebkitBackdropFilter: "blur(20px)",
-        borderTop: "1px solid #f3f4f6",
-        paddingBottom: "env(safe-area-inset-bottom, 0px)",
-      }}
+      className="fixed bottom-0 left-0 right-0 z-50 nav-float"
+      style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
     >
       <div className="max-w-lg mx-auto flex items-center px-2">
         {TABS.map((tab) => {
@@ -76,56 +63,54 @@ export default function BottomNav() {
             return (
               <Link key={tab.href} href={tab.href} className="flex-1 flex justify-center py-2">
                 <div
-                  className="flex items-center justify-center text-white text-2xl font-light -mt-4 transition-transform active:scale-95"
+                  className="flex items-center justify-center text-white -mt-4 transition-all active:scale-95"
                   style={{
-                    width: 52,
-                    height: 52,
-                    borderRadius: 16,
-                    background: "#f97316",
-                    boxShadow: "0 6px 20px rgba(249,115,22,0.4), 0 2px 8px rgba(249,115,22,0.2)",
+                    width: 48,
+                    height: 48,
+                    borderRadius: 12,
+                    background: "#0a0a0a",
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
                   }}
                 >
-                  +
+                  <Plus size={20} strokeWidth={2} />
                 </div>
               </Link>
             );
           }
 
+          const Icon = tab.Icon;
           return (
             <Link
               key={tab.href}
               href={tab.href}
-              className="flex-1 flex flex-col items-center gap-0.5 py-3"
-              style={{ transition: "all 0.2s ease" }}
+              className="flex-1 flex flex-col items-center gap-1 py-3 group"
             >
               <span
-                className="text-xl leading-none relative"
+                className="relative flex items-center justify-center"
                 style={{
-                  opacity: active ? 1 : 0.4,
-                  transform: active ? "scale(1.1)" : "scale(1)",
-                  transition: "opacity 0.2s ease, transform 0.2s ease",
-                  display: "inline-block",
+                  color: active ? "#0a0a0a" : "#a3a3a3",
+                  transition: "color 0.15s ease",
                 }}
               >
-                {tab.icon}
+                <Icon size={19} strokeWidth={active ? 2 : 1.75} />
                 {tab.chatTab && hasSavedChat && !isOnChat && (
                   <span
-                    className="absolute -top-0.5 -right-1 w-2 h-2 rounded-full border-2 border-white"
-                    style={{ background: "#f97316" }}
+                    className="absolute -top-0.5 -right-1 w-1.5 h-1.5 rounded-full"
+                    style={{ background: "#ea580c" }}
                   />
                 )}
                 {tab.dot === "green" && (
                   <span
-                    className="absolute -top-0.5 -right-1 w-2 h-2 rounded-full border-2 border-white"
-                    style={{ background: "#22c55e" }}
+                    className="absolute -top-0.5 -right-1 w-1.5 h-1.5 rounded-full"
+                    style={{ background: "#16a34a" }}
                   />
                 )}
               </span>
               <span
-                className="text-[10px] font-semibold"
+                className="text-[10px] font-medium tracking-wide"
                 style={{
-                  color: active ? "#f97316" : "#9ca3af",
-                  transition: "color 0.2s ease",
+                  color: active ? "#0a0a0a" : "#a3a3a3",
+                  transition: "color 0.15s ease",
                 }}
               >
                 {tab.label}
